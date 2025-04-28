@@ -1,177 +1,320 @@
+/* --- START OF FILE style.css --- */
+
+/* --- Fuentes y Estilos Base --- */
 body {
-  font-family: 'Lato', sans-serif;
-  background: #e9f0f5;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #e9f0f5; /* Fondo base suave */
   padding: 20px;
   margin: 0;
   line-height: 1.6;
   color: #333;
+  font-size: 16px;
 }
 
 .container {
-  background-color: #fff;
+  background-color: #ffffff;
   border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  max-width: 1000px;
-  margin: 20px auto;
+  padding: 30px 40px; /* Más padding horizontal */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  max-width: 900px; /* Un poco más ancho */
+  margin: 30px auto;
 }
 
+/* --- Fondo Dinámico (si se usa desde JS) --- */
 body.fondo-dinamico {
   background-size: cover;
   background-repeat: no-repeat;
   background-attachment: fixed;
+  transition: background-image 0.5s ease-in-out; /* Transición suave */
 }
 
-button, .btn-volver {
+/* --- Botones y Enlaces --- */
+button, .btn-volver, .btn-link {
   display: inline-block;
   padding: 10px 20px;
   margin: 5px;
   border: none;
-  background-color: #007bff;
+  background-color: #007bff; /* Azul primario */
   color: white;
   border-radius: 6px;
   cursor: pointer;
   text-decoration: none;
-  font-size: 16px;
-  transition: background-color 0.3s;
+  font-size: 15px; /* Ligeramente más pequeño */
+  font-weight: 600; /* Semibold */
+  font-family: 'Poppins', sans-serif; /* Fuente diferente para botones */
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
-button:hover, .btn-volver:hover {
-  background-color: #0056b3;
+button:hover, .btn-volver:hover, .btn-link:hover {
+  background-color: #0056b3; /* Azul más oscuro */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+button:active, .btn-volver:active, .btn-link:active {
+    transform: translateY(1px); /* Efecto presionado */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+
+.btn-primario {
+  background-color: #28a745 !important; /* Verde para acción principal */
+  font-weight: bold;
+}
+.btn-primario:hover {
+  background-color: #218838 !important;
+}
+
+.btn-link {
+  background-color: #6c757d; /* Gris para acciones secundarias */
+}
+.btn-link:hover {
+  background-color: #5a6268;
+}
+
+.btn-volver {
+    background-color: #6c757d; /* Gris para volver */
+}
+.btn-volver:hover {
+    background-color: #5a6268;
+}
+
+
+/* --- Formularios --- */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 25px; /* Más espacio entre grupos */
 }
 
-.tema-artroscopia { border-left-color: #17a2b8; background-color: #e9f7fc; }
-.tema-maxilofacial { border-left-color: #a0418a; background-color: #fbe9ff; }
-.tema-hombro { border-left-color: #007bff; background-color: #e8f0ff; }
-.tema-columna { border-left-color: #28a745; background-color: #eafaf1; }
-.tema-default { border-left-color: #999; background-color: #f5f5f5; }
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600; /* Labels más visibles */
+  color: #495057;
+  font-size: 15px;
+}
 
 .form-control {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 12px 15px; /* Padding más cómodo */
+  border: 1px solid #ced4da; /* Borde estándar */
+  border-radius: 6px;
   font-size: 16px;
+  line-height: 1.5;
+  background-color: #fff;
+  box-sizing: border-box; /* Incluir padding y borde en el width */
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-control:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+textarea.form-control {
+    min-height: 80px; /* Altura mínima para textareas */
+}
+
+/* --- Validación --- */
+.campo-invalido {
+  border-color: #dc3545 !important; /* Rojo para inválido */
+}
+.campo-invalido:focus {
+   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); /* Sombra roja en focus */
+}
+
+.mensaje-error {
+  color: #dc3545;
+  font-size: 13px; /* Un poco más grande */
+  margin-top: 6px;
+  display: none; /* Oculto por defecto, JS lo muestra */
+}
+
+.ayuda-texto {
+  font-size: 13px;
+  color: #6c757d;
+  margin-top: 6px;
+  display: block; /* Asegurar que esté en su propia línea */
+  font-style: italic;
+}
+
+/* --- Contenedor y Contenido del Reporte Generado --- */
+#resultado-container {
+    /* Estilos base ya definidos, se mostrará/ocultará con JS */
 }
 
 .reporte-box {
-  background-color: #f5faff;
-  border-left: 5px solid #007bff;
+  background-color: #f8f9fa; /* Fondo ligeramente gris */
+  border-left: 5px solid #007bff; /* Borde izquierdo azul */
   padding: 25px;
   border-radius: 8px;
-  margin-top: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 }
 
 .reporte-contenido {
   text-align: left;
   margin: 0 auto;
-  max-width: 700px;
+  max-width: 100%; /* Ocupar el ancho del reporte-box */
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.7; /* Un poco más de espacio entre líneas */
+  color: #212529; /* Texto más oscuro */
 }
 
 .reporte-contenido img {
   display: block;
-  margin: 0 auto 15px auto;
+  margin: 0 auto 20px auto; /* Más margen inferior */
   max-height: 70px;
 }
 
-.formato-formal {
-  font-family: 'Times New Roman', serif;
+.reporte-contenido h3 {
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 20px;
+    font-family: 'Poppins', sans-serif;
+}
+.reporte-contenido h4 {
+    color: #007bff;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 5px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1em;
 }
 
-.formato-moderno {
-  font-family: 'Lato', sans-serif;
+.reporte-contenido ul {
+    list-style: none; /* Quitar bullets */
+    padding-left: 0;
+    margin-bottom: 20px;
+}
+.reporte-contenido li {
+    margin-bottom: 8px;
+    padding-left: 15px;
+    position: relative;
+}
+.reporte-contenido li::before { /* Añadir un pequeño marcador */
+    content: '•';
+    color: #007bff;
+    position: absolute;
+    left: 0;
+    font-size: 1.2em;
+    line-height: 1;
+}
+.reporte-contenido li strong {
+    color: #495057; /* Color para el texto en negrita */
 }
 
-.formato-detallado {
-  font-family: 'Arial', sans-serif;
+.reporte-contenido p {
+    margin-bottom: 15px;
 }
 
-.loading::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255,255,255,0.7);
-  z-index: 9999;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" stroke="%23007bff" stroke-width="8" fill="none" stroke-dasharray="60 20" transform="rotate(0 50 50)"><animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" values="0 50 50;360 50 50"/></circle></svg>');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 100px;
-}
-
-/* Estilo para la tabla de material */
+/* --- Tabla de Material --- */
 .material-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 10px 0;
-  background: #f8f9fa;
+  margin: 15px 0 20px 0;
+  background: #ffffff; /* Fondo blanco para la tabla */
+  border: 1px solid #dee2e6; /* Borde alrededor de la tabla */
+  font-size: 15px; /* Tamaño de fuente para el material */
 }
 
 .material-table td {
-  padding: 8px 12px;
-  border: 1px solid #dee2e6;
+  padding: 10px 15px; /* Padding en celdas */
+  border-bottom: 1px solid #dee2e6; /* Línea separadora horizontal */
+}
+.material-table tr:last-child td {
+    border-bottom: none; /* Quitar borde inferior de la última fila */
 }
 
-.material-table tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-/* Estilo para el preformateado */
-.reporte-contenido pre {
-  background: #f0f8ff;
-  padding: 12px;
+/* --- Notificación Toast --- */
+.toast-notification {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  padding: 12px 25px;
   border-radius: 8px;
-  font-family: 'Courier New', monospace;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  color: #fff;
   font-size: 15px;
-  line-height: 1.5;
-  margin-top: 10px;
-  margin-bottom: 20px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1050; /* Asegurar que esté por encima de otros elementos */
+  display: none; /* Oculto por defecto */
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+/* Estilos para cuando se muestra */
+.toast-notification[style*="display: block"] {
+    opacity: 1;
 }
 
+.toast-notification.info { background-color: #17a2b8; } /* Azul info */
+.toast-notification.success { background-color: #28a745; } /* Verde éxito */
+.toast-notification.warning { background-color: #ffc107; color: #333; } /* Amarillo advertencia */
+.toast-notification.error { background-color: #dc3545; } /* Rojo error */
+
+
+/* --- Créditos --- */
 .credit {
   display: block;
   text-align: center;
-  margin-top: 30px;
+  margin-top: 40px; /* Más espacio arriba */
   font-size: 12px;
   color: #6c757d;
-/* Nuevos estilos añadidos */
-.btn-primario {
-  background-color: #28a745 !important;
-  font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-.btn-primario:hover {
-  background-color: #218838 !important;
+/* --- Estilos para la tabla en admin.html --- */
+.table-responsive {
+    overflow-x: auto; /* Permitir scroll horizontal en tablas grandes */
+    margin-bottom: 20px;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+th, td {
+    padding: 12px 15px; /* Buen padding */
+    text-align: left;
+    border-bottom: 1px solid #dee2e6; /* Separador de filas */
+    vertical-align: top; /* Alinear arriba si el contenido es largo */
+}
+thead th {
+    background-color: #007bff;
+    color: #ffffff;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+}
+tbody tr:nth-child(even) {
+    background-color: #f8f9fa; /* Filas alternas */
+}
+tbody tr:hover {
+    background-color: #e9ecef; /* Hover suave */
 }
 
-.ayuda-texto {
-  font-size: 12px;
-  color: #6c757d;
-  margin-top: 5px;
-  font-style: italic;
+/* --- Responsividad Simple --- */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+  button, .btn-volver, .btn-link {
+    padding: 8px 15px;
+    font-size: 14px;
+  }
+  .text-center {
+      gap: 5px; /* Menos espacio entre botones en móvil */
+  }
+  h4 { font-size: 1.2em; }
 }
 
-.campo-invalido {
-  border-color: #dc3545 !important;
+@media (max-width: 480px) {
+   body { padding: 10px; }
+   .container { padding: 15px; margin: 15px auto; }
+   th, td { padding: 8px 10px; font-size: 14px; }
+   button, .btn-volver, .btn-link { width: 100%; margin: 5px 0; } /* Botones full width */
+   .text-center { flex-direction: column; } /* Apilar botones */
+   .toast-notification { width: calc(100% - 40px); right: 20px; bottom: 20px; }
 }
 
-.mensaje-error {
-  color: #dc3545;
-  font-size: 12px;
-  margin-top: 5px;
-  display: none;
-}
-
-}
+/* --- END OF FILE style.css --- */
