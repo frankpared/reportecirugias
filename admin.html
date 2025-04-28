@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel de Reportes Guardados | Districorr</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&family=Lato&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+
+<body class="fondo-dinamico">
+  <div class="container">
+    <header>
+      <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 80px; display: block; margin: 0 auto;" />
+      <h2 style="text-align: center; margin-top: 15px;">📋 Reportes Enviados</h2>
+    </header>
+
+    <div class="table-responsive" style="overflow-x: auto; margin-top: 30px;">
+      <table style="width:100%; border-collapse: collapse;">
+        <thead style="background-color: #007bff; color: white;">
+          <tr>
+            <th style="padding: 10px;">Paciente</th>
+            <th style="padding: 10px;">Médico</th>
+            <th style="padding: 10px;">Tipo</th>
+            <th style="padding: 10px;">Fecha</th>
+            <th style="padding: 10px;">Material</th>
+          </tr>
+        </thead>
+        <tbody id="reporte-rows" style="background: #fff;"></tbody>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="index.html" class="btn-volver">← Volver al formulario</a>
+    </div>
+  </div>
+
+  <script>
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E",
+      authDomain: "cirugia-reporte.firebaseapp.com",
+      projectId: "cirugia-reporte",
+      storageBucket: "cirugia-reporte.appspot.com",
+      messagingSenderId: "698831567840",
+      appId: "1:698831567840:web:fc6d6197f22beba4d88985",
+      measurementId: "G-HD7ZLL1GLZ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    window.onload = function () {
+      aplicarFondoDinamico();
+      cargarReportes();
+    };
+
+    function cargarReportes() {
+      const tbody = document.getElementById("reporte-rows");
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Cargando reportes...</td></tr>';
+
+      db.collection("reportes").orderBy("timestamp", "desc").get()
+        .then(snapshot => {
+          tbody.innerHTML = '';
+          if (snapshot.empty) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay reportes guardados</td></tr>';
+            return;
+          }
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            let fechaFormateada = 'Fecha no disponible';
+            try {
+              if (data.fechaCirugia) {
+                fechaFormateada = new Date(`${data.fechaCirugia}T00:00:00`).toLocaleDateString('es-AR');
+              } else if (data.timestamp?.toDate) {
+                fechaFormateada = data.timestamp.toDate().toLocaleDateString('es-AR');
+              }
+            } catch (e) {
+              console.error('Error formateando fecha:', e);
+            }
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td style="padding: 10px;">${data.paciente || 'No especificado'}</td>
+              <td style="padding: 10px;">${data.medico || 'No especificado'}</td>
+              <td style="padding: 10px;">${data.tipoCirugia || 'No especificado'}</td>
+              <td style="padding: 10px;">${fechaFormateada}</td>
+              <td style="padding: 10px;">${data.material ? (data.material.length > 30 ? data.material.substring(0, 30) + '...' : data.material) : 'No especificado'}</td>`;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(error => {
+          console.error('Error cargando reportes:', error);
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Error cargando datos</td></tr>';
+        });
+    }
+
+    // Fondo dinámico
+    function aplicarFondoDinamico() {
+      const body = document.body;
+      const dia = new Date().getDay(); // 0 = Domingo, 6 = Sábado
+
+      const fondos = {
+        0: "url('https://images.unsplash.com/photo-1588776814546-ec7e4c1a1d4d?auto=format&fit=crop&w=1920&q=80')", // Domingo
+        1: "url('https://images.unsplash.com/photo-1606813909027-5e0b8c1a1d4d?auto=format&fit=crop&w=1920&q=80')", // Lunes
+        2: "url('https://images.unsplash.com/photo-1517832606294-acecc31259b1?auto=format&fit=crop&w=1920&q=80')", // Martes
+        3: "url('https://images.unsplash.com/photo-1487014679447-9f8336841d58?auto=format&fit=crop&w=1920&q=80')", // Miércoles
+        4: "url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1920&q=80')", // Jueves
+        5: "url('https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1920&q=80')", // Viernes
+        6: "url('https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1920&q=80')", // Sábado
+      };
+
+      body.style.backgroundImage = fondos[dia];
+      body.style.backgroundSize = 'cover';
+      body.style.backgroundRepeat = 'no-repeat';
+      body.style.backgroundAttachment = 'fixed';
+    }
+  </script>
+</body>
+</html>
