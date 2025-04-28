@@ -81,13 +81,18 @@
       <div class="mensaje-error" id="error-fecha">Este campo es requerido.</div>
     </div>
 
+    <!-- CAMBIO: Botón para Tipo de Cirugía -->
     <div class="form-group">
-      <label for="tipoCirugia">Tipo de Cirugía (*)</label>
-      <input id="tipoCirugia" class="form-control" list="tiposCirugiaList" placeholder="Escriba o seleccione..." required />
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+             <label for="tipoCirugia" style="margin-bottom: 0;">Tipo de Cirugía (*)</label>
+             <button type="button" onclick="abrirModalTipoCx()" class="btn-seleccionar-material">🔍 Seleccionar</button>
+        </div>
+      <input id="tipoCirugia" class="form-control" list="tiposCirugiaList" placeholder="Escriba, seleccione o use el botón..." required />
       <datalist id="tiposCirugiaList"></datalist>
       <small class="ayuda-texto">Descripción del procedimiento quirúrgico.</small>
       <div class="mensaje-error" id="error-tipo">Este campo es requerido.</div>
     </div>
+    <!-- Fin del cambio -->
 
     <div class="form-group">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -142,7 +147,8 @@
         <button class="modal-close-btn" onclick="cerrarModalMateriales()">×</button>
       </div>
       <div class="modal-body">
-        <input type="text" id="modalSearchInput" class="form-control" placeholder="Buscar material por código o descripción..." onkeyup="filtrarModalMateriales()">
+        <!-- CAMBIO: Llamar a función debounced -->
+        <input type="text" id="modalMaterialesSearchInput" class="form-control" placeholder="Buscar material por código o descripción..." onkeyup="debouncedFilterMateriales()">
         <div id="modalMaterialesLista" class="modal-lista-container">
           Cargando materiales...
         </div>
@@ -153,6 +159,28 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal para Tipo de Cirugía -->
+  <div id="modalTipoCx" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Seleccionar Tipo de Cirugía</h3>
+        <button class="modal-close-btn" onclick="cerrarModalTipoCx()">×</button>
+      </div>
+      <div class="modal-body">
+         <!-- CAMBIO: Llamar a función debounced -->
+        <input type="text" id="modalTipoCxSearchInput" class="form-control" placeholder="Buscar tipo de cirugía..." onkeyup="debouncedFilterTipoCx()">
+        <div id="modalTipoCxLista" class="modal-lista-container">
+          Cargando tipos de cirugía...
+        </div>
+      </div>
+      <div class="modal-footer">
+         <button type="button" class="btn-link" onclick="cerrarModalTipoCx()">Cancelar</button>
+         <!-- No hay botón "Añadir", la selección es directa -->
+      </div>
+    </div>
+  </div>
+
 
   <!-- Script principal -->
   <script src="script.js"></script>
