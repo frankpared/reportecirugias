@@ -12,12 +12,45 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// Cargar sugerencias iniciales desde Firestore
+async function cargarSugerenciasIniciales(idInput, idList) {
+  const key = `sugerencias_${idInput}`;
+  try {
+    const snapshot = await db.collection('sugerencias')
+      .where('campo', '==', idInput)
+      .get();
+    
+    const valores = [];
+    snapshot.forEach(doc => {
+      valores.push(doc.data().valor);
+    });
+    
+    // Eliminar duplicados
+    const valoresUnicos = [...new Set(valores)];
+    localStorage.setItem(key, JSON.stringify(valoresUnicos));
+    
+    // Actualizar datalist
+    const list = document.getElementById(idList);
+    list.innerHTML = '';
+    valoresUnicos.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      list.appendChild(opt);
+    });
+  } catch (error) {
+    console.error("Error cargando sugerencias:", error);
+  }
+}
+
 // Actualiza sugerencias en localStorage y Firebase
 function actualizarSugerencias(idInput, idList) {
   const input = document.getElementById(idInput);
   const list = document.getElementById(idList);
   const key = `sugerencias_${idInput}`;
   const valores = JSON.parse(localStorage.getItem(key) || "[]");
+
+  // Cargar sugerencias iniciales
+  cargarSugerenciasIniciales(idInput, idList);
 
   input.addEventListener('change', async () => {
     const nuevo = input.value.trim();
@@ -63,13 +96,30 @@ function obtenerDatos() {
   };
 }
 
+// Formatear material en tabla
+function formatearMaterial(material) {
+  if (!material) return 'No especificado';
+  
+  // Dividir por líneas y crear tabla
+  const lineas = material.split('\n').filter(l => l.trim());
+  if (lineas.length === 0) return 'No especificado';
+  
+  let html = '<table class="material-table"><tbody>';
+  lineas.forEach(linea => {
+    html += `<tr><td>${linea}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  
+  return html;
+}
+
 // Genera texto de reporte
 function generarTexto() {
   const datos = obtenerDatos();
   const fecha = datos.fechaCirugia ? new Date(`${datos.fechaCirugia}T00:00:00`) : new Date();
   const fechaFormateada = fecha.toLocaleDateString('es-AR');
 
-  let contenidoMaterial = datos.material ? `<pre>${datos.material}</pre>` : 'No especificado';
+  let contenidoMaterial = formatearMaterial(datos.material);
 
   const reporte = `
     <div class="reporte-contenido">
@@ -190,4 +240,5 @@ document.addEventListener('DOMContentLoaded', () => {
   actualizarSugerencias('medico', 'medicosList');
   actualizarSugerencias('instrumentador', 'instrumentadoresList');
   actualizarSugerencias('lugarCirugia', 'lugaresList');
+  actualizarSugerencias('tipoCirugia', 'tiposCirugiaList');
 });
