@@ -55,6 +55,11 @@ button:active, .btn-volver:active, .btn-link:active {
     transform: translateY(1px); /* Efecto presionado */
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+button:disabled { /* Estilo para botones deshabilitados */
+    background-color: #adb5bd;
+    cursor: not-allowed;
+    box-shadow: none;
+}
 
 
 .btn-primario {
@@ -63,6 +68,9 @@ button:active, .btn-volver:active, .btn-link:active {
 }
 .btn-primario:hover {
   background-color: #218838 !important;
+}
+.btn-primario:disabled {
+    background-color: #6fbf73 !important; /* Verde más claro deshabilitado */
 }
 
 .btn-link {
@@ -92,6 +100,24 @@ button:active, .btn-volver:active, .btn-link:active {
   color: #495057;
   font-size: 15px;
 }
+/* Añadir asterisco visual para campos requeridos */
+.form-group label[for]:after {
+    content: " (*)";
+    color: #dc3545; /* Rojo */
+    font-weight: normal; /* No tan fuerte como el label */
+    font-size: 0.9em; /* Ligeramente más pequeño */
+    vertical-align: super; /* Alinear arriba */
+    padding-left: 2px;
+}
+/* Ocultar el asterisco si el label no es de un campo requerido (ej. Instrumentador) */
+.form-group label[for="instrumentador"]:after,
+.form-group label[for="observaciones"]:after,
+.form-group label[for="infoAdicional"]:after,
+.form-group label[for="formato"]:after,
+.form-group label[for="mensajeInicio"]:after {
+    content: ""; /* Sin asterisco */
+}
+
 
 .form-control {
   width: 100%;
@@ -241,11 +267,13 @@ textarea.form-control {
   z-index: 1050; /* Asegurar que esté por encima de otros elementos */
   display: none; /* Oculto por defecto */
   opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transform: translateY(20px); /* Empezar ligeramente abajo */
 }
 /* Estilos para cuando se muestra */
 .toast-notification[style*="display: block"] {
     opacity: 1;
+    transform: translateY(0); /* Mover a su posición final */
 }
 
 .toast-notification.info { background-color: #17a2b8; } /* Azul info */
@@ -279,12 +307,24 @@ th, td {
     text-align: left;
     border-bottom: 1px solid #dee2e6; /* Separador de filas */
     vertical-align: top; /* Alinear arriba si el contenido es largo */
+    white-space: nowrap; /* Evitar que el texto largo rompa la celda (combinado con overflow) */
 }
+/* Permitir que algunas columnas específicas puedan romper línea si es necesario */
+td:nth-child(2), /* Paciente */
+td:nth-child(3), /* Medico */
+td:nth-child(4), /* Tipo Cirugia */
+td:nth-child(5) { /* Material */
+    white-space: normal;
+}
+
 thead th {
     background-color: #007bff;
     color: #ffffff;
     font-weight: 600;
     font-family: 'Poppins', sans-serif;
+    position: sticky; /* Encabezado fijo al hacer scroll vertical (si la tabla es muy larga) */
+    top: 0;
+    z-index: 10;
 }
 tbody tr:nth-child(even) {
     background-color: #f8f9fa; /* Filas alternas */
@@ -306,12 +346,13 @@ tbody tr:hover {
       gap: 5px; /* Menos espacio entre botones en móvil */
   }
   h4 { font-size: 1.2em; }
+  th, td { font-size: 14px; white-space: normal; } /* Permitir wrap en móvil */
 }
 
 @media (max-width: 480px) {
    body { padding: 10px; }
    .container { padding: 15px; margin: 15px auto; }
-   th, td { padding: 8px 10px; font-size: 14px; }
+   th, td { padding: 8px 10px; font-size: 13px; }
    button, .btn-volver, .btn-link { width: 100%; margin: 5px 0; } /* Botones full width */
    .text-center { flex-direction: column; } /* Apilar botones */
    .toast-notification { width: calc(100% - 40px); right: 20px; bottom: 20px; }
