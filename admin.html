@@ -2,45 +2,51 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Reportes Guardados | Districorr</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&family=Lato&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Lato&display=swap" rel="stylesheet">
+  <!-- Firebase SDK (compat version para firestore() v8) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 
 <body class="fondo-dinamico">
   <div class="container">
-    <header>
-      <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 80px; display: block; margin: 0 auto;" />
-      <h2 style="text-align: center; margin-top: 15px;">📋 Reportes Enviados</h2>
+    <header style="margin-bottom: 30px;">
+      <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 80px; display: block; margin: 0 auto 15px auto;" />
+      <h2 style="text-align: center; color: #333;">📋 Reportes Guardados</h2>
     </header>
 
-    <div class="table-responsive" style="overflow-x: auto; margin-top: 30px;">
-      <table style="width:100%; border-collapse: collapse;">
+    <div class="table-responsive" style="overflow-x: auto;">
+      <table style="width:100%; border-collapse: collapse; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         <thead style="background-color: #007bff; color: white;">
           <tr>
-            <th style="padding: 10px;">Paciente</th>
-            <th style="padding: 10px;">Médico</th>
-            <th style="padding: 10px;">Tipo</th>
-            <th style="padding: 10px;">Fecha</th>
-            <th style="padding: 10px;">Material</th>
-            <th style="padding: 10px;">Usuario</th>
+            <th style="padding: 12px 15px; text-align: left;">Fecha Cirugía</th>
+            <th style="padding: 12px 15px; text-align: left;">Paciente</th>
+            <th style="padding: 12px 15px; text-align: left;">Médico</th>
+            <th style="padding: 12px 15px; text-align: left;">Tipo Cirugía</th>
+            <th style="padding: 12px 15px; text-align: left;">Material (Inicio)</th>
+            <th style="padding: 12px 15px; text-align: left;">Usuario ID</th>
+            <th style="padding: 12px 15px; text-align: left;">Guardado En</th>
           </tr>
         </thead>
-        <tbody id="reporte-rows" style="background: #fff;"></tbody>
+        <tbody id="reporte-rows" style="background-color: #fff;">
+          <!-- Las filas se cargarán aquí -->
+           <tr><td colspan="7" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>
+        </tbody>
       </table>
     </div>
 
-    <div style="text-align: center; margin-top: 20px;">
-      <a href="index.html" class="btn-volver">← Volver al formulario</a>
+    <div style="text-align: center; margin-top: 30px;">
+      <a href="index.html" class="btn-volver" style="background-color: #6c757d;">← Volver al formulario</a>
     </div>
   </div>
 
   <script>
-    // Configuración de Firebase
+    // Configuración de Firebase (DEBE SER LA MISMA QUE EN script.js)
     const firebaseConfig = {
-      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E",
+      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // Mantén tu API Key real
       authDomain: "cirugia-reporte.firebaseapp.com",
       projectId: "cirugia-reporte",
       storageBucket: "cirugia-reporte.appspot.com",
@@ -49,82 +55,110 @@
       measurementId: "G-HD7ZLL1GLZ"
     };
 
+    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Habilitar persistencia de datos
+    // Habilitar persistencia (opcional pero bueno para offline)
     db.enablePersistence()
       .catch((err) => {
-        console.error("Error al habilitar persistencia:", err);
+         if (err.code == 'failed-precondition') {
+          console.warn("Persistencia admin falló: Múltiples pestañas?");
+        } else if (err.code == 'unimplemented') {
+          console.warn("Persistencia admin no soportada.");
+        } else {
+          console.error("Error habilitando persistencia admin:", err);
+        }
       });
 
-    window.onload = function () {
-      aplicarFondoDinamico();
-      cargarReportes();
-    };
+    // Formatea la fecha ISO (YYYY-MM-DD) a formato local
+    function formatearFechaLocal(fechaISO) {
+        if (!fechaISO) return '-';
+        try {
+            const partes = fechaISO.split('-');
+            if (partes.length !== 3) return fechaISO;
+            const fecha = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]), 12, 0, 0);
+            return fecha.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        } catch (e) { return fechaISO; }
+    }
 
+     // Formatea el timestamp de Firestore a fecha y hora local
+    function formatearTimestamp(timestamp) {
+        if (!timestamp || !timestamp.toDate) return '-';
+        try {
+            return timestamp.toDate().toLocaleString('es-AR', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            });
+        } catch (e) { return '-'; }
+    }
+
+
+    // Carga los reportes desde Firestore
     function cargarReportes() {
       const tbody = document.getElementById("reporte-rows");
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Cargando reportes...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>'; // Colspan 7 ahora
 
-      db.collection("reportes").orderBy("timestamp", "desc").get()
+      db.collection("reportes")
+        .orderBy("timestamp", "desc") // Ordenar por fecha de guardado, más reciente primero
+        .limit(100) // Limitar a los últimos 100 para no sobrecargar
+        .get()
         .then(snapshot => {
-          tbody.innerHTML = '';
+          tbody.innerHTML = ''; // Limpiar 'Cargando...'
           if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay reportes guardados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados todavía.</td></tr>';
             return;
           }
 
           snapshot.forEach(doc => {
             const data = doc.data();
-            let fechaFormateada = 'Fecha no disponible';
-            try {
-              if (data.fechaCirugia) {
-                fechaFormateada = new Date(`${data.fechaCirugia}T00:00:00`).toLocaleDateString('es-AR');
-              } else if (data.timestamp?.toDate) {
-                fechaFormateada = data.timestamp.toDate().toLocaleDateString('es-AR');
-              }
-            } catch (e) {
-              console.error('Error formateando fecha:', e);
-            }
+            const fechaCirugiaFormateada = formatearFechaLocal(data.fechaCirugia);
+            const fechaGuardadoFormateada = formatearTimestamp(data.timestamp);
+            const materialCortado = data.material ? (data.material.substring(0, 40) + (data.material.length > 40 ? '...' : '')) : 'No especificado';
+            const usuarioIdCorto = data.usuario ? data.usuario.substring(0, 6) : 'Anónimo';
 
             const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td style="padding: 10px;">${data.paciente || 'No especificado'}</td>
-              <td style="padding: 10px;">${data.medico || 'No especificado'}</td>
-              <td style="padding: 10px;">${data.tipoCirugia || 'No especificado'}</td>
-              <td style="padding: 10px;">${fechaFormateada}</td>
-              <td style="padding: 10px;">${data.material ? (data.material.length > 30 ? data.material.substring(0, 30) + '...' : data.material) : 'No especificado'}</td>
-              <td style="padding: 10px;">${data.usuario ? data.usuario.substring(0, 6) : 'Anónimo'}</td>`;
+            tr.style.borderBottom = "1px solid #eee"; // Separador visual
+
+            // Usar textContent para seguridad básica contra XSS
+            const createCell = (text) => {
+                const td = document.createElement('td');
+                td.textContent = text || '-'; // Mostrar guión si está vacío
+                td.style.padding = "10px 15px";
+                td.style.verticalAlign = "top";
+                return td;
+            };
+
+            tr.appendChild(createCell(fechaCirugiaFormateada));
+            tr.appendChild(createCell(data.paciente));
+            tr.appendChild(createCell(data.medico));
+            tr.appendChild(createCell(data.tipoCirugia));
+            tr.appendChild(createCell(materialCortado));
+            tr.appendChild(createCell(usuarioIdCorto));
+            tr.appendChild(createCell(fechaGuardadoFormateada));
+
             tbody.appendChild(tr);
           });
         })
         .catch(error => {
           console.error('Error cargando reportes:', error);
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">Error cargando datos</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color:red;">Error al cargar los reportes. Revise la consola.</td></tr>';
         });
     }
 
-    // Fondo dinámico
+    // Aplica fondo dinámico (opcional)
     function aplicarFondoDinamico() {
-      const body = document.body;
-      const dia = new Date().getDay(); // 0 = Domingo, 6 = Sábado
-
-      const fondos = {
-        0: "url('https://images.unsplash.com/photo-1588776814546-ec7e4c1a1d4d?auto=format&fit=crop&w=1920&q=80')", // Domingo
-        1: "url('https://images.unsplash.com/photo-1606813909027-5e0b8c1a1d4d?auto=format&fit=crop&w=1920&q=80')", // Lunes
-        2: "url('https://images.unsplash.com/photo-1517832606294-acecc31259b1?auto=format&fit=crop&w=1920&q=80')", // Martes
-        3: "url('https://images.unsplash.com/photo-1487014679447-9f8336841d58?auto=format&fit=crop&w=1920&q=80')", // Miércoles
-        4: "url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1920&q=80')", // Jueves
-        5: "url('https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1920&q=80')", // Viernes
-        6: "url('https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1920&q=80')", // Sábado
-      };
-
-      body.style.backgroundImage = fondos[dia];
-      body.style.backgroundSize = 'cover';
-      body.style.backgroundRepeat = 'no-repeat';
-      body.style.backgroundAttachment = 'fixed';
+        // Código de fondo dinámico (si lo quieres mantener)
+        // ... (el mismo código de antes) ...
+        // O simplemente un fondo fijo:
+        document.body.style.backgroundColor = "#e9f0f5"; // Fondo simple
     }
+
+    // Ejecutar al cargar la página
+    window.onload = function () {
+      aplicarFondoDinamico();
+      cargarReportes();
+    };
   </script>
 </body>
 </html>
