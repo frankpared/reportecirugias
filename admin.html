@@ -11,27 +11,36 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 
-<body class="fondo-dinamico">
+<!-- Añadir clase 'admin-page' para estilos específicos si es necesario -->
+<body class="fondo-dinamico admin-page">
   <div class="container">
     <header style="margin-bottom: 30px;">
       <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 80px; display: block; margin: 0 auto 15px auto;" />
-      <h2 style="text-align: center; color: #333;">📋 Reportes Guardados</h2>
+      <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">📋 Reportes Guardados</h2>
     </header>
 
-    <div class="table-responsive" style="overflow-x: auto;">
-      <table style="width:100%; border-collapse: collapse; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-        <thead style="background-color: #007bff; color: white;">
+    <!-- Opcional: Añadir un campo de búsqueda (requiere JS adicional para funcionar) -->
+    <!--
+    <div class="form-group" style="margin-bottom: 20px;">
+      <input type="text" id="searchInput" class="form-control" placeholder="Buscar por paciente o médico..." onkeyup="filtrarTabla()">
+    </div>
+    -->
+
+    <div class="table-responsive">
+      <table id="reportesTable" style="width:100%;">
+        <thead>
           <tr>
-            <th style="padding: 12px 15px; text-align: left;">Fecha Cirugía</th>
-            <th style="padding: 12px 15px; text-align: left;">Paciente</th>
-            <th style="padding: 12px 15px; text-align: left;">Médico</th>
-            <th style="padding: 12px 15px; text-align: left;">Tipo Cirugía</th>
-            <th style="padding: 12px 15px; text-align: left;">Material (Inicio)</th>
-            <th style="padding: 12px 15px; text-align: left;">Usuario ID</th>
-            <th style="padding: 12px 15px; text-align: left;">Guardado En</th>
+            <!-- Columnas reordenadas y añadidas -->
+            <th>Fecha Cirugía</th>
+            <th>Paciente</th>
+            <th>Médico</th>
+            <th>Tipo Cirugía</th>
+            <th>Material (Inicio)</th>
+            <th>Usuario ID</th>
+            <th>Guardado En</th>
           </tr>
         </thead>
-        <tbody id="reporte-rows" style="background-color: #fff;">
+        <tbody id="reporte-rows">
           <!-- Las filas se cargarán aquí -->
            <tr><td colspan="7" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>
         </tbody>
@@ -39,14 +48,14 @@
     </div>
 
     <div style="text-align: center; margin-top: 30px;">
-      <a href="index.html" class="btn-volver" style="background-color: #6c757d;">← Volver al formulario</a>
+      <a href="index.html" class="btn-volver">← Volver al formulario</a>
     </div>
   </div>
 
   <script>
     // Configuración de Firebase (DEBE SER LA MISMA QUE EN script.js)
     const firebaseConfig = {
-      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // Mantén tu API Key real
+      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // ¡ASEGÚRATE DE QUE ESTA SEA TU API KEY REAL!
       authDomain: "cirugia-reporte.firebaseapp.com",
       projectId: "cirugia-reporte",
       storageBucket: "cirugia-reporte.appspot.com",
@@ -75,6 +84,7 @@
     function formatearFechaLocal(fechaISO) {
         if (!fechaISO) return '-';
         try {
+            // Interpretar la fecha como local añadiendo hora
             const partes = fechaISO.split('-');
             if (partes.length !== 3) return fechaISO;
             const fecha = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]), 12, 0, 0);
@@ -93,15 +103,14 @@
         } catch (e) { return '-'; }
     }
 
-
-    // Carga los reportes desde Firestore
+    // Carga los reportes desde Firestore y los muestra en la tabla
     function cargarReportes() {
       const tbody = document.getElementById("reporte-rows");
       tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>'; // Colspan 7 ahora
 
       db.collection("reportes")
         .orderBy("timestamp", "desc") // Ordenar por fecha de guardado, más reciente primero
-        .limit(100) // Limitar a los últimos 100 para no sobrecargar
+        .limit(100) // Limitar a los últimos 100 para rendimiento
         .get()
         .then(snapshot => {
           tbody.innerHTML = ''; // Limpiar 'Cargando...'
@@ -114,21 +123,22 @@
             const data = doc.data();
             const fechaCirugiaFormateada = formatearFechaLocal(data.fechaCirugia);
             const fechaGuardadoFormateada = formatearTimestamp(data.timestamp);
-            const materialCortado = data.material ? (data.material.substring(0, 40) + (data.material.length > 40 ? '...' : '')) : 'No especificado';
-            const usuarioIdCorto = data.usuario ? data.usuario.substring(0, 6) : 'Anónimo';
+            // Acortar material para visualización en tabla
+            const materialCortado = data.material
+                ? (data.material.substring(0, 40) + (data.material.length > 40 ? '...' : ''))
+                : '-'; // Mostrar guión si no hay material
+            const usuarioIdCorto = data.usuario ? data.usuario.substring(0, 6) : 'Anón.'; // Acortar ID y poner texto si es anónimo
 
             const tr = document.createElement("tr");
-            tr.style.borderBottom = "1px solid #eee"; // Separador visual
 
-            // Usar textContent para seguridad básica contra XSS
+            // Helper para crear celdas de forma segura
             const createCell = (text) => {
                 const td = document.createElement('td');
-                td.textContent = text || '-'; // Mostrar guión si está vacío
-                td.style.padding = "10px 15px";
-                td.style.verticalAlign = "top";
+                td.textContent = text || '-'; // Mostrar guión si el valor es null/undefined/vacío
                 return td;
             };
 
+            // Añadir celdas en el orden correcto de las columnas
             tr.appendChild(createCell(fechaCirugiaFormateada));
             tr.appendChild(createCell(data.paciente));
             tr.appendChild(createCell(data.medico));
@@ -146,13 +156,61 @@
         });
     }
 
-    // Aplica fondo dinámico (opcional)
+    // Aplica fondo dinámico (opcional) o un fondo fijo
     function aplicarFondoDinamico() {
-        // Código de fondo dinámico (si lo quieres mantener)
-        // ... (el mismo código de antes) ...
+        // Si quieres mantener los fondos dinámicos por día:
+        /*
+        const body = document.body;
+        const dia = new Date().getDay(); // 0 = Domingo, 6 = Sábado
+        const fondos = { // Asegúrate de que las URLs sean válidas
+             0: "url('https://images.unsplash.com/photo-1588776814546-ec7e4c1a1d4d?auto=format&fit=crop&w=1920&q=80')", // Domingo
+             // ... (resto de días) ...
+             6: "url('https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1920&q=80')", // Sábado
+        };
+        body.style.backgroundImage = fondos[dia] || fondos[1]; // Usar Lunes como default
+        body.style.backgroundSize = 'cover';
+        body.style.backgroundRepeat = 'no-repeat';
+        body.style.backgroundAttachment = 'fixed';
+        */
         // O simplemente un fondo fijo:
-        document.body.style.backgroundColor = "#e9f0f5"; // Fondo simple
+        document.body.style.backgroundColor = "#f0f2f5"; // Un gris ligeramente diferente para admin
     }
+
+    // Opcional: Función para filtrar la tabla (si descomentas el input de búsqueda)
+    /*
+    function filtrarTabla() {
+      const input = document.getElementById("searchInput");
+      const filter = input.value.toUpperCase();
+      const table = document.getElementById("reportesTable");
+      const tr = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+
+      for (let i = 0; i < tr.length; i++) {
+        // Buscar en columna Paciente (índice 1) y Médico (índice 2)
+        const tdPaciente = tr[i].getElementsByTagName("td")[1];
+        const tdMedico = tr[i].getElementsByTagName("td")[2];
+        let mostrar = false;
+
+        if (tdPaciente) {
+          const txtValuePaciente = tdPaciente.textContent || tdPaciente.innerText;
+          if (txtValuePaciente.toUpperCase().indexOf(filter) > -1) {
+            mostrar = true;
+          }
+        }
+        if (!mostrar && tdMedico) { // Solo buscar en médico si no coincidió paciente
+           const txtValueMedico = tdMedico.textContent || tdMedico.innerText;
+           if (txtValueMedico.toUpperCase().indexOf(filter) > -1) {
+            mostrar = true;
+          }
+        }
+
+        if (mostrar) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+    */
 
     // Ejecutar al cargar la página
     window.onload = function () {
