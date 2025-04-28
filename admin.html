@@ -25,6 +25,7 @@
             <th style="padding: 10px;">Tipo</th>
             <th style="padding: 10px;">Fecha</th>
             <th style="padding: 10px;">Material</th>
+            <th style="padding: 10px;">Usuario</th>
           </tr>
         </thead>
         <tbody id="reporte-rows" style="background: #fff;"></tbody>
@@ -51,6 +52,12 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Habilitar persistencia de datos
+    db.enablePersistence()
+      .catch((err) => {
+        console.error("Error al habilitar persistencia:", err);
+      });
+
     window.onload = function () {
       aplicarFondoDinamico();
       cargarReportes();
@@ -58,13 +65,13 @@
 
     function cargarReportes() {
       const tbody = document.getElementById("reporte-rows");
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Cargando reportes...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Cargando reportes...</td></tr>';
 
       db.collection("reportes").orderBy("timestamp", "desc").get()
         .then(snapshot => {
           tbody.innerHTML = '';
           if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay reportes guardados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay reportes guardados</td></tr>';
             return;
           }
 
@@ -87,13 +94,14 @@
               <td style="padding: 10px;">${data.medico || 'No especificado'}</td>
               <td style="padding: 10px;">${data.tipoCirugia || 'No especificado'}</td>
               <td style="padding: 10px;">${fechaFormateada}</td>
-              <td style="padding: 10px;">${data.material ? (data.material.length > 30 ? data.material.substring(0, 30) + '...' : data.material) : 'No especificado'}</td>`;
+              <td style="padding: 10px;">${data.material ? (data.material.length > 30 ? data.material.substring(0, 30) + '...' : data.material) : 'No especificado'}</td>
+              <td style="padding: 10px;">${data.usuario ? data.usuario.substring(0, 6) : 'Anónimo'}</td>`;
             tbody.appendChild(tr);
           });
         })
         .catch(error => {
           console.error('Error cargando reportes:', error);
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Error cargando datos</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">Error cargando datos</td></tr>';
         });
     }
 
