@@ -145,4 +145,33 @@ button:hover, .btn-volver:hover {
   margin-top: 30px;
   font-size: 12px;
   color: #6c757d;
+/* Nuevos estilos añadidos */
+.btn-primario {
+  background-color: #28a745 !important;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.btn-primario:hover {
+  background-color: #218838 !important;
+}
+
+.ayuda-texto {
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.campo-invalido {
+  border-color: #dc3545 !important;
+}
+
+.mensaje-error {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 5px;
+  display: none;
+}
+
 }
