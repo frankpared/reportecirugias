@@ -27,6 +27,7 @@
         <option value="moderno">Moderno</option>
         <option value="casual">Detallado</option>
       </select>
+      <small class="ayuda-texto">Seleccione el estilo de redacción del reporte</small>
     </div>
 
     <div class="form-group">
@@ -36,42 +37,75 @@
         <option>Estimados, Informo novedades de la cirugía programada</option>
         <option>Equipo, adjunto detalle de cirugía para logística y coordinación</option>
       </select>
+      <small class="ayuda-texto">Elija cómo comenzará el mensaje</small>
     </div>
 
-    <div class="form-group"><label>Paciente</label><input id="paciente" class="form-control" /></div>
+    <div class="form-group">
+      <label>Paciente</label>
+      <input id="paciente" class="form-control" required />
+      <small class="ayuda-texto">Nombre completo del paciente</small>
+      <div class="mensaje-error" id="error-paciente">Este campo es requerido</div>
+    </div>
 
     <div class="form-group">
       <label>Médico</label>
-      <input id="medico" class="form-control" list="medicosList" placeholder="Escriba o seleccione..." />
+      <input id="medico" class="form-control" list="medicosList" placeholder="Escriba o seleccione..." required />
       <datalist id="medicosList"></datalist>
+      <small class="ayuda-texto">Seleccione o escriba el nombre del médico</small>
+      <div class="mensaje-error" id="error-medico">Este campo es requerido</div>
     </div>
 
     <div class="form-group">
       <label>Instrumentador</label>
       <input id="instrumentador" class="form-control" list="instrumentadoresList" placeholder="Escriba o seleccione..." />
       <datalist id="instrumentadoresList"></datalist>
+      <small class="ayuda-texto">Nombre del instrumentador quirúrgico</small>
     </div>
 
     <div class="form-group">
       <label>Lugar de Cirugía</label>
-      <input id="lugarCirugia" class="form-control" list="lugaresList" placeholder="Escriba o seleccione..." />
+      <input id="lugarCirugia" class="form-control" list="lugaresList" placeholder="Escriba o seleccione..." required />
       <datalist id="lugaresList"></datalist>
+      <small class="ayuda-texto">Hospital o clínica donde se realizará la cirugía</small>
+      <div class="mensaje-error" id="error-lugar">Este campo es requerido</div>
     </div>
 
-    <div class="form-group"><label>Fecha de Cirugía</label><input type="date" id="fechaCirugia" class="form-control" /></div>
+    <div class="form-group">
+      <label>Fecha de Cirugía</label>
+      <input type="date" id="fechaCirugia" class="form-control" required />
+      <small class="ayuda-texto">Fecha programada para la intervención</small>
+      <div class="mensaje-error" id="error-fecha">Este campo es requerido</div>
+    </div>
 
     <div class="form-group">
       <label>Tipo de Cirugía</label>
-      <input id="tipoCirugia" class="form-control" list="tiposCirugiaList" placeholder="Tipo de cirugía" />
+      <input id="tipoCirugia" class="form-control" list="tiposCirugiaList" placeholder="Tipo de cirugía" required />
       <datalist id="tiposCirugiaList"></datalist>
+      <small class="ayuda-texto">Ejemplo: Artroscopia de rodilla, Reemplazo de cadera</small>
+      <div class="mensaje-error" id="error-tipo">Este campo es requerido</div>
     </div>
 
-    <div class="form-group"><label>Material Requerido</label><textarea id="material" class="form-control" rows="3" placeholder="Ingrese un ítem por línea"></textarea></div>
-    <div class="form-group"><label>Observaciones</label><textarea id="observaciones" class="form-control" rows="3"></textarea></div>
-    <div class="form-group"><label>Información Adicional</label><textarea id="infoAdicional" class="form-control" rows="3"></textarea></div>
+    <div class="form-group">
+      <label>Material Requerido</label>
+      <textarea id="material" class="form-control" rows="3" placeholder="Ingrese un ítem por línea" required></textarea>
+      <small class="ayuda-texto">Lista de materiales necesarios para la cirugía</small>
+      <div class="mensaje-error" id="error-material">Este campo es requerido</div>
+    </div>
+
+    <div class="form-group">
+      <label>Observaciones</label>
+      <textarea id="observaciones" class="form-control" rows="3"></textarea>
+      <small class="ayuda-texto">Consideraciones especiales para el procedimiento</small>
+    </div>
+
+    <div class="form-group">
+      <label>Información Adicional</label>
+      <textarea id="infoAdicional" class="form-control" rows="3"></textarea>
+      <small class="ayuda-texto">Otros datos relevantes para el equipo</small>
+    </div>
 
     <div class="text-center">
-      <button onclick="generarTexto()">📝 Generar Texto</button>
+      <button onclick="generarTexto()" class="btn-primario">📝 Generar Texto</button>
       <button onclick="copiarTexto()">📋 Copiar y Guardar</button>
       <button onclick="compartirWhatsApp()">📲 Enviar WhatsApp</button>
       <button onclick="enviarPorEmail()">✉️ Enviar Email</button>
