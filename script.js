@@ -2,7 +2,7 @@
 
 // Inicialización de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // Mantén tu API Key real
+  apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // ¡ASEGÚRATE DE QUE ESTA SEA TU API KEY REAL!
   authDomain: "cirugia-reporte.firebaseapp.com",
   projectId: "cirugia-reporte",
   storageBucket: "cirugia-reporte.appspot.com",
@@ -29,6 +29,11 @@ db.enablePersistence()
       console.error("Error al habilitar persistencia:", err);
     }
   });
+
+// --- Constantes ---
+const COLECCION_REPORTES = 'reportes';
+const COLECCION_SUGERENCIAS = 'sugerencias';
+const LOCALSTORAGE_USER_ID = 'usuarioId';
 
 // --- Validación ---
 
@@ -112,7 +117,7 @@ async function cargarSugerenciasIniciales(idInput, idList) {
   }
 
   try {
-    const snapshot = await db.collection('sugerencias')
+    const snapshot = await db.collection(COLECCION_SUGERENCIAS)
       .where('campo', '==', idInput)
       .orderBy('valor') // Ordenar alfabéticamente desde Firestore
       .get();
@@ -170,7 +175,7 @@ function actualizarSugerencias(idInput, idList) {
 
       try {
         // Guardar en Firestore (las reglas ya permiten esto)
-        await db.collection('sugerencias').add({
+        await db.collection(COLECCION_SUGERENCIAS).add({
           campo: idInput,
           valor: nuevoValor,
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -356,15 +361,15 @@ async function copiarTexto() {
 // Guarda los datos del reporte en la colección 'reportes' de Firestore
 async function guardarEnFirebase(data) {
   try {
-    let usuarioId = localStorage.getItem('usuarioId');
+    let usuarioId = localStorage.getItem(LOCALSTORAGE_USER_ID);
     if (!usuarioId) {
       usuarioId = Math.random().toString(36).substring(2, 10); // ID aleatorio simple
-      localStorage.setItem('usuarioId', usuarioId);
+      localStorage.setItem(LOCALSTORAGE_USER_ID, usuarioId);
     }
     data.usuario = usuarioId;
     data.timestamp = firebase.firestore.FieldValue.serverTimestamp(); // Usar hora del servidor
 
-    const docRef = await db.collection('reportes').add(data);
+    const docRef = await db.collection(COLECCION_REPORTES).add(data);
     console.log('Reporte guardado en Firestore con ID:', docRef.id);
     return docRef;
   } catch (error) {
@@ -567,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
   actualizarSugerencias('medico', 'medicosList');
   actualizarSugerencias('instrumentador', 'instrumentadoresList');
   actualizarSugerencias('lugarCirugia', 'lugaresList');
-  actualizarSugerencias('tipoCirugia', 'tiposCirugiaList');
+  actualizarSugerencias('tipoCirugia', 'tiposCirugiaList'); // <- Esta línea carga los tipos de cirugía
 
   // Configurar validación en tiempo real
   setupValidacion();
