@@ -158,26 +158,11 @@
 
     // Aplica fondo dinámico (opcional) o un fondo fijo
     function aplicarFondoDinamico() {
-        // Si quieres mantener los fondos dinámicos por día:
-        /*
-        const body = document.body;
-        const dia = new Date().getDay(); // 0 = Domingo, 6 = Sábado
-        const fondos = { // Asegúrate de que las URLs sean válidas
-             0: "url('https://images.unsplash.com/photo-1588776814546-ec7e4c1a1d4d?auto=format&fit=crop&w=1920&q=80')", // Domingo
-             // ... (resto de días) ...
-             6: "url('https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1920&q=80')", // Sábado
-        };
-        body.style.backgroundImage = fondos[dia] || fondos[1]; // Usar Lunes como default
-        body.style.backgroundSize = 'cover';
-        body.style.backgroundRepeat = 'no-repeat';
-        body.style.backgroundAttachment = 'fixed';
-        */
-        // O simplemente un fondo fijo:
         document.body.style.backgroundColor = "#f0f2f5"; // Un gris ligeramente diferente para admin
     }
 
     // Opcional: Función para filtrar la tabla (si descomentas el input de búsqueda)
-    /*
+    
     function filtrarTabla() {
       const input = document.getElementById("searchInput");
       const filter = input.value.toUpperCase();
@@ -210,7 +195,7 @@
         }
       }
     }
-    */
+    
 
     // Ejecutar al cargar la página
     window.onload = function () {
