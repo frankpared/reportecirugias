@@ -87,6 +87,24 @@ button:disabled { /* Estilo para botones deshabilitados */
     background-color: #5a6268;
 }
 
+/* --- Estilos para el Botón de Selección de Material --- */
+.btn-seleccionar-material {
+    padding: 5px 12px;
+    font-size: 13px;
+    background-color: #6c757d; /* Gris */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-weight: normal; /* No tan fuerte como otros botones */
+    font-family: 'Lato', sans-serif; /* Usar fuente base */
+}
+
+.btn-seleccionar-material:hover {
+    background-color: #5a6268;
+}
+
 
 /* --- Formularios --- */
 .form-group {
@@ -281,6 +299,157 @@ textarea.form-control {
 .toast-notification.warning { background-color: #ffc107; color: #333; } /* Amarillo advertencia */
 .toast-notification.error { background-color: #dc3545; } /* Rojo error */
 
+/* --- Modal de Materiales --- */
+.modal-overlay {
+    position: fixed; /* Cubrir toda la pantalla */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
+    display: flex; /* Usar flex para centrar */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Asegurar que esté por encima de todo */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 700px; /* Ancho máximo del modal */
+    max-height: 85vh; /* Altura máxima, dejar espacio arriba/abajo */
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.visible .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    color: #333;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    line-height: 1;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0 5px;
+}
+.modal-close-btn:hover {
+    color: #333;
+}
+
+.modal-body {
+    flex-grow: 1; /* Permitir que el cuerpo crezca */
+    overflow-y: auto; /* Scroll si el contenido es muy largo */
+    margin-bottom: 20px;
+    padding-right: 10px; /* Espacio para la barra de scroll */
+}
+
+#modalSearchInput {
+    margin-bottom: 15px;
+}
+
+.modal-lista-container {
+    /* Contenedor para la lista */
+}
+
+.modal-categoria {
+    margin-bottom: 15px;
+}
+
+.modal-categoria-titulo {
+    font-weight: 600;
+    color: #007bff;
+    margin-bottom: 8px;
+    font-size: 1.05em;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    position: sticky; /* Hacer título de categoría pegajoso */
+    top: -1px; /* Ajuste para que no se solape */
+    background-color: #fff; /* Fondo para que no se vea el texto debajo */
+    z-index: 1; /* Encima de los items */
+}
+
+.modal-item {
+    display: block; /* Hacer que el label ocupe toda la línea */
+    margin-bottom: 8px;
+    padding: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.modal-item:hover {
+    background-color: #f0f8ff; /* Azul muy claro en hover */
+}
+
+.modal-item input[type="checkbox"] {
+    margin-right: 10px;
+    vertical-align: middle; /* Alinear checkbox con texto */
+    cursor: pointer;
+    transform: scale(1.1); /* Checkbox un poco más grande */
+}
+
+.modal-item label {
+    font-size: 15px;
+    color: #333;
+    vertical-align: middle;
+    cursor: pointer;
+    display: inline-block; /* Para que el hover funcione bien */
+    width: calc(100% - 30px); /* Ajustar ancho para el checkbox */
+}
+.modal-item .item-code {
+    font-weight: 600;
+    color: #555;
+    display: inline-block; /* Evitar wrap indeseado */
+    margin-right: 5px;
+}
+.modal-item .item-desc {
+    color: #444;
+    font-size: 0.95em;
+}
+
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding-top: 15px;
+    text-align: right; /* Alinear botones a la derecha */
+}
+
+.modal-footer button {
+    margin-left: 10px; /* Espacio entre botones del footer */
+}
+
 
 /* --- Créditos --- */
 .credit {
@@ -291,18 +460,20 @@ textarea.form-control {
   color: #6c757d;
 }
 
-/* --- Estilos para la tabla en admin.html --- */
+/* --- Estilos para admin.html --- */
 .table-responsive {
     overflow-x: auto; /* Permitir scroll horizontal en tablas grandes */
     margin-bottom: 20px;
 }
-table {
+/* Prefijo para evitar colisiones si admin.html usa más estilos */
+body.admin-page table {
     border-collapse: collapse;
     width: 100%;
     background-color: #fff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-th, td {
+body.admin-page th,
+body.admin-page td {
     padding: 12px 15px; /* Buen padding */
     text-align: left;
     border-bottom: 1px solid #dee2e6; /* Separador de filas */
@@ -310,14 +481,14 @@ th, td {
     white-space: nowrap; /* Evitar que el texto largo rompa la celda (combinado con overflow) */
 }
 /* Permitir que algunas columnas específicas puedan romper línea si es necesario */
-td:nth-child(2), /* Paciente */
-td:nth-child(3), /* Medico */
-td:nth-child(4), /* Tipo Cirugia */
-td:nth-child(5) { /* Material */
+body.admin-page td:nth-child(2), /* Paciente */
+body.admin-page td:nth-child(3), /* Medico */
+body.admin-page td:nth-child(4), /* Tipo Cirugia */
+body.admin-page td:nth-child(5) { /* Material */
     white-space: normal;
 }
 
-thead th {
+body.admin-page thead th {
     background-color: #007bff;
     color: #ffffff;
     font-weight: 600;
@@ -326,36 +497,33 @@ thead th {
     top: 0;
     z-index: 10;
 }
-tbody tr:nth-child(even) {
+body.admin-page tbody tr:nth-child(even) {
     background-color: #f8f9fa; /* Filas alternas */
 }
-tbody tr:hover {
+body.admin-page tbody tr:hover {
     background-color: #e9ecef; /* Hover suave */
 }
 
-/* --- Responsividad Simple --- */
+/* --- Responsividad --- */
 @media (max-width: 768px) {
-  .container {
-    padding: 20px;
-  }
-  button, .btn-volver, .btn-link {
-    padding: 8px 15px;
-    font-size: 14px;
-  }
-  .text-center {
-      gap: 5px; /* Menos espacio entre botones en móvil */
-  }
+  .container { padding: 20px; }
+  button, .btn-volver, .btn-link { padding: 8px 15px; font-size: 14px; }
+  .text-center { gap: 5px; }
   h4 { font-size: 1.2em; }
-  th, td { font-size: 14px; white-space: normal; } /* Permitir wrap en móvil */
+  body.admin-page th, body.admin-page td { font-size: 14px; white-space: normal; }
+  .modal-content { width: 95%; padding: 20px; } /* Modal más ancho en tablets */
 }
 
 @media (max-width: 480px) {
    body { padding: 10px; }
    .container { padding: 15px; margin: 15px auto; }
-   th, td { padding: 8px 10px; font-size: 13px; }
+   body.admin-page th, body.admin-page td { padding: 8px 10px; font-size: 13px; }
    button, .btn-volver, .btn-link { width: 100%; margin: 5px 0; } /* Botones full width */
    .text-center { flex-direction: column; } /* Apilar botones */
    .toast-notification { width: calc(100% - 40px); right: 20px; bottom: 20px; }
+   .modal-content { padding: 15px; }
+   .modal-header h3 { font-size: 1.1em; }
+   .modal-item label { font-size: 14px; }
 }
 
 /* --- END OF FILE style.css --- */
