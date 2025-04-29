@@ -119,21 +119,15 @@ button:disabled { /* Estilo para botones deshabilitados */
   font-size: 15px;
 }
 /* Añadir asterisco visual para campos requeridos */
-.form-group label[for]:after {
+.form-group label[for="paciente"]:after,
+.form-group label[for="medico"]:after,
+.form-group label[for="fechaCirugia"]:after {
     content: " (*)";
     color: #dc3545; /* Rojo */
     font-weight: normal; /* No tan fuerte como el label */
     font-size: 0.9em; /* Ligeramente más pequeño */
     vertical-align: super; /* Alinear arriba */
     padding-left: 2px;
-}
-/* Ocultar el asterisco si el label no es de un campo requerido (ej. Instrumentador) */
-.form-group label[for="instrumentador"]:after,
-.form-group label[for="observaciones"]:after,
-.form-group label[for="infoAdicional"]:after,
-.form-group label[for="formato"]:after,
-.form-group label[for="mensajeInicio"]:after {
-    content: ""; /* Sin asterisco */
 }
 
 
@@ -298,6 +292,8 @@ textarea.form-control {
 .toast-notification.success { background-color: #28a745; } /* Verde éxito */
 .toast-notification.warning { background-color: #ffc107; color: #333; } /* Amarillo advertencia */
 .toast-notification.error { background-color: #dc3545; } /* Rojo error */
+.btn-warning { background-color: #ffc107; color: #333; } /* Botón Amarillo */
+.btn-warning:hover { background-color: #e0a800; }
 
 /* --- Estilos Comunes para Modales --- */
 .modal-overlay {
