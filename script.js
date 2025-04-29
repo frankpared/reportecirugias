@@ -26,30 +26,15 @@ db.enablePersistence()
 const COLECCION_REPORTES = 'reportes';
 const COLECCION_SUGERENCIAS = 'sugerencias';
 const LOCALSTORAGE_USER_ID = 'usuarioId';
-const DEBOUNCE_DELAY = 300; // ms para esperar antes de filtrar modales
+const DEBOUNCE_DELAY = 300; // ms
+const COLECCION_TIPOS_CX = 'tiposCirugia'; // Nombre de la colección en Firestore
+const COLECCION_MATERIALES = 'materiales'; // Nombre de la colección en Firestore
 
-// --- Base de Datos de Materiales ---
-// (Se omite por brevedad, es la misma que proporcionaste)
-const baseDeDatosMateriales = {
-  "CIRUGIA MINIMAMENTE INVASIVA": [ { code: "TR-T00TCU-001", description: "TORNILLO TITANIO 4,5/6,5 CANULADO SERIE 001" }, { code: "TR-T00TCU-002", description: "TORNILLO TITANIO 4,5/6,5 CANULADO SERIE 002" }, { code: "TR-T70TCU-001", description: "TORNILLO TITANIO 7,0 CANULADO SERIE 001" }, { code: "TR-T35TCU-001", description: "TORNILLO TITANIO 3,5 CANULADO SERIE 001" }, { code: "TR-T35TCU-002", description: "TORNILLO TITANIO 3,5 CANULADO SERIE 002" }, { code: "TR-T35TCU-003", description: "TORNILLO TITANIO 3,5 CANULADO SERIE 003" }, { code: "HE-T30CNU-001", description: "TORNILLO TITANIO 3,0 CANULADO HERBERT SERIE 001" }, { code: "HE-T00HMU-001", description: "TORNILLO TITANIO 2,0/2,5 CANULADO MICROHERBERT SERIE 001" }, { code: "HE-T00HMU-002", description: "TORNILLO TITANIO 2,0/2,5 CANULADO MICROHERBERT SERIE 002" }, { code: "OS-T15MCU-002", description: "TORNILLO TITANIO 1,5/2,0 MICRO SERIE 001" }, { code: "OS-T25MCU-002", description: "TORNILLO TITANIO 2,5 MICRO SERIE 002" } ],
-  "CLAVOS ENDOMEDULARES": [ { code: "CL-T00FRP-001", description: "CAJA FEMUR TITANIO 001 IMPLANTES" }, { code: "CL-T00FRI-001", description: "INSTRUMENTAL FEMUR TITANIO 001" }, { code: "CL-T00FRP-002", description: "CAJA FEMUR TITANIO 002 IMPLANTES" }, { code: "CL-T00FRI-002", description: "INSTRUMENTAL FEMUR TITANIO 002" }, { code: "CL-A00FRP-001", description: "CAJA FEMUR ACERO 001 IMPLANTES" }, { code: "CL-A00FRI-001", description: "INSTRUMENTAL FEMUR ACERO 001" }, { code: "CL-T00FXI-001", description: "CAJA INSTRUMENTAL EXPERT TITANIO 001" }, { code: "CL-TI1FXP-001", description: "IMPLANTE IZQUIERDA EXPERT TITANIO 001" }, { code: "CL-AD2FXP-001", description: "IMPLANTE DERECHA EXPERT TITANIO 002" }, { code: "CL-T00TBP-001", description: "CAJA TIBIA TITANIO 001 IMPLANTES" }, { code: "CL-T00TBI-001", description: "INSTRUMENTAL TIBIA TITANIO 001" }, { code: "CL-T00TBP-002", description: "CAJA TIBIA TITANIO 002 IMPLANTES" }, { code: "CL-T00TBI-002", description: "INSTRUMENTAL TIBIA TITANIO 002" }, { code: "CL-T00TXP-001", description: "CAJA TIBIA EXPERT TITANIO 001 IMPLANTES" }, { code: "CL-T00TXI-001", description: "INSTRUMENTAL TIBIA EXPERT 001" }, { code: "CL-A00TBP-001", description: "CAJA TIBIA ACERO 001 IMPLANTES" }, { code: "CL-A00TBI-001", description: "INSTRUMENTAL TIBIA ACERO" }, { code: "CL-T00TAP-001", description: "CAJA TIBIA C/ ANTIBIOTICO MULTIACERROJADO IMPLANTES" }, { code: "CL-T00TAI-001", description: "INSTRUMENTAL TIBIA C/ ANTIBIOTICO MULTIACERROJADO" }, { code: "CL-T00HGP-001", description: "CAJA HUMERO TIPO \"G\" 001 IMPLANTES" }, { code: "CL-T00HGI-001", description: "INSTRUMENTAL HUMERO TIPO \"G\" 001" }, { code: "CL-T00HRP-001", description: "CAJA HUMERO 001 IMPLANTES" }, { code: "CL-T00HRI-001", description: "INSTRUMENTAL HUMERO 001" }, { code: "RC-T00GMC-001", description: "CONTENEDOR GAMMA TITANIO 001 IMPLANTES" }, { code: "RC-T00GMI-001", description: "INSTRUMENTAL GAMMA TITANIO 001" }, { code: "RC-T00GMC-002", description: "CONTENEDOR GAMMA TITANIO 002 IMPLANTES" }, { code: "RC-T00GMI-002", description: "INSTRUMENTAL GAMMA TITANIO 002" } ],
-  "EXTRACCION Y REVISION DE IMPLANTES": [ { code: "EX-X00OCI-002", description: "SET DE EXTRACCION DE CLAVOS 3.5/4.5" }, { code: "EX-X00OCI-001", description: "SET EXTRACCION DE CLAVO 001" }, { code: "EX-X00MRI-001", description: "EXTRACCION MORELAN 001" }, { code: "ST-X00DSI-001", description: "SET DE DESCEMENTACION 001" }, { code: "RC-X00ECC-001", description: "ESPACIADOR CON GENTAMICINA CADERA 001" } ],
-  "OSTEOSINTESIS": [ { code: "RD-X00PLI-001", description: "CAJA DE REDUCCION INSTRUMENTAL PELVIS 001" }, { code: "PC-A00DHU-001", description: "CAJA TUTOR AO ACERO 001" }, { code: "OS-T35TPU-001", description: "CAJA OSTEOSINTESIS TIBIA DISTAL 3,5 SERIE 001" }, { code: "ST-T35TDP-001", description: "SET TIBIA DISTAL ANTERIOR 3,5 001 IMPLANTES" }, { code: "MT-SIMTLB-001", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 001" }, { code: "OS-T35CLU-002", description: "CAJA OSTEOSINTESIS CLAVICULA 3,5 SERIE 002" }, { code: "ST-T35CLP-002", description: "SET PLACA P/ CLAVICULA 3,5 TITANIO 002" }, { code: "MT-SIMTLB-002", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 002" }, { code: "OS-T35VLU-003", description: "CAJA OSTEOSINTESIS VOLAR 3,5 003" }, { code: "ST-T35VLP-003", description: "SET DE PLACA VOLAR TITANIO 003" }, { code: "MT-SIMTLB-003", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 003" }, { code: "OS-T35VLU-004", description: "CAJA OSTEOSINTESIS VOLAR 3,5 004" }, { code: "ST-T35VLP-004", description: "SET DE PLACA VOLAR TITANIO 004" }, { code: "MT-SIMTLB-004", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 004" }, { code: "OS-T35TDU-005", description: "OSTEOSINTESIS TIBIA PROXIMAL 3,5 SERIE 005" }, { code: "ST-T35TPP-005", description: "SET PLACA TIBIA PROXIMAL 3.5 TITANIO 005" }, { code: "MT-SIMTLB-005", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 005" }, { code: "OS-T35DCU-006", description: "OSTEOSINTESIS DCP/TERCIOTUBO 3,5 SERIE 006" }, { code: "ST-T35TDP-006", description: "SET PLACA DCP 013 / SET PLACA TERCIO TUBO 006" }, { code: "MT-SIMTLB-006", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 006" }, { code: "OS-T35DTU-007", description: "OSTEOSINTESIS DCP/TERCIOTUBO 3,5 SERIE 007" }, { code: "ST-T35TDP-007", description: "SET PLACA 1/3 TUBO / SET PLACA DCP 007" }, { code: "MT-SIMTLB-007", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 007" }, { code: "OS-T35DTU-008", description: "OSTEOSINTESIS DCP/TERCIOTUBO 3,5 SERIE 008" }, { code: "ST-T35TDP-008", description: "SET PLACA 1/3 TUBO / SET PLACA DCP 008" }, { code: "OS-T35VLU-009", description: "OSTEOSINTESIS VOLAR 3,5 SERIE 009" }, { code: "ST-T35VLP-009", description: "SET DE PLACA VOLAR TITANIO 009" }, { code: "MT-SIMTLB-009", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 009" }, { code: "OS-T35OLU-010", description: "OSTEOSINTESIS OLECRANO 3,5 SERIE 010" }, { code: "ST-T35OLP-010", description: "SET PLACA OLECRANON TITANIO 010" }, { code: "ST-T35PYP-010", description: "SET TITANIO 3.5 PLACA EN Y IMPLANTE 010" }, { code: "MT-SIMTLB-010", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 010" }, { code: "OS-T35CPU-011", description: "OSTEOSINTESIS CALCANEO/PHILO 3,5 SERIE 011" }, { code: "ST-T35OLP-011", description: "SET PLACA PHILO TIT 11" }, { code: "ST-T35CCP-011", description: "SET PLACAS CALCANEO TITANIO 011" }, { code: "MT-SIMTLB-011", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 011" }, { code: "OS-T35CLU-012", description: "OSTEOSINTESIS CLAVICULA 3,5 SERIE 012" }, { code: "ST-T35CLP-012", description: "SET PLACA P/ CLAVICULA 3,5 TITANIO 012" }, { code: "MT-SIMTLB-012", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 012" }, { code: "OS-T35DTU-013", description: "OSTEOSINTESIS DCP/TERCIOTUBO 3,5 SERIE 013" }, { code: "ST-T35TDP-013", description: "SET PLACA 1/3 TUBO / SET PLACA DCP 013" }, { code: "MT-SIMTLB-013", description: "MOTOR CANULADO A BATERIA TOTAL ASIGNADO 013" }, { code: "OS-A35XXU-001", description: "OSTEOSINTESIS 3,5 ACERO 001" }, { code: "OS-A35XXU-002", description: "OSTEOSINTESIS 3,5 ACERO 002" }, { code: "OS-A35XXU-003", description: "OSTEOSINTESIS 3,5 ACERO 003" }, { code: "OS-T45XXU-001", description: "OSTEOSINTESIS 4.5 TITANIO 001" }, { code: "OS-T45XXU-002", description: "OSTEOSINTESIS 4.5 TITANIO 002" }, { code: "OS-A45XXU-001", description: "OSTEOSINTESIS 4,5 ACERO 001" }, { code: "OS-A45XXU-002", description: "OSTEOSINTESIS 4,5 ACERO 002" }, { code: "PC-A00DHP-001", description: "PLACA CLAVO DHS - DCS EN ACERO 001" } ],
-  "MEDICINA DEL DEPORTE": [ { code: "AR-X00MCI-001", description: "CAJA ARTROSCOPIA MICROMED 001" }, { code: "AR-X00BTI-001", description: "CAJA ARTROSCOPIA BOTON 001" }, { code: "AR-X00API-001", description: "CAJA ARTROSCOPIA ARPON 001" }, { code: "AR-X00SMI-001", description: "CAJA ARTROSCOPIA SUTURA MENISCAL 001" }, { code: "AR-X00HMP-001", description: "CAJA ARTROSCOPIA HOMBRO 001" }, { code: "LG-T00PKI-001", description: "CAJA LIGAMENTO CRUZADO ANTERIOR TIT/PEEK SERIE 001" }, { code: "LG-T00PKI-002", description: "CAJA LIGAMENTO CRUZADO ANTERIOR TIT/PEEK SERIE 002" }, { code: "LG-T00PKI-003", description: "CAJA LIGAMENTO CRUZADO ANTERIOR TIT/PEEK SERIE 003" } ],
-  "EQUIPOS DE FERRETERIA": [ { code: "MT-CANDWB-001", description: "MOTOR CANULADO A BATERIA DEWALT" }, { code: "MT-CANDWB-002", description: "MOTOR CANULADO A BATERIA DEWALT" }, { code: "MT-CANDWB-003", description: "MOTOR CANULADO A BATERIA DEWALT" }, { code: "MT-CANDWB-005", description: "MOTOR CANULADO A BATERIA DEWALT" }, { code: "MT-CANDWB-006", description: "MOTOR CANULADO A BATERIA DEWALT" }, { code: "MT-CANDWB-007", description: "MOTOR CANULADO A BATERIA DEWALT" }, { code: "MT-CANDWB-008", description: "MOTOR CANULADO A BATERIA DEWALT" }, { code: "MT-CANDWB-009", description: "MOTOR CANULADO A BATERIA DEWALT" }, { code: "MT-CANDWB-010", description: "MOTOR CANULADO A BATERIA DEWALT" }, { code: "MT-CANMWB-001", description: "MOTOR CANULADO A BATERIA MILWAUKEE" }, { code: "MT-CANMWB-002", description: "MOTOR CANULADO A BATERIA MILWAUKEE" }, { code: "MT-CANMWB-003", description: "MOTOR CANULADO A BATERIA MILWAUKEE" }, { code: "MT-CANMWB-004", description: "MOTOR CANULADO A BATERIA MILWAUKEE" }, { code: "MT-TALMKE-001", description: "TALADRO ELECTRICO MAKITA" }, { code: "MT-TALMKE-002", description: "TALADRO ELECTRICO MAKITA" }, { code: "MT-TALMKE-003", description: "TALADRO ELECTRICO MAKITA" }, { code: "MT-CANMKB-001", description: "MOTOR CANULADO A BATERIA MAKITA" }, { code: "MT-CANMKB-002", description: "MOTOR CANULADO A BATERIA MAKITA" }, { code: "MT-CANMKB-003", description: "MOTOR CANULADO A BATERIA MAKITA" }, { code: "MT-SIMBSB-001", description: "MOTOR CANULADO A BATERIA BOSCH P/CIRUGIAS PEQUEÑO FRAGMENTO" }, { code: "MT-SIMTLB-001", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-002", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-005", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-009", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-010", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-003", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-004", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-006", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-007", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-008", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-011", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-012", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-013", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-014", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-015", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-SIMTLB-016", description: "MOTOR CANULADO A BATERIA TOTAL" }, { code: "MT-CANEHB-001", description: "MOTOR CANULADO A BATERIA EINHELL" }, { code: "MT-CANEHB-002", description: "MOTOR CANULADO A BATERIA EINHELL" }, { code: "MT-CANEHB-003", description: "MOTOR CANULADO A BATERIA EINHELL" }, { code: "TL-MANDRE-001", description: "TALADRO DE MANO DREMEL 001" }, { code: "MS-UNIOFB-001", description: "MOTOR CANULADO/ MICRO SIERRA A BATERIA OVER FIX" }, { code: "MS-UNIOFB-002", description: "MOTOR CANULADO/ MICRO SIERRA A BATERIA OVER FIX" }, { code: "MS-UNIOFB-003", description: "MOTOR CANULADO/ MICRO SIERRA A BATERIA OVER FIX" }, { code: "MC-MOTBTM-001", description: "MICRO MOTOR BTR 2000 + MICRO SIERRA" }, { code: "MC-MOTBTM-002", description: "MICRO SIERRA BTR 20000" }, { code: "EQ-SHABTM-001", description: "EQUIPO SHAVER BTR 001" }, { code: "SR-UNIBTM-001", description: "SIERRA BTR 2000 1" }, { code: "SR-UNIBTM-002", description: "SIERRA BTR 2000 2" }, { code: "EQ-SHABTM-002", description: "EQUIPO SHAVER BTR 002" }, { code: "EQ-RDFCMM-001", description: "EQUIPO RADIO FRECUENCIA CONMED" }, { code: "EQ-BIRCMM-001", description: "EQUIPO SISTEMA DE GESTION DE IRRIGACION-CONMED (BOMBA)" }, { code: "SR-RECSWB-001", description: "SIERRA RECIPROCANTE SWIPRO 001" } ],
-   "REEMPLAZO TOTAL DE CADERA CEMENTADA": [ { code: "RC-X00CMC-001", description: "REEMPLAZO TOTAL DE CADERA CEMENTADA TIPO MULLER - 001" }, { code: "RC-X00CMC-002", description: "REEMPLAZO TOTAL DE CADERA CEMENTADA TIPO MULLER - 002" } ],
-  "REEMPLAZO TOTAL DE CADERA NO CEMENTADA": [ { code: "RC-X00CNC-001", description: "INSTRUMENTAL + IMPLANTES - 001" }, { code: "RC-X00CNC-002", description: "INSTRUMENTAL + IMPLANTES - 002" } ],
-  "REEMPLAZO TOTAL CADERA CEMENTADA TALLO TRICONICO CONTENEDOR 001": [ { code: "RC-X00TAC-001", description: "INSTRUMENTAL + IMPLANTES - 001" } ],
-  "REEMPLAZO TOTAL DE CADERA CEMENTADA DOBLE MOVILIDAD CONTENEDOR 001": [ { code: "RC-X00DMC-001", description: "INSTRUMENTAL PARA COTILO DOBLE MOVILIDAD CEMENTADO - 001" } ],
-  "REEMPLAZO PARCIAL DE CADERA THOMPSON 001": [ { code: "RP-X00THC-001", description: "INSTRUMENTAL PARA COTILO NO CEMENTADO - 001" } ],
-  "REEMPLAZO TOTAL DE RODILLA FEMORAL JPX 001": [ { code: "RR-X00JFI-001", description: "INSTRUMENTAL - 001" }, { code: "RR-X00JTI-002", description: "INSTRUMENTAL - 002" }, { code: "RR-X00JPI-003", description: "INSTRUMENTAL - 003" }, { code: "RR-X00JPM-004", description: "IMPLANTES - 004" } ],
-  "CAJA REEMPLAZO DE CUPULA RADIAL 001": [ { code: "RP-X00CRU-001", description: "INSTRUMENTAL + IMPLANTE - 1" } ]
-};
-// Limpiar descripciones (código sin cambios)
-for (const categoria in baseDeDatosMateriales) { baseDeDatosMateriales[categoria].forEach(item => { item.description = item.description.replace(/^-+|-+$/g, '').trim(); }); }
-
-// --- Base de Datos Tipo Cirugía ---
-const baseDeDatosTipoCx = [ "ARTROSCOPIA DE CADERA", "SISTEMA ALL INSIDE", "ARTROPLASTIA ANATOMICA DE HUMERO", "ARTROPLASTIA CUPULA RADIAL", "ARTROPLASTIA REVERSA", "ARTRODESIS CERVICAL/ DORSAL/ LUMBAR HASTA 3 NIVELES", "ARTROSCOPIA DE HOMBRO ACROMIOCLAVICULAR", "ARTROSCOPIA DE HOMBRO - COMPLEJA - PEEK", "ARTROSCOPIA DE MANO - CODO - TOBILLO", "ARTROSCOPIA RODILLA COMPLEJA", "ARTRO RODILLA SIMPLE", "ARTROPLASTIA HUMERO PARCIAL", "ASISTENCIA POR DRILL CON FRESAS,BURS O SHAVER, CRANEO", "CAGE PEEK", "CLAVO DHS", "CLAVO EXPERT F-T", "CLAVO GAMMA", "CLAVO NANCY", "CLAVO CON ATB", "CLAVIJA", "CLAVO F/T/H EN ACERO", "CLAVO F/T/H TITANIO", "CLAVO FEMUR/TIBIA CON ATB", "COLOCACION MECHES", "COLUMNA POR NIVELES", "CRANEOPLASTIA MAS DE 4 HORAS", "CRANEOPLASTIA POR HORA UNA VEZ SUSPERADAS 8 HORAS DE CX", "CRANEOPLASTIA HASTA 4 HORAS", "CRANEOPLATIA", "CUPULA RADIAL", "DESCARTABLE", "ENDOPROTESIS", "EQUIPO", "ESCOLIOSIS POR NIVEL", "EXTRACION CLAVOS", "EXTRACION PLACAS", "EXTRACCION MATERIAL", "HOMBRO - ACROMICLAVICULAR", "HOMBRO PEEK", "INTERESPINOSO O CAGE POR IMPLANTE", "JPX", "LESIÓN DE LIGAMENTO CRUZADO ANTERIOR", "LIGAMENTO CRUZADO COMPLEJO", "LOGISTICA", "MANO ARPON", "MAXILOFACIAL COMPLEJA", "MAXILOFACIAL POR HORA UNA VEZ SUPERADA 8 HORAS DE CX", "MAXILOFACIAL SIMPLE", "MICROFRAGMENTO", "ORTOPEDIA", "OSTESINSTESIS 3,5 TITANIO", "OSTEOSINTESIS 4,5 ACERO", "OSTEOSINTESIS 4,5 EN TITANIO", "OSTESINSTESIS 3,5 ACERO", "PLACA CERVICAL", "PUNTA SHAVER", "RODILLA", "REV RTC REVISION", "RTC NO CEMENTADA", "REEMPAZO TOTAL DE CADERA BIPOLAR", "RTC CEMENTADA - ESPACIADOR", "RTC HIBRIDA - REVISION", "REEMPLAZO TOTAL RODILLA ANATOMICA", "RTR REVISION", "RTR PRIMARIA C/ VASTAGO TIBIAL", "SIN CONSUMO O SUSPENDIDA SE COBRARA EL 50% SEGUN COMPL", "SUTURA", "SUTURA COMPLEJA", "THOMPSON", "TORNILLOS CANULADOS/HERBERT", "TUTOR", "XLIF, ALIF, OLIF SISTEMAS MINIVASICO/LAPAROSCOPIA DE COLUMNA" ].sort((a, b) => a.localeCompare(b));
+// --- Variables Globales para Datos Cargados ---
+let listaTiposCxCargada = null; // Se cargará desde Firestore
+let listaMaterialesCargada = null; // Se cargará desde Firestore y se agrupará por categoría
+let reportePendiente = null; // Para guardar datos si falla el envío
+let guardandoReporte = false; // Flag para evitar doble envío
 
 // --- Helper Debounce ---
 function debounce(func, wait) {
@@ -64,9 +49,22 @@ function debounce(func, wait) {
     };
 }
 
+// --- Referencias a Elementos DOM adicionales ---
+const loadingIndicator = document.getElementById('loading-indicator');
+const retrySaveBtn = document.getElementById('retry-save-btn');
+const actionButtons = document.querySelectorAll('.text-center button, .text-center a'); // Todos los botones de acción
+
+function setActionButtonsDisabled(disabled) {
+    actionButtons.forEach(btn => {
+        if (btn.id !== 'retry-save-btn') { // No deshabilitar el botón de reintento
+            btn.disabled = disabled;
+        }
+    });
+}
+
 // --- Validación ---
 function setupValidacion() {
-    const camposRequeridos = ['paciente', 'medico', 'lugarCirugia', 'fechaCirugia', 'tipoCirugia', 'material'];
+    const camposRequeridos = ['paciente', 'medico', 'fechaCirugia']; // Campos ahora requeridos
     camposRequeridos.forEach(id => {
         const input = document.getElementById(id);
         if (input) {
@@ -108,7 +106,7 @@ function validarCampo(input) {
 
 function validarFormulario() {
     let esFormularioValido = true;
-    const camposRequeridos = ['paciente', 'medico', 'lugarCirugia', 'fechaCirugia', 'tipoCirugia', 'material'];
+    const camposRequeridos = ['paciente', 'medico', 'fechaCirugia']; // Campos ahora requeridos
 
     camposRequeridos.forEach(id => {
         const input = document.getElementById(id);
@@ -122,6 +120,51 @@ function validarFormulario() {
     }
 
     return esFormularioValido;
+}
+
+// --- Carga de Datos Maestros desde Firestore ---
+async function fetchTiposCirugia() {
+    if (listaTiposCxCargada !== null) return; // Ya cargado o en proceso
+    console.log("Fetching tipos de cirugía...");
+    listaTiposCxCargada = []; // Marcar como en proceso
+    try {
+        const snapshot = await db.collection(COLECCION_TIPOS_CX).orderBy('nombre').get();
+        listaTiposCxCargada = snapshot.docs.map(doc => doc.data().nombre);
+        console.log(`Tipos de cirugía cargados: ${listaTiposCxCargada.length}`);
+    } catch (error) {
+        console.error("Error fetching tipos de cirugía:", error);
+        mostrarToast("Error al cargar tipos de cirugía desde DB.", "error");
+        listaTiposCxCargada = []; // Marcar como vacío en caso de error para no reintentar indefinidamente
+    }
+}
+
+async function fetchMateriales() {
+    if (listaMaterialesCargada !== null) return; // Ya cargado o en proceso
+    console.log("Fetching materiales...");
+    listaMaterialesCargada = {}; // Marcar como en proceso
+    try {
+        const snapshot = await db.collection(COLECCION_MATERIALES).orderBy('categoria').orderBy('code').get();
+        const materialesAgrupados = {};
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const categoria = data.categoria || "SIN CATEGORIA"; // Agrupar sin categoría si falta
+            if (!materialesAgrupados[categoria]) {
+                materialesAgrupados[categoria] = [];
+            }
+            // Limpiar descripción (puede venir con guiones extra)
+            const cleanDescription = (data.description || '').replace(/^-+|-+$/g, '').trim();
+            materialesAgrupados[categoria].push({
+                code: data.code,
+                description: cleanDescription
+            });
+        });
+        listaMaterialesCargada = materialesAgrupados;
+        console.log(`Materiales cargados: ${Object.keys(listaMaterialesCargada).length} categorías.`);
+    } catch (error) {
+        console.error("Error fetching materiales:", error);
+        mostrarToast("Error al cargar materiales desde DB.", "error");
+        listaMaterialesCargada = {}; // Marcar como vacío en caso de error
+    }
 }
 
 
@@ -293,6 +336,12 @@ function generarTexto() {
 
 async function copiarTexto() {
     if (!validarFormulario()) return;
+    if (guardandoReporte) {
+        mostrarToast("Espere, guardado anterior en proceso...", "info");
+        return;
+    }
+
+    ocultarBotonReintento(); // Ocultar si estaba visible
 
     const resultadoContainer = document.getElementById('resultado-container');
     const reporteContenidoElement = resultadoContainer.querySelector('.reporte-contenido');
@@ -318,6 +367,12 @@ async function copiarTexto() {
 
 // Función interna para evitar duplicar lógica de copia y guardado
 async function copiarYGuardarInterno(reporteElement) {
+    if (guardandoReporte) return; // Evitar doble click
+    guardandoReporte = true;
+    loadingIndicator.style.display = 'block';
+    setActionButtonsDisabled(true);
+    ocultarBotonReintento();
+
     const datosParaGuardar = obtenerDatos(); // Obtener datos actuales para guardar
 
     // Obtener texto plano del HTML renderizado para copiar
@@ -342,6 +397,8 @@ async function copiarYGuardarInterno(reporteElement) {
         await guardarEnFirebase(datosParaGuardar);
         guardadoExitoso = true;
         console.log('Reporte guardado en Firestore.');
+        reportePendiente = null; // Limpiar reporte pendiente si el guardado fue exitoso
+        ocultarBotonReintento();
     } catch (err) {
         console.error('Fallo en la operación de guardado iniciada por copiarTexto:', err);
     }
@@ -356,6 +413,13 @@ async function copiarYGuardarInterno(reporteElement) {
     } else {
         mostrarToast('❌ Falló la copia y el guardado. Revise la consola.', 'error');
     }
+
+    // No ocultar loading/botones si se muestra el botón de reintento
+    if (!reportePendiente) {
+        loadingIndicator.style.display = 'none';
+        setActionButtonsDisabled(false);
+    }
+    guardandoReporte = false;
 }
 
 
@@ -376,8 +440,17 @@ function obtenerUsuarioId() {
 }
 
 
+// Modificada para manejar estados de carga y reintentos
 async function guardarEnFirebase(data) {
-    if (!data || !data.paciente || !data.medico) { // Validación mínima antes de guardar
+    guardandoReporte = true; // Marcar inicio
+    loadingIndicator.style.display = 'block';
+    setActionButtonsDisabled(true);
+    ocultarBotonReintento();
+    if (!data || !data.paciente || !data.medico || !data.fechaCirugia) { // Validación actualizada
+        mostrarToast('Faltan datos requeridos (Paciente, Médico, Fecha).', 'error');
+        loadingIndicator.style.display = 'none';
+        setActionButtonsDisabled(false);
+        guardandoReporte = false;
         throw new Error("Datos insuficientes para guardar el reporte.");
     }
     const reporte = {
@@ -397,11 +470,33 @@ async function guardarEnFirebase(data) {
         await guardarSugerencia('tipoCirugia', data.tipoCirugia);
         // No guardamos sugerencias para paciente o material por su variabilidad
 
+        reportePendiente = null; // Limpiar datos pendientes al guardar con éxito
+        ocultarBotonReintento();
         return docRef.id; // Devolver el ID por si se necesita
+
     } catch (error) {
         console.error("Error al guardar reporte en Firebase: ", error);
-        mostrarToast(`❌ Error al guardar: ${error.message}`, 'error');
+
+        // Lógica de Reintento
+        // Códigos comunes de error de red/offline: 'unavailable', 'cancelled'
+        if (error.code === 'unavailable' || error.code === 'cancelled' || error.message.includes('offline')) {
+            reportePendiente = data; // Guardar los datos para reintentar
+            mostrarToast('⚠️ Falló el guardado (posible red). Puede reintentar.', 'warning');
+            mostrarBotonReintento();
+        } else {
+            // Otro tipo de error (ej. permisos)
+            mostrarToast(`❌ Error al guardar: ${error.message}`, 'error');
+            reportePendiente = null; // No reintentar otros errores automáticamente
+            ocultarBotonReintento();
+        }
         throw error; // Re-lanzar el error para que la función llamante sepa que falló
+    } finally {
+        // Asegurarse de limpiar el estado de carga, excepto si se muestra el botón de reintento
+        if (!reportePendiente) {
+            loadingIndicator.style.display = 'none';
+            setActionButtonsDisabled(false);
+        }
+        guardandoReporte = false; // Marcar fin
     }
 }
 
@@ -429,6 +524,44 @@ function mostrarToast(mensaje, tipo = 'info') {
             toast.style.display = 'none';
         }, 300); // Debe coincidir con la duración de la transición CSS
     }, 4000); // Duración visible del toast (4 segundos)
+}
+
+// --- Funciones para Botón de Reintento ---
+function mostrarBotonReintento() {
+    if (retrySaveBtn) {
+        retrySaveBtn.style.display = 'inline-block';
+        // También asegurarse de que los botones estén habilitados para poder clickear reintento
+        loadingIndicator.style.display = 'none';
+        setActionButtonsDisabled(false);
+    }
+}
+
+function ocultarBotonReintento() {
+    if (retrySaveBtn) {
+        retrySaveBtn.style.display = 'none';
+    }
+}
+
+function reintentarGuardado() {
+    if (reportePendiente) {
+        console.log("Reintentando guardar reporte pendiente...");
+        // Usar copiarYGuardarInterno para reintentar, ya que maneja UI y lógica
+        // Necesitamos generar un elemento temporal o usar los datos directamente
+        // Para simplificar, llamaremos a guardarEnFirebase directamente
+        guardarEnFirebase(reportePendiente)
+            .then(() => {
+                mostrarToast("✅ Reporte guardado exitosamente tras reintento.", "success");
+                reportePendiente = null; // Limpiar al tener éxito
+                ocultarBotonReintento();
+            })
+            .catch(err => {
+                // El error ya se maneja dentro de guardarEnFirebase (mostrará toast/botón de nuevo si falla)
+                console.error("Reintento de guardado falló:", err);
+            });
+    } else {
+        console.warn("Se intentó reintentar sin un reporte pendiente.");
+        ocultarBotonReintento(); // Ocultar por si acaso
+    }
 }
 
 // --- Otras Acciones ---
@@ -475,7 +608,7 @@ function enviarPorEmail() {
 
     const datos = obtenerDatos();
     const fechaFormateada = formatearFechaUsuario(datos.fechaCirugia);
-    const subject = `Reporte Cirugía: ${datos.paciente} - ${datos.tipoCirugia} (${fechaFormateada})`;
+    const subject = `Reporte Cirugía: ${datos.paciente} - ${datos.tipoCirugia || 'N/E'} (${fechaFormateada})`;
 
     // Usar innerText para el cuerpo, es más simple y suele dar mejor formato
     let body = reporteContenidoElement.innerText;
@@ -512,7 +645,7 @@ function imprimirReporte() {
                     max-width: 100%;
                 }
                 /* Ocultar botones y elementos no deseados en la impresión */
-                button, .btn-link, .btn-volver, .modal-overlay, .toast-notification, .credit, header, .form-group, .text-center {
+                button, .btn-link, .btn-volver, .modal-overlay, .toast-notification, .credit, header, .form-group, .text-center, #loading-indicator, #retry-save-btn {
                     display: none !important;
                 }
                 @media print {
@@ -579,9 +712,9 @@ async function generarImagen() {
 
 
 // --- Funciones para Modales ---
-
+// Asegurarse de que los datos se carguen antes de abrir
 // Modal Materiales
-function abrirModalMateriales() {
+async function abrirModalMateriales() { // Convertida a async
     const modal = document.getElementById('modalMateriales');
     const listaContainer = document.getElementById('modalMaterialesLista');
     const searchInput = document.getElementById('modalMaterialesSearchInput');
@@ -591,55 +724,61 @@ function abrirModalMateriales() {
         return;
     }
 
+    // Verificar si los materiales están cargados, si no, intentar cargarlos
+    if (listaMaterialesCargada === null) {
+        mostrarToast("Cargando lista de materiales...", "info");
+        await fetchMateriales(); // Esperar carga
+    }
+    if (listaMaterialesCargada === null || Object.keys(listaMaterialesCargada).length === 0) {
+         mostrarToast("No hay materiales disponibles o hubo un error al cargarlos.", "warning");
+         return;
+    }
+
     searchInput.value = ''; // Limpiar búsqueda anterior
-    listaContainer.innerHTML = ''; // Limpiar lista anterior
+    listaContainer.innerHTML = 'Cargando...'; // Mostrar carga mientras se genera el HTML
 
-    // Cargar y mostrar materiales por categoría
-    let hasContent = false;
-    for (const categoria in baseDeDatosMateriales) {
-        if (baseDeDatosMateriales[categoria] && baseDeDatosMateriales[categoria].length > 0) {
-             hasContent = true;
-            const categoriaDiv = document.createElement('div');
-            categoriaDiv.classList.add('modal-categoria');
+    // Usar setTimeout para permitir que UI se actualice antes de generar lista larga
+    setTimeout(() => {
+        listaContainer.innerHTML = ''; // Limpiar lista anterior
+        // Cargar y mostrar materiales por categoría desde la variable global
+        for (const categoria in listaMaterialesCargada) {
+                const categoriaDiv = document.createElement('div');
+                categoriaDiv.classList.add('modal-categoria');
 
-            const titulo = document.createElement('div');
-            titulo.classList.add('modal-categoria-titulo');
-            titulo.textContent = categoria;
-            categoriaDiv.appendChild(titulo);
+                const titulo = document.createElement('div');
+                titulo.classList.add('modal-categoria-titulo');
+                titulo.textContent = categoria;
+                categoriaDiv.appendChild(titulo);
 
-            baseDeDatosMateriales[categoria].forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.classList.add('modal-item');
-                itemDiv.dataset.code = item.code; // Guardar datos en dataset
-                itemDiv.dataset.description = item.description;
+                listaMaterialesCargada[categoria].forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.classList.add('modal-item');
+                    itemDiv.dataset.code = item.code; // Guardar datos en dataset
+                    itemDiv.dataset.description = item.description;
 
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `mat-${item.code}`; // ID único para el label
-                checkbox.value = item.code;
-                checkbox.classList.add('modal-item-checkbox');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `mat-${item.code}`; // ID único para el label
+                    checkbox.value = item.code;
+                    checkbox.classList.add('modal-item-checkbox');
 
-                const label = document.createElement('label');
-                label.htmlFor = `mat-${item.code}`;
-                // Usar innerHTML para formatear código y descripción
-                label.innerHTML = `<span class="item-code">${item.code}</span> - <span class="item-desc">${item.description}</span>`;
+                    const label = document.createElement('label');
+                    label.htmlFor = `mat-${item.code}`;
+                    // Usar innerHTML para formatear código y descripción
+                    label.innerHTML = `<span class="item-code">${item.code}</span> - <span class="item-desc">${item.description}</span>`;
 
-                itemDiv.appendChild(checkbox);
-                itemDiv.appendChild(label);
-                categoriaDiv.appendChild(itemDiv);
-            });
-            listaContainer.appendChild(categoriaDiv);
+                    itemDiv.appendChild(checkbox);
+                    itemDiv.appendChild(label);
+                    categoriaDiv.appendChild(itemDiv);
+                });
+                listaContainer.appendChild(categoriaDiv);
         }
-    }
+        // Mostrar el modal
+        modal.classList.add('visible');
+        modal.style.display = 'flex'; // Asegurar display flex
+        searchInput.focus(); // Poner foco en la búsqueda
+    }, 10); // Pequeño delay
 
-     if (!hasContent) {
-        listaContainer.innerHTML = '<p style="text-align: center; color: #777;">No hay materiales para mostrar.</p>';
-    }
-
-    // Mostrar el modal
-    modal.classList.add('visible');
-    modal.style.display = 'flex'; // Asegurar display flex
-    searchInput.focus(); // Poner foco en la búsqueda
 }
 
 function cerrarModalMateriales() {
@@ -718,7 +857,7 @@ function filtrarModalMateriales() {
 const debouncedFilterMateriales = debounce(filtrarModalMateriales, DEBOUNCE_DELAY);
 
 // Modal Tipo Cirugía
-function abrirModalTipoCx() {
+async function abrirModalTipoCx() { // Convertida a async para esperar carga
     const modal = document.getElementById('modalTipoCx');
     const listaContainer = document.getElementById('modalTipoCxLista');
     const searchInput = document.getElementById('modalTipoCxSearchInput');
@@ -728,12 +867,20 @@ function abrirModalTipoCx() {
         return;
     }
 
+    // Verificar si los tipos están cargados, si no, intentar cargarlos
+    if (listaTiposCxCargada === null) {
+        mostrarToast("Cargando tipos de cirugía...", "info");
+        await fetchTiposCirugia(); // Esperar a que termine la carga
+    }
+    if (!listaTiposCxCargada || listaTiposCxCargada.length === 0) {
+        mostrarToast("No hay tipos de cirugía disponibles o hubo un error al cargarlos.", "warning");
+        return; // No abrir el modal si no hay datos
+    }
+
     searchInput.value = ''; // Limpiar búsqueda
     listaContainer.innerHTML = ''; // Limpiar lista
 
-    // Cargar y mostrar tipos de cirugía
-    if (baseDeDatosTipoCx && baseDeDatosTipoCx.length > 0) {
-        baseDeDatosTipoCx.forEach(tipo => {
+    listaTiposCxCargada.forEach(tipo => {
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('modal-item', 'tipo-cx-item'); // Clase específica para filtrar
             itemDiv.dataset.value = tipo; // Guardar valor en dataset
@@ -746,9 +893,6 @@ function abrirModalTipoCx() {
 
             listaContainer.appendChild(itemDiv);
         });
-    } else {
-         listaContainer.innerHTML = '<p style="text-align: center; color: #777;">No hay tipos de cirugía para mostrar.</p>';
-    }
 
 
     // Mostrar el modal
@@ -817,6 +961,10 @@ const debouncedFilterTipoCx = debounce(filtrarModalTipoCx, DEBOUNCE_DELAY);
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM completamente cargado y parseado.");
 
+    // Iniciar carga de datos maestros en segundo plano
+    fetchTiposCirugia();
+    fetchMateriales();
+
     // Cargar sugerencias iniciales para los datalists
     cargarSugerenciasIniciales('medico', 'medicosList');
     cargarSugerenciasIniciales('instrumentador', 'instrumentadoresList');
@@ -841,6 +989,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } catch (e) {
         console.error("Error estableciendo fecha por defecto:", e);
+    }
+
+    // Añadir listener para el botón de reintento
+    if (retrySaveBtn) {
+        retrySaveBtn.addEventListener('click', reintentarGuardado);
     }
 
     // Añadir listeners para cerrar modales al hacer clic fuera del contenido
