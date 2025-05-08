@@ -1,3 +1,5 @@
+--- START OF FILE datos_admin.js ---
+
 // --- START OF FILE datos_admin.js ---
 
 // Configuración de Firebase (DEBE SER LA MISMA QUE EN script.js y admin.html)
@@ -16,10 +18,18 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // --- Constantes ---
+const COLECCION_CLIENTES = 'clientes'; // Nueva constante
 const COLECCION_TIPOS_CX = 'tiposCirugia';
 const COLECCION_MATERIALES = 'materiales';
 
 // --- Referencias a Elementos DOM ---
+// Clientes (Nuevas referencias)
+const clienteList = document.getElementById('clientesList');
+const newClienteNameInput = document.getElementById('newClienteName');
+const addClienteBtn = document.getElementById('addClienteBtn');
+const loadingClientes = document.getElementById('loading-clientes');
+const clientesListContainer = document.getElementById('clientesListContainer');
+
 // Tipos Cirugía
 const tipoCxList = document.getElementById('tiposCxList');
 const newTipoCxNameInput = document.getElementById('newTipoCxName');
@@ -54,6 +64,119 @@ function mostrarToast(mensaje, tipo = 'info') {
         setTimeout(() => { toast.style.display = 'none'; }, 300);
     }, 4000);
 }
+
+// --- Funciones para Clientes (NUEVAS) ---
+
+// Cargar y mostrar clientes
+async function loadClientes() {
+    loadingClientes.style.display = 'block';
+    clienteList.style.display = 'none';
+    clienteList.innerHTML = ''; // Limpiar lista
+
+    try {
+        const snapshot = await db.collection(COLECCION_CLIENTES).orderBy('nombre').get();
+        if (snapshot.empty) {
+            loadingClientes.textContent = 'No hay clientes definidos.';
+            return;
+        }
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const li = document.createElement('li');
+            li.dataset.id = doc.id; // Guardar ID para editar/borrar
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = data.nombre;
+            li.appendChild(nameSpan);
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.classList.add('data-actions');
+
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Editar';
+            editBtn.classList.add('btn-edit');
+            editBtn.onclick = () => editCliente(doc.id, data.nombre);
+            actionsDiv.appendChild(editBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Borrar';
+            deleteBtn.classList.add('btn-delete');
+            deleteBtn.onclick = () => deleteCliente(doc.id, data.nombre);
+            actionsDiv.appendChild(deleteBtn);
+
+            li.appendChild(actionsDiv);
+            clienteList.appendChild(li);
+        });
+
+        loadingClientes.style.display = 'none';
+        clienteList.style.display = 'block';
+
+    } catch (error) {
+        console.error("Error cargando clientes:", error);
+        loadingClientes.textContent = 'Error al cargar datos.';
+        loadingClientes.style.color = 'red';
+        mostrarToast('Error cargando clientes.', 'error');
+    }
+}
+
+// Añadir nuevo cliente
+async function addCliente() {
+    const nombre = newClienteNameInput.value.trim();
+    if (!nombre) {
+        mostrarToast('Ingrese un nombre para el cliente.', 'warning');
+        return;
+    }
+
+    addClienteBtn.disabled = true;
+    addClienteBtn.textContent = 'Añadiendo...';
+
+    try {
+        await db.collection(COLECCION_CLIENTES).add({ nombre: nombre });
+        mostrarToast('Cliente añadido con éxito.', 'success');
+        newClienteNameInput.value = ''; // Limpiar input
+        await loadClientes(); // Recargar lista
+    } catch (error) {
+        console.error("Error añadiendo cliente:", error);
+        mostrarToast('Error al añadir cliente.', 'error');
+    } finally {
+        addClienteBtn.disabled = false;
+        addClienteBtn.textContent = '➕ Añadir';
+    }
+}
+
+// Editar cliente
+async function editCliente(id, currentName) {
+    const newName = prompt(`Editar nombre del cliente:\n(ID: ${id})`, currentName);
+    if (newName === null || newName.trim() === '' || newName.trim() === currentName) {
+        return; // Cancelado o sin cambios
+    }
+
+    try {
+        await db.collection(COLECCION_CLIENTES).doc(id).update({ nombre: newName.trim() });
+        mostrarToast('Cliente actualizado.', 'success');
+        await loadClientes(); // Recargar lista
+    } catch (error) {
+        console.error("Error actualizando cliente:", error);
+        mostrarToast('Error al actualizar.', 'error');
+    }
+}
+
+// Borrar cliente
+async function deleteCliente(id, name) {
+    if (!confirm(`¿Está seguro de que desea eliminar el cliente "${name}" (ID: ${id})?`)) {
+        return;
+    }
+
+    try {
+        await db.collection(COLECCION_CLIENTES).doc(id).delete();
+        mostrarToast('Cliente eliminado.', 'success');
+        await loadClientes(); // Recargar lista
+    } catch (error) {
+        console.error("Error eliminando cliente:", error);
+        mostrarToast('Error al eliminar.', 'error');
+    }
+}
+
 
 // --- Funciones para Tipos de Cirugía ---
 
@@ -327,14 +450,17 @@ async function deleteMaterial(id, code) {
 
 // --- Inicialización ---
 document.addEventListener('DOMContentLoaded', () => {
+    loadClientes(); // Cargar clientes
     loadTiposCirugia();
     loadMateriales();
 
     // Listeners para botones de añadir
+    addClienteBtn.addEventListener('click', addCliente); // Listener para añadir cliente
     addTipoCxBtn.addEventListener('click', addTipoCirugia);
     addMaterialBtn.addEventListener('click', addMaterial);
 
     // Opcional: Añadir al presionar Enter en los inputs
+    newClienteNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addClienteBtn.click(); });
     newTipoCxNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTipoCxBtn.click(); });
     // Añadir listeners similares para inputs de material si se desea
 });
