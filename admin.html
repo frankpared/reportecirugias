@@ -4,142 +4,575 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administrar Datos | Districorr</title>
+  <title>Panel de Reportes Guardados | Districorr</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Lato&display=swap" rel="stylesheet">
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK (compat version para firestore() v8) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <!-- Chart.js para estadísticas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Estilos adicionales específicos para esta página */
-    .admin-data-section {
-      margin-bottom: 40px;
+    .stats-section {
+      margin-top: 30px;
       padding: 20px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
       background-color: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
     }
-    .admin-data-section h3 {
-      margin-top: 0;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 10px;
+    .stats-section h3 {
+      text-align: center;
       color: #0056b3;
+      margin-bottom: 20px;
     }
-    .data-list {
-      list-style: none;
-      padding: 0;
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid #eee;
-      margin-bottom: 15px;
-    }
-    .data-list li, .data-table tr {
-      padding: 8px 12px;
-      border-bottom: 1px solid #eee;
+    .charts-container {
       display: flex;
-      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: space-around;
+    }
+    .chart-wrapper {
+      flex: 1 1 45%; /* Cada gráfico ocupa ~45% del ancho, permitiendo 2 por fila */
+      min-width: 300px; /* Ancho mínimo para gráficos pequeños */
+      max-width: 600px; /* Ancho máximo */
+      height: 350px; /* Altura fija para los gráficos */
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      display: flex; /* Para centrar el canvas si es más pequeño */
+      justify-content: center;
       align-items: center;
     }
-     .data-list li:last-child, .data-table tr:last-child td {
-       border-bottom: none;
+    .chart-wrapper canvas {
+        max-width: 100%;
+        max-height: 100%;
+    }
+    #auditLogModal .modal-content {
+        max-width: 800px; /* Modal más ancho para logs */
+    }
+    #auditLogModal .log-entry {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+        font-size: 0.9em;
+    }
+    #auditLogModal .log-entry:last-child {
+        border-bottom: none;
+    }
+    #auditLogModal .log-timestamp {
+        font-weight: bold;
+        color: #555;
+        margin-right: 10px;
+        display: inline-block; /* Para espacio */
+        min-width: 130px; /* Espacio consistente para fecha */
+    }
+    #auditLogModal .log-user {
+        color: #007bff;
+        margin-right: 10px;
+        font-weight: bold;
+    }
+     #auditLogModal .log-action {
+         color: #6c757d;
+         font-style: italic;
      }
-     .data-list li span, .data-table td {
-       flex-grow: 1;
-       margin-right: 10px;
-       word-break: break-word;
-     }
-     .data-actions button {
-       padding: 3px 8px;
-       font-size: 12px;
-       margin-left: 5px;
-       min-width: 60px; /* Ancho mínimo para botones */
-     }
-     .btn-edit { background-color: #ffc107; color: #333; }
-     .btn-edit:hover { background-color: #e0a800; }
-     .btn-delete { background-color: #dc3545; }
-     .btn-delete:hover { background-color: #c82333; }
-     .add-form { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-     .add-form input { flex-grow: 1; }
-     .add-form button { flex-shrink: 0; }
-     #materialesTable th, #materialesTable td { white-space: normal; }
-     #loading-admin { text-align: center; padding: 15px; color: #555; }
+     #auditLogModal .log-details-title {
+        font-weight: bold;
+        margin-top: 5px;
+        display: block;
+        color: #333;
+    }
+    #auditLogModal .log-field-change {
+        margin-left: 15px;
+        font-size: 0.95em;
+        padding: 2px 0;
+    }
+    #auditLogModal .log-field-change .field-name {
+        font-style: italic;
+        color: #5a6268;
+        display: inline-block;
+        min-width: 120px; /* Alinear nombres de campo */
+    }
+    #auditLogModal .log-field-change .old-value {
+        color: #dc3545; 
+        text-decoration: line-through;
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+    #auditLogModal .log-field-change .new-value {
+        color: #28a745; 
+        font-weight: bold;
+    }
+    .btn-audit {
+        padding: 2px 6px;
+        font-size: 11px;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        margin: 0; 
+    }
+    .btn-audit:hover {
+        background-color: #5a6268;
+    }
+    body.admin-page td:last-child, body.admin-page th:last-child { 
+        width: 65px; /* Ajustado para "Log" */
+        text-align: center;
+    }
+    body.admin-page td:nth-child(7), body.admin-page th:nth-child(7) { 
+        width: 70px; 
+        text-align: center;
+    }
   </style>
 </head>
+
 <body class="fondo-dinamico admin-page">
   <div class="container">
     <header style="margin-bottom: 30px;">
       <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 80px; display: block; margin: 0 auto 15px auto;" />
-      <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">⚙️ Administrar Datos Maestros</h2>
+      <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">📋 Reportes Guardados y Estadísticas</h2>
     </header>
 
-    <!-- Sección Clientes -->
-    <div class="admin-data-section">
-      <h3>Clientes</h3>
-      <div class="add-form">
-        <input type="text" id="newClienteName" class="form-control" placeholder="Nuevo nombre de cliente...">
-        <button id="addClienteBtn" class="btn-primario">➕ Añadir</button>
-      </div>
-      <div id="clientesListContainer">
-         <p id="loading-clientes" style="text-align:center; color: #777;">Cargando clientes...</p>
-         <ul id="clientesList" class="data-list" style="display:none;">
-           <!-- Los clientes se cargarán aquí -->
-         </ul>
-      </div>
+    <div class="table-responsive">
+      <table id="reportesTable" style="width:100%;">
+        <thead>
+          <tr>
+            <th>Fecha Cirugía</th>
+            <th>Paciente</th>
+            <th>Médico</th>
+            <th>Cliente</th>
+            <th>Tipo Cirugía</th>
+            <th>Material (Inicio)</th>
+            <th>Archivos</th>
+            <th>Usuario ID</th>
+            <th>Creado En</th>
+            <th>Últ. Modif.</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="reporte-rows">
+           <tr><td colspan="11" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>
+        </tbody>
+      </table>
     </div>
 
-    <!-- Sección Tipos de Cirugía -->
-    <div class="admin-data-section">
-      <h3>Tipos de Cirugía</h3>
-      <div class="add-form">
-        <input type="text" id="newTipoCxName" class="form-control" placeholder="Nuevo tipo de cirugía...">
-        <button id="addTipoCxBtn" class="btn-primario">➕ Añadir</button>
-      </div>
-      <div id="tiposCxListContainer">
-         <p id="loading-tiposcx" style="text-align:center; color: #777;">Cargando tipos de cirugía...</p>
-         <ul id="tiposCxList" class="data-list" style="display:none;">
-           <!-- Los tipos de cirugía se cargarán aquí -->
-         </ul>
-      </div>
+    <div class="stats-section">
+        <h3>📊 Estadísticas de Reportes</h3>
+        <div id="loading-stats" style="text-align:center; color: #777; padding: 15px;">Cargando estadísticas...</div>
+        <div class="charts-container" style="display: none;">
+            <div class="chart-wrapper">
+                <canvas id="cirugiasPorMesChart"></canvas>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="topMedicosChart"></canvas>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="topTiposCirugiaChart"></canvas>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="topClientesChart"></canvas>
+            </div>
+        </div>
     </div>
 
-    <!-- Sección Materiales -->
-    <div class="admin-data-section">
-      <h3>Materiales</h3>
-      <div class="add-form">
-        <input type="text" id="newMaterialCode" class="form-control" placeholder="Código (*)" style="flex-basis: 150px; flex-grow: 0;">
-        <input type="text" id="newMaterialDesc" class="form-control" placeholder="Descripción (*)">
-        <input type="text" id="newMaterialCat" class="form-control" placeholder="Categoría (*)" style="flex-basis: 200px; flex-grow: 0;">
-        <button id="addMaterialBtn" class="btn-primario">➕ Añadir</button>
-      </div>
-       <div id="materialesListContainer">
-           <p id="loading-materiales" style="text-align:center; color: #777;">Cargando materiales...</p>
-           <div class="table-responsive">
-               <table id="materialesTable" style="width:100%; display:none;">
-                   <thead>
-                       <tr>
-                           <th>Código</th>
-                           <th>Descripción</th>
-                           <th>Categoría</th>
-                           <th>Acciones</th>
-                       </tr>
-                   </thead>
-                   <tbody id="materialesListBody">
-                       <!-- Los materiales se cargarán aquí -->
-                   </tbody>
-               </table>
-           </div>
-       </div>
+    <div id="auditLogModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="auditLogModalTitle">Historial de Cambios</h3>
+                <button class="modal-close-btn" onclick="cerrarModalAuditLog()">×</button>
+            </div>
+            <div class="modal-body" id="auditLogModalBody">
+                <p style="text-align:center;">Cargando historial...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-link" onclick="cerrarModalAuditLog()">Cerrar</button>
+            </div>
+        </div>
     </div>
-
-     <div id="toast" class="toast-notification" style="display:none;"></div>
 
     <div style="text-align: center; margin-top: 30px;">
       <a href="index.html" class="btn-volver">← Volver al Formulario Principal</a>
     </div>
   </div>
 
-  <script src="datos_admin.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", 
+      authDomain: "cirugia-reporte.firebaseapp.com",
+      projectId: "cirugia-reporte",
+      storageBucket: "cirugia-reporte.appspot.com",
+      messagingSenderId: "698831567840",
+      appId: "1:698831567840:web:fc6d6197f22beba4d88985",
+      measurementId: "G-HD7ZLL1GLZ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    db.enablePersistence()
+      .catch((err) => {
+         if (err.code == 'failed-precondition') console.warn("Persistencia admin falló: Múltiples pestañas?");
+         else if (err.code == 'unimplemented') console.warn("Persistencia admin no soportada.");
+         else console.error("Error habilitando persistencia admin:", err);
+      });
+
+    function formatearFechaLocal(fechaISO) {
+        if (!fechaISO) return '-';
+        try {
+            const partes = fechaISO.split('-');
+            if (partes.length !== 3) return fechaISO;
+            const fecha = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]), 12, 0, 0);
+            return fecha.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        } catch (e) { return fechaISO; }
+    }
+
+    function formatearTimestamp(timestamp) {
+        if (!timestamp || !timestamp.toDate) return '-';
+        try {
+            return timestamp.toDate().toLocaleString('es-AR', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            });
+        } catch (e) { return '-'; }
+    }
+    
+    let reportesDataGlobal = [];
+    let charts = {}; 
+
+    function cargarReportes() {
+      const tbody = document.getElementById("reporte-rows");
+      const loadingStatsEl = document.getElementById("loading-stats");
+      const chartsContainerEl = document.querySelector(".charts-container");
+
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>`;
+      loadingStatsEl.style.display = 'block';
+      chartsContainerEl.style.display = 'none';
+
+      db.collection("reportes")
+        .orderBy("modificadoEn", "desc") // Ordenar por modificación más reciente
+        .limit(200) 
+        .get()
+        .then(snapshot => {
+          tbody.innerHTML = ''; 
+          reportesDataGlobal = []; 
+
+          if (snapshot.empty) {
+            tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados todavía.</td></tr>`;
+            loadingStatsEl.textContent = 'No hay datos para generar estadísticas.';
+             // Limpiar gráficos si estaban visibles y ahora no hay datos
+             Object.values(charts).forEach(chart => chart.destroy());
+             charts = {};
+             chartsContainerEl.style.display = 'none'; // Ocultar contenedor
+            return;
+          }
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            data.id = doc.id; 
+            reportesDataGlobal.push(data); 
+
+            const fechaCirugiaFormateada = formatearFechaLocal(data.fechaCirugia);
+            const fechaCreadoFormateada = formatearTimestamp(data.creadoEn || data.timestamp);
+            const fechaModificacionFormateada = data.modificadoEn ? formatearTimestamp(data.modificadoEn) : (data.timestamp ? formatearTimestamp(data.timestamp) : '-');
+            
+            const materialCortado = data.material
+                ? (data.material.substring(0, 30) + (data.material.length > 30 ? '...' : ''))
+                : '-';
+            const usuarioIdCorto = data.modificadoPor ? `Mod:${data.modificadoPor.substring(0,6)}` 
+                                 : (data.creadoPor ? `Cr:${data.creadoPor.substring(0,6)}` 
+                                 : (data.usuario ? `Usr:${data.usuario.substring(0,6)}` : 'Anón.'));
+            
+            const tieneArchivos = data.archivosAdjuntos && data.archivosAdjuntos.length > 0;
+
+            const tr = document.createElement("tr");
+            tr.dataset.reportId = doc.id; 
+
+            const createCell = (text, isHtml = false) => {
+                const td = document.createElement('td');
+                if (isHtml) {
+                    td.innerHTML = text || '-';
+                } else {
+                    td.textContent = text || '-';
+                }
+                return td;
+            };
+            
+            let archivosHtml = '-';
+            if (tieneArchivos) {
+                 // Crear enlaces para cada archivo
+                archivosHtml = data.archivosAdjuntos.map(archivo => 
+                    `<a href="${archivo.url}" target="_blank" title="${archivo.nombre}" style="font-size: 1.3em; text-decoration: none; margin: 0 2px;">📎</a>`
+                ).join('');
+            }
+
+            tr.appendChild(createCell(fechaCirugiaFormateada));
+            tr.appendChild(createCell(data.paciente));
+            tr.appendChild(createCell(data.medico));
+            tr.appendChild(createCell(data.cliente));
+            tr.appendChild(createCell(data.tipoCirugia));
+            tr.appendChild(createCell(materialCortado));
+            tr.appendChild(createCell(archivosHtml, true)); 
+            tr.appendChild(createCell(usuarioIdCorto)); // Indica quién creó/modificó
+            tr.appendChild(createCell(fechaCreadoFormateada)); 
+            tr.appendChild(createCell(fechaModificacionFormateada)); 
+            
+            const tdActions = document.createElement('td');
+            const auditButton = document.createElement('button');
+            auditButton.textContent = 'Log'; 
+            auditButton.classList.add('btn-audit');
+            auditButton.onclick = (e) => { 
+                e.stopPropagation(); // Evitar que otros eventos de la fila se disparen
+                abrirModalAuditLog(doc.id, data.paciente); 
+            };
+            tdActions.appendChild(auditButton);
+            tr.appendChild(tdActions);
+
+            tbody.appendChild(tr);
+          });
+          
+          loadingStatsEl.style.display = 'none';
+          chartsContainerEl.style.display = 'flex';
+          generarEstadisticas();
+
+        })
+        .catch(error => {
+          console.error('Error cargando reportes:', error);
+          tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 20px; color:red;">Error al cargar los reportes (${error.code || error.message}). Revise la consola y las reglas de seguridad.</td></tr>`;
+          loadingStatsEl.textContent = 'Error al cargar datos para estadísticas.';
+           // Limpiar gráficos si falló la carga
+           Object.values(charts).forEach(chart => chart.destroy());
+           charts = {};
+           chartsContainerEl.style.display = 'none';
+        });
+    }
+    
+    function abrirModalAuditLog(reporteId, pacienteNombre) {
+        const modal = document.getElementById('auditLogModal');
+        const modalTitle = document.getElementById('auditLogModalTitle');
+        const modalBody = document.getElementById('auditLogModalBody');
+
+        if (!modal || !modalTitle || !modalBody) return;
+
+        modalTitle.textContent = `Historial: ${pacienteNombre || 'Reporte ' + reporteId.substring(0,6)}`;
+        modalBody.innerHTML = '<p style="text-align:center;">Cargando historial...</p>';
+        modal.classList.add('visible'); 
+        modal.style.display = 'flex'; 
+
+        db.collection('reportes').doc(reporteId).collection('auditLog')
+            .orderBy('timestamp', 'desc')
+            .get()
+            .then(snapshot => {
+                if (snapshot.empty) {
+                    modalBody.innerHTML = '<p style="text-align:center;">No hay historial de cambios para este reporte.</p>';
+                    return;
+                }
+                modalBody.innerHTML = ''; 
+                snapshot.forEach(logDoc => {
+                    const logData = logDoc.data();
+                    const entryDiv = document.createElement('div');
+                    entryDiv.classList.add('log-entry');
+
+                    const user = logData.usuarioId ? logData.usuarioId.substring(0,6) : 'Sistema';
+                    let html = `<span class="log-timestamp">${formatearTimestamp(logData.timestamp)}</span>`;
+                    html += `<span class="log-user">Usr: ${user}</span>`;
+                    html += `<span class="log-action">${logData.accion || 'Modif.'}</span>`; // Acción más clara
+
+                    if (logData.cambios && logData.cambios.length > 0) {
+                        html += '<div class="log-details-title">Detalles:</div>';
+                        logData.cambios.forEach(cambio => {
+                            // Escapar HTML en valores para seguridad
+                             let anteriorStr = escapeHtml(String(cambio.anterior !== undefined ? cambio.anterior : '-'));
+                             let nuevoStr = escapeHtml(String(cambio.nuevo !== undefined ? cambio.nuevo : '-'));
+                            
+                            // Truncar visualmente valores largos
+                            anteriorStr = anteriorStr.length > 70 ? anteriorStr.substring(0,67) + '...' : anteriorStr;
+                            nuevoStr = nuevoStr.length > 70 ? nuevoStr.substring(0,67) + '...' : nuevoStr;
+                            
+                            if (cambio.campo === 'material' && (String(cambio.anterior).trim() !== '(vacío)' || String(cambio.nuevo).trim() !== '(vacío)')) {
+                                anteriorStr = String(cambio.anterior).trim() !== '(vacío)' ? '[Material Anterior]' : '(vacío)';
+                                nuevoStr = String(cambio.nuevo).trim() !== '(vacío)' ? '[Material Nuevo]' : '(vacío)';
+                            }
+                             if (cambio.campo === 'archivoAdjunto') {
+                                 anteriorStr = escapeHtml(cambio.anterior); // Nombre archivo anterior
+                                 nuevoStr = escapeHtml(cambio.nuevo); // Nombre archivo nuevo
+                             }
+
+                            html += `<div class="log-field-change">
+                                        <span class="field-name">${escapeHtml(cambio.campo)}:</span> 
+                                        <span class="old-value">${anteriorStr}</span> → 
+                                        <span class="new-value">${nuevoStr}</span>
+                                     </div>`;
+                        });
+                    }
+                    entryDiv.innerHTML = html;
+                    modalBody.appendChild(entryDiv);
+                });
+            })
+            .catch(error => {
+                console.error("Error cargando log de auditoría:", error);
+                modalBody.innerHTML = '<p style="text-align:center; color:red;">Error al cargar el historial.</p>';
+            });
+    }
+
+    function cerrarModalAuditLog() {
+        const modal = document.getElementById('auditLogModal');
+        if (modal) {
+            modal.classList.remove('visible');
+            setTimeout(() => { 
+                 modal.style.display = 'none';
+            }, 300);
+        }
+    }
+    
+    // Helper para escapar HTML en los logs
+    function escapeHtml(unsafe) {
+        if (!unsafe) return unsafe;
+        return unsafe
+             .replace(/&/g, "&")
+             .replace(/</g, "<")
+             .replace(/>/g, ">")
+             .replace(/"/g, """)
+             .replace(/'/g, "'");
+     }
+
+
+    function generarEstadisticas() {
+        if (reportesDataGlobal.length === 0) {
+            document.getElementById("loading-stats").textContent = 'No hay suficientes datos para estadísticas.';
+            document.querySelector(".charts-container").style.display = 'none';
+             // Asegurar que los contenedores de gráficos estén vacíos si no hay datos
+             ['cirugiasPorMesChart', 'topMedicosChart', 'topTiposCirugiaChart', 'topClientesChart'].forEach(id => {
+                const wrapper = document.getElementById(id)?.parentElement;
+                if (wrapper) wrapper.innerHTML = `<canvas id="${id}"></canvas>`; // Resetear a canvas vacío
+             });
+            return;
+        }
+        
+        Object.values(charts).forEach(chart => chart.destroy());
+        charts = {};
+         // Asegurar que los contenedores de gráficos tengan el canvas antes de crear
+         ['cirugiasPorMesChart', 'topMedicosChart', 'topTiposCirugiaChart', 'topClientesChart'].forEach(id => {
+             const wrapper = document.getElementById(id)?.parentElement;
+             if (wrapper && !wrapper.querySelector('canvas')) {
+                 wrapper.innerHTML = `<canvas id="${id}"></canvas>`; 
+             }
+         });
+
+        // --- Cálculo de Estadísticas ---
+        const cirugiasPorMes = {};
+        reportesDataGlobal.forEach(r => {
+            if (r.fechaCirugia && r.fechaCirugia.length >= 7) { // Validar formato YYYY-MM...
+                const mesAnio = r.fechaCirugia.substring(0, 7); 
+                cirugiasPorMes[mesAnio] = (cirugiasPorMes[mesAnio] || 0) + 1;
+            }
+        });
+        const labelsMeses = Object.keys(cirugiasPorMes).sort();
+        const dataMeses = labelsMeses.map(label => cirugiasPorMes[label]);
+        if (labelsMeses.length > 0) {
+            crearGrafico('cirugiasPorMesChart', 'bar', 'Cirugías por Mes', labelsMeses, dataMeses, 'Nº de Cirugías');
+        } else {
+             document.getElementById('cirugiasPorMesChart').parentElement.innerHTML = '<p class="loading-placeholder">No hay datos suficientes para Cirugías por Mes.</p>';
+        }
+
+
+        const conteoMedicos = {};
+        reportesDataGlobal.forEach(r => {
+            if (r.medico && r.medico.trim() !== '') conteoMedicos[r.medico.trim()] = (conteoMedicos[r.medico.trim()] || 0) + 1;
+        });
+        const topMedicos = Object.entries(conteoMedicos).sort((a, b) => b[1] - a[1]).slice(0, 10); 
+        if (topMedicos.length > 0) {
+            crearGrafico('topMedicosChart', 'pie', 'Top Médicos (# Reportes)', topMedicos.map(m => m[0]), topMedicos.map(m => m[1]));
+        } else {
+             document.getElementById('topMedicosChart').parentElement.innerHTML = '<p class="loading-placeholder">No hay datos suficientes para Top Médicos.</p>';
+        }
+
+        const conteoTiposCx = {};
+        reportesDataGlobal.forEach(r => {
+            if (r.tipoCirugia && r.tipoCirugia.trim() !== '') conteoTiposCx[r.tipoCirugia.trim()] = (conteoTiposCx[r.tipoCirugia.trim()] || 0) + 1;
+        });
+        const topTiposCx = Object.entries(conteoTiposCx).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        if (topTiposCx.length > 0) {
+            crearGrafico('topTiposCirugiaChart', 'doughnut', 'Top Tipos de Cirugía', topTiposCx.map(t => t[0]), topTiposCx.map(t => t[1]));
+        } else {
+             document.getElementById('topTiposCirugiaChart').parentElement.innerHTML = '<p class="loading-placeholder">No hay datos suficientes para Top Tipos Cirugía.</p>';
+        }
+        
+        const conteoClientes = {};
+        reportesDataGlobal.forEach(r => {
+            if (r.cliente && r.cliente.trim() !== '') conteoClientes[r.cliente.trim()] = (conteoClientes[r.cliente.trim()] || 0) + 1;
+        });
+        const topClientes = Object.entries(conteoClientes).sort((a,b) => b[1] - a[1]).slice(0,10);
+        if (topClientes.length > 0) {
+            crearGrafico('topClientesChart', 'bar', 'Top Clientes (# Reportes)', topClientes.map(c => c[0]), topClientes.map(c => c[1]), 'Nº de Reportes');
+        } else {
+            document.getElementById('topClientesChart').parentElement.innerHTML = '<p class="loading-placeholder">No hay datos suficientes para Top Clientes.</p>';
+        }
+    }
+
+    function crearGrafico(canvasId, tipo, tituloLabel, labels, data, dataLabel = 'Cantidad') {
+        const ctx = document.getElementById(canvasId)?.getContext('2d'); // Usar optional chaining
+        if (!ctx) {
+            console.warn(`Contexto 2D no encontrado para canvas con ID ${canvasId}.`);
+             const wrapper = document.getElementById(canvasId)?.parentElement;
+             if(wrapper) wrapper.innerHTML = `<p class="loading-placeholder">Error al crear gráfico ${tituloLabel}.</p>`;
+            return;
+        }
+        // Datos de colores consistentes
+         const chartColors = [ 
+            'rgba(255, 99, 132, 0.8)','rgba(54, 162, 235, 0.8)','rgba(255, 206, 86, 0.8)','rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)','rgba(255, 159, 64, 0.8)','rgba(201, 203, 207, 0.8)','rgba(60, 179, 113, 0.8)',
+            'rgba(255, 0, 255, 0.8)','rgba(210, 105, 30, 0.8)', 'rgba(0, 0, 128, 0.8)' // Añadido uno más por si acaso
+        ];
+
+        charts[canvasId] = new Chart(ctx, {
+            type: tipo,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: dataLabel,
+                    data: data,
+                    backgroundColor: tipo === 'bar' ? 'rgba(0, 123, 255, 0.7)' : chartColors,
+                    borderColor: tipo === 'bar' ? 'rgba(0, 123, 255, 1)' : '#fff',
+                    borderWidth: tipo === 'bar' ? 1 : 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: tituloLabel, font: { size: 14, weight: 'bold' }, padding: { bottom: 10 } },
+                    legend: { display: tipo !== 'bar', position: 'top', labels: { font: { size: 10 }, boxWidth: 15 } }, // Leyenda más compacta
+                    tooltip: { titleFont: {size: 12}, bodyFont: {size: 11} }
+                },
+                scales: tipo === 'bar' ? { 
+                    y: { beginAtZero: true, ticks: { precision: 0, stepSize: Math.max(1, Math.ceil(Math.max(...data, 0) / 8)), font: {size:10} } }, // precision 0 y stepSize ajustado
+                    x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 30, font: {size:10} } } 
+                } : {},
+                 // Evitar que las etiquetas largas en gráficos pie/doughnut se corten
+                 layout: tipo !== 'bar' ? { padding: { left: 10, right: 10, top: 0, bottom: 10 } } : {}
+            }
+        });
+    }
+
+    window.onload = function () {
+      document.body.style.backgroundColor = "#f0f2f5";
+      cargarReportes();
+      
+      const auditModal = document.getElementById('auditLogModal');
+      if (auditModal) {
+          auditModal.addEventListener('click', function(event) {
+              if (event.target === this) { 
+                  cerrarModalAuditLog();
+              }
+          });
+      }
+       // Cerrar modal con tecla Escape
+       document.addEventListener('keydown', function(event) {
+         if (event.key === "Escape") {
+            cerrarModalAuditLog();
+         }
+       });
+    };
+  </script>
 </body>
 </html>
-
