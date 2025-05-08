@@ -286,8 +286,8 @@ input[type="file"].form-control {
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
   transform: translateY(20px); 
 }
-.toast-notification.visible, /* Añadido para control con clase */
-.toast-notification[style*="display: block"] { /* Compatibilidad con estilo inline anterior */
+.toast-notification.visible { /* Usar clase para controlar visibilidad */
+    display: block; /* Asegurar que esté visible para la transición */
     opacity: 1;
     transform: translateY(0); 
 }
@@ -307,7 +307,7 @@ input[type="file"].form-control {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6); 
-    display: flex; 
+    display: none; /* Cambiado a none por defecto */
     justify-content: center;
     align-items: center;
     z-index: 1000; 
@@ -317,6 +317,7 @@ input[type="file"].form-control {
 }
 
 .modal-overlay.visible {
+    display: flex; /* Mostrar con flex al ser visible */
     opacity: 1;
     visibility: visible;
     transition: opacity 0.3s ease;
@@ -474,12 +475,12 @@ body.admin-page table {
 }
 body.admin-page th,
 body.admin-page td {
-    padding: 10px 12px; /* Un poco menos de padding para más columnas */
+    padding: 10px 12px; 
     text-align: left;
     border-bottom: 1px solid #dee2e6; 
     vertical-align: top; 
     white-space: nowrap; 
-    font-size: 0.9em; /* Reducir un poco el tamaño de fuente en la tabla admin */
+    font-size: 0.9em; 
 }
 body.admin-page td:nth-child(2), /* Paciente */
 body.admin-page td:nth-child(3), /* Medico */
@@ -489,7 +490,7 @@ body.admin-page td:nth-child(6) { /* Material */
     white-space: normal;
 }
 body.admin-page td:last-child, body.admin-page th:last-child { /* Columna de acciones */
-    width: 65px; /* Ancho ajustado para botón "Log" */
+    width: 65px; 
     text-align: center;
     white-space: nowrap;
 }
@@ -524,8 +525,8 @@ body.admin-page tbody tr:hover {
   h4 { font-size: 1.2em; }
   body.admin-page th, body.admin-page td { font-size: 13px; white-space: normal; padding: 8px 10px;}
   .modal-content { width: 95%; padding: 20px; } 
-  .charts-container { flex-direction: column; } /* Apilar gráficos en pantallas pequeñas */
-  .chart-wrapper { flex: 1 1 100%; height: 300px; } /* Gráficos ocupan todo el ancho y menos altura */
+  .charts-container { flex-direction: column; } 
+  .chart-wrapper { flex: 1 1 100%; height: 300px; } 
 }
 
 @media (max-width: 480px) {
@@ -540,3 +541,5 @@ body.admin-page tbody tr:hover {
    .modal-item, #modalMateriales .modal-item label { font-size: 14px; }
    .chart-wrapper { height: 250px; } 
 }
+
+/* --- END OF FILE style.css --- */
