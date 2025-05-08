@@ -154,6 +154,7 @@ textarea.form-control {
 }
 input[type="file"].form-control {
     padding: 8px 12px; /* Ajuste para input file */
+    line-height: 1.5; /* Asegurar altura consistente */
 }
 
 
@@ -281,7 +282,7 @@ input[type="file"].form-control {
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1050; 
-  display: none; 
+  display: none; /* Oculto por defecto */
   opacity: 0;
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
   transform: translateY(20px); 
@@ -373,8 +374,24 @@ input[type="file"].form-control {
     flex-grow: 1; 
     overflow-y: auto; 
     margin-bottom: 20px;
-    padding-right: 10px; 
+    padding-right: 10px; /* Espacio para scrollbar */
+    /* Añadir scrollbar estilizado (opcional, requiere prefijos) */
+     scrollbar-width: thin;
+     scrollbar-color: #adb5bd #f8f9fa;
 }
+.modal-body::-webkit-scrollbar {
+     width: 8px;
+}
+.modal-body::-webkit-scrollbar-track {
+     background: #f8f9fa;
+     border-radius: 4px;
+}
+.modal-body::-webkit-scrollbar-thumb {
+     background-color: #adb5bd;
+     border-radius: 4px;
+     border: 2px solid #f8f9fa;
+}
+
 
 .modal-body input[type="text"].form-control {
     margin-bottom: 15px; 
@@ -495,7 +512,8 @@ body.admin-page td:last-child, body.admin-page th:last-child { /* Columna de acc
     white-space: nowrap;
 }
 body.admin-page td:nth-child(7), body.admin-page th:nth-child(7) { /* Columna Archivos */
-    width: 70px; 
+    width: auto; /* Permitir que se ajuste al contenido (iconos) */
+    min-width: 70px; /* Ancho mínimo */
     text-align: center;
     white-space: nowrap;
 }
