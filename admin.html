@@ -32,15 +32,15 @@
       justify-content: space-around;
     }
     .chart-wrapper {
-      flex: 1 1 45%; /* Cada gráfico ocupa ~45% del ancho, permitiendo 2 por fila */
-      min-width: 300px; /* Ancho mínimo para gráficos pequeños */
-      max-width: 600px; /* Ancho máximo */
-      height: 350px; /* Altura fija para los gráficos */
+      flex: 1 1 45%; 
+      min-width: 300px; 
+      max-width: 600px; 
+      height: 350px; 
       background-color: #fff;
       padding: 15px;
       border-radius: 6px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      display: flex; /* Para centrar el canvas si es más pequeño */
+      display: flex; 
       justify-content: center;
       align-items: center;
     }
@@ -49,7 +49,7 @@
         max-height: 100%;
     }
     #auditLogModal .modal-content {
-        max-width: 800px; /* Modal más ancho para logs */
+        max-width: 800px; 
     }
     #auditLogModal .log-entry {
         padding: 8px;
@@ -63,8 +63,8 @@
         font-weight: bold;
         color: #555;
         margin-right: 10px;
-        display: inline-block; /* Para espacio */
-        min-width: 130px; /* Espacio consistente para fecha */
+        display: inline-block; 
+        min-width: 130px; 
     }
     #auditLogModal .log-user {
         color: #007bff;
@@ -90,7 +90,7 @@
         font-style: italic;
         color: #5a6268;
         display: inline-block;
-        min-width: 120px; /* Alinear nombres de campo */
+        min-width: 120px; 
     }
     #auditLogModal .log-field-change .old-value {
         color: #dc3545; 
@@ -116,13 +116,20 @@
         background-color: #5a6268;
     }
     body.admin-page td:last-child, body.admin-page th:last-child { 
-        width: 65px; /* Ajustado para "Log" */
+        width: 65px; 
         text-align: center;
     }
     body.admin-page td:nth-child(7), body.admin-page th:nth-child(7) { 
         width: 70px; 
         text-align: center;
     }
+    .loading-placeholder { /* Estilo para mensajes de carga/vacío en gráficos */
+         text-align:center; 
+         color: #777; 
+         padding: 15px;
+         font-style: italic;
+         width: 100%; /* Ocupar espacio del gráfico */
+     }
   </style>
 </head>
 
@@ -160,16 +167,17 @@
         <h3>📊 Estadísticas de Reportes</h3>
         <div id="loading-stats" style="text-align:center; color: #777; padding: 15px;">Cargando estadísticas...</div>
         <div class="charts-container" style="display: none;">
-            <div class="chart-wrapper">
+             <!-- Wrappers para los gráficos -->
+            <div class="chart-wrapper" id="cirugiasPorMesChartWrapper">
                 <canvas id="cirugiasPorMesChart"></canvas>
             </div>
-            <div class="chart-wrapper">
+            <div class="chart-wrapper" id="topMedicosChartWrapper">
                 <canvas id="topMedicosChart"></canvas>
             </div>
-            <div class="chart-wrapper">
+            <div class="chart-wrapper" id="topTiposCirugiaChartWrapper">
                 <canvas id="topTiposCirugiaChart"></canvas>
             </div>
-            <div class="chart-wrapper">
+            <div class="chart-wrapper" id="topClientesChartWrapper">
                 <canvas id="topClientesChart"></canvas>
             </div>
         </div>
@@ -249,7 +257,7 @@
       chartsContainerEl.style.display = 'none';
 
       db.collection("reportes")
-        .orderBy("modificadoEn", "desc") // Ordenar por modificación más reciente
+        .orderBy("modificadoEn", "desc") 
         .limit(200) 
         .get()
         .then(snapshot => {
@@ -259,10 +267,9 @@
           if (snapshot.empty) {
             tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados todavía.</td></tr>`;
             loadingStatsEl.textContent = 'No hay datos para generar estadísticas.';
-             // Limpiar gráficos si estaban visibles y ahora no hay datos
              Object.values(charts).forEach(chart => chart.destroy());
              charts = {};
-             chartsContainerEl.style.display = 'none'; // Ocultar contenedor
+             chartsContainerEl.style.display = 'none'; 
             return;
           }
 
@@ -299,9 +306,8 @@
             
             let archivosHtml = '-';
             if (tieneArchivos) {
-                 // Crear enlaces para cada archivo
                 archivosHtml = data.archivosAdjuntos.map(archivo => 
-                    `<a href="${archivo.url}" target="_blank" title="${archivo.nombre}" style="font-size: 1.3em; text-decoration: none; margin: 0 2px;">📎</a>`
+                    `<a href="${archivo.url}" target="_blank" title="${escapeHtml(archivo.nombre)}" style="font-size: 1.3em; text-decoration: none; margin: 0 2px;">📎</a>`
                 ).join('');
             }
 
@@ -312,7 +318,7 @@
             tr.appendChild(createCell(data.tipoCirugia));
             tr.appendChild(createCell(materialCortado));
             tr.appendChild(createCell(archivosHtml, true)); 
-            tr.appendChild(createCell(usuarioIdCorto)); // Indica quién creó/modificó
+            tr.appendChild(createCell(usuarioIdCorto)); 
             tr.appendChild(createCell(fechaCreadoFormateada)); 
             tr.appendChild(createCell(fechaModificacionFormateada)); 
             
@@ -321,7 +327,7 @@
             auditButton.textContent = 'Log'; 
             auditButton.classList.add('btn-audit');
             auditButton.onclick = (e) => { 
-                e.stopPropagation(); // Evitar que otros eventos de la fila se disparen
+                e.stopPropagation(); 
                 abrirModalAuditLog(doc.id, data.paciente); 
             };
             tdActions.appendChild(auditButton);
@@ -339,7 +345,6 @@
           console.error('Error cargando reportes:', error);
           tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 20px; color:red;">Error al cargar los reportes (${error.code || error.message}). Revise la consola y las reglas de seguridad.</td></tr>`;
           loadingStatsEl.textContent = 'Error al cargar datos para estadísticas.';
-           // Limpiar gráficos si falló la carga
            Object.values(charts).forEach(chart => chart.destroy());
            charts = {};
            chartsContainerEl.style.display = 'none';
@@ -375,16 +380,14 @@
                     const user = logData.usuarioId ? logData.usuarioId.substring(0,6) : 'Sistema';
                     let html = `<span class="log-timestamp">${formatearTimestamp(logData.timestamp)}</span>`;
                     html += `<span class="log-user">Usr: ${user}</span>`;
-                    html += `<span class="log-action">${logData.accion || 'Modif.'}</span>`; // Acción más clara
+                    html += `<span class="log-action">${logData.accion || 'Modif.'}</span>`; 
 
                     if (logData.cambios && logData.cambios.length > 0) {
                         html += '<div class="log-details-title">Detalles:</div>';
                         logData.cambios.forEach(cambio => {
-                            // Escapar HTML en valores para seguridad
                              let anteriorStr = escapeHtml(String(cambio.anterior !== undefined ? cambio.anterior : '-'));
                              let nuevoStr = escapeHtml(String(cambio.nuevo !== undefined ? cambio.nuevo : '-'));
                             
-                            // Truncar visualmente valores largos
                             anteriorStr = anteriorStr.length > 70 ? anteriorStr.substring(0,67) + '...' : anteriorStr;
                             nuevoStr = nuevoStr.length > 70 ? nuevoStr.substring(0,67) + '...' : nuevoStr;
                             
@@ -393,8 +396,8 @@
                                 nuevoStr = String(cambio.nuevo).trim() !== '(vacío)' ? '[Material Nuevo]' : '(vacío)';
                             }
                              if (cambio.campo === 'archivoAdjunto') {
-                                 anteriorStr = escapeHtml(cambio.anterior); // Nombre archivo anterior
-                                 nuevoStr = escapeHtml(cambio.nuevo); // Nombre archivo nuevo
+                                 anteriorStr = escapeHtml(cambio.anterior); 
+                                 nuevoStr = escapeHtml(cambio.nuevo); 
                              }
 
                             html += `<div class="log-field-change">
@@ -424,10 +427,9 @@
         }
     }
     
-    // Helper para escapar HTML en los logs
     function escapeHtml(unsafe) {
-        if (!unsafe) return unsafe;
-        return unsafe
+        if (unsafe === null || unsafe === undefined) return ''; // Devolver cadena vacía para null/undefined
+        return String(unsafe) // Asegurar que sea string
              .replace(/&/g, "&")
              .replace(/</g, "<")
              .replace(/>/g, ">")
@@ -437,31 +439,38 @@
 
 
     function generarEstadisticas() {
+        const loadingStatsEl = document.getElementById("loading-stats");
+        const chartsContainerEl = document.querySelector(".charts-container");
+
         if (reportesDataGlobal.length === 0) {
-            document.getElementById("loading-stats").textContent = 'No hay suficientes datos para estadísticas.';
-            document.querySelector(".charts-container").style.display = 'none';
-             // Asegurar que los contenedores de gráficos estén vacíos si no hay datos
+            loadingStatsEl.textContent = 'No hay suficientes datos para estadísticas.';
+            loadingStatsEl.style.display = 'block'; // Mostrar mensaje
+            chartsContainerEl.style.display = 'none'; // Ocultar contenedor
+             // Asegurar que los contenedores de gráficos estén vacíos
              ['cirugiasPorMesChart', 'topMedicosChart', 'topTiposCirugiaChart', 'topClientesChart'].forEach(id => {
-                const wrapper = document.getElementById(id)?.parentElement;
-                if (wrapper) wrapper.innerHTML = `<canvas id="${id}"></canvas>`; // Resetear a canvas vacío
+                const wrapper = document.getElementById(id + 'Wrapper'); // Usar ID del wrapper
+                if (wrapper) wrapper.innerHTML = `<p class="loading-placeholder">No hay datos suficientes.</p>`; 
              });
             return;
+        } else {
+             loadingStatsEl.style.display = 'none'; // Ocultar mensaje de carga/vacío
+             chartsContainerEl.style.display = 'flex'; // Mostrar contenedor
+              // Asegurar que los contenedores tengan el canvas antes de crear
+             ['cirugiasPorMesChart', 'topMedicosChart', 'topTiposCirugiaChart', 'topClientesChart'].forEach(id => {
+                 const wrapper = document.getElementById(id + 'Wrapper'); // Usar ID del wrapper
+                 if (wrapper && !wrapper.querySelector('canvas')) {
+                     wrapper.innerHTML = `<canvas id="${id}"></canvas>`; 
+                 }
+             });
         }
         
         Object.values(charts).forEach(chart => chart.destroy());
         charts = {};
-         // Asegurar que los contenedores de gráficos tengan el canvas antes de crear
-         ['cirugiasPorMesChart', 'topMedicosChart', 'topTiposCirugiaChart', 'topClientesChart'].forEach(id => {
-             const wrapper = document.getElementById(id)?.parentElement;
-             if (wrapper && !wrapper.querySelector('canvas')) {
-                 wrapper.innerHTML = `<canvas id="${id}"></canvas>`; 
-             }
-         });
 
         // --- Cálculo de Estadísticas ---
         const cirugiasPorMes = {};
         reportesDataGlobal.forEach(r => {
-            if (r.fechaCirugia && r.fechaCirugia.length >= 7) { // Validar formato YYYY-MM...
+            if (r.fechaCirugia && r.fechaCirugia.length >= 7) { 
                 const mesAnio = r.fechaCirugia.substring(0, 7); 
                 cirugiasPorMes[mesAnio] = (cirugiasPorMes[mesAnio] || 0) + 1;
             }
@@ -471,7 +480,7 @@
         if (labelsMeses.length > 0) {
             crearGrafico('cirugiasPorMesChart', 'bar', 'Cirugías por Mes', labelsMeses, dataMeses, 'Nº de Cirugías');
         } else {
-             document.getElementById('cirugiasPorMesChart').parentElement.innerHTML = '<p class="loading-placeholder">No hay datos suficientes para Cirugías por Mes.</p>';
+             document.getElementById('cirugiasPorMesChartWrapper').innerHTML = '<p class="loading-placeholder">No hay datos para Cirugías por Mes.</p>';
         }
 
 
@@ -483,7 +492,7 @@
         if (topMedicos.length > 0) {
             crearGrafico('topMedicosChart', 'pie', 'Top Médicos (# Reportes)', topMedicos.map(m => m[0]), topMedicos.map(m => m[1]));
         } else {
-             document.getElementById('topMedicosChart').parentElement.innerHTML = '<p class="loading-placeholder">No hay datos suficientes para Top Médicos.</p>';
+             document.getElementById('topMedicosChartWrapper').innerHTML = '<p class="loading-placeholder">No hay datos para Top Médicos.</p>';
         }
 
         const conteoTiposCx = {};
@@ -494,7 +503,7 @@
         if (topTiposCx.length > 0) {
             crearGrafico('topTiposCirugiaChart', 'doughnut', 'Top Tipos de Cirugía', topTiposCx.map(t => t[0]), topTiposCx.map(t => t[1]));
         } else {
-             document.getElementById('topTiposCirugiaChart').parentElement.innerHTML = '<p class="loading-placeholder">No hay datos suficientes para Top Tipos Cirugía.</p>';
+             document.getElementById('topTiposCirugiaChartWrapper').innerHTML = '<p class="loading-placeholder">No hay datos para Top Tipos Cirugía.</p>';
         }
         
         const conteoClientes = {};
@@ -505,23 +514,38 @@
         if (topClientes.length > 0) {
             crearGrafico('topClientesChart', 'bar', 'Top Clientes (# Reportes)', topClientes.map(c => c[0]), topClientes.map(c => c[1]), 'Nº de Reportes');
         } else {
-            document.getElementById('topClientesChart').parentElement.innerHTML = '<p class="loading-placeholder">No hay datos suficientes para Top Clientes.</p>';
+            document.getElementById('topClientesChartWrapper').innerHTML = '<p class="loading-placeholder">No hay datos para Top Clientes.</p>';
         }
     }
 
     function crearGrafico(canvasId, tipo, tituloLabel, labels, data, dataLabel = 'Cantidad') {
-        const ctx = document.getElementById(canvasId)?.getContext('2d'); // Usar optional chaining
-        if (!ctx) {
-            console.warn(`Contexto 2D no encontrado para canvas con ID ${canvasId}.`);
-             const wrapper = document.getElementById(canvasId)?.parentElement;
+        const canvas = document.getElementById(canvasId);
+         if (!canvas) {
+            console.warn(`Canvas con ID ${canvasId} no encontrado para gráfico.`);
+             const wrapper = document.getElementById(canvasId + 'Wrapper'); // Usar ID del wrapper
              if(wrapper) wrapper.innerHTML = `<p class="loading-placeholder">Error al crear gráfico ${tituloLabel}.</p>`;
             return;
         }
-        // Datos de colores consistentes
-         const chartColors = [ 
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+             console.error(`No se pudo obtener contexto 2D para ${canvasId}`);
+             return;
+        }
+
+        // Validar datos antes de crear gráfico
+        const numericData = data.filter(d => typeof d === 'number');
+        if (numericData.length === 0 && data.length > 0) {
+             console.warn(`Datos para gráfico ${tituloLabel} no son numéricos.`);
+             const wrapper = document.getElementById(canvasId + 'Wrapper'); 
+             if(wrapper) wrapper.innerHTML = `<p class="loading-placeholder">Datos inválidos para ${tituloLabel}.</p>`;
+             return;
+        }
+
+
+        const chartColors = [ 
             'rgba(255, 99, 132, 0.8)','rgba(54, 162, 235, 0.8)','rgba(255, 206, 86, 0.8)','rgba(75, 192, 192, 0.8)',
             'rgba(153, 102, 255, 0.8)','rgba(255, 159, 64, 0.8)','rgba(201, 203, 207, 0.8)','rgba(60, 179, 113, 0.8)',
-            'rgba(255, 0, 255, 0.8)','rgba(210, 105, 30, 0.8)', 'rgba(0, 0, 128, 0.8)' // Añadido uno más por si acaso
+            'rgba(255, 0, 255, 0.8)','rgba(210, 105, 30, 0.8)', 'rgba(0, 0, 128, 0.8)'
         ];
 
         charts[canvasId] = new Chart(ctx, {
@@ -531,7 +555,7 @@
                 datasets: [{
                     label: dataLabel,
                     data: data,
-                    backgroundColor: tipo === 'bar' ? 'rgba(0, 123, 255, 0.7)' : chartColors,
+                    backgroundColor: tipo === 'bar' ? 'rgba(0, 123, 255, 0.7)' : chartColors.slice(0, data.length), // Usar colores necesarios
                     borderColor: tipo === 'bar' ? 'rgba(0, 123, 255, 1)' : '#fff',
                     borderWidth: tipo === 'bar' ? 1 : 2
                 }]
@@ -541,14 +565,13 @@
                 maintainAspectRatio: false,
                 plugins: {
                     title: { display: true, text: tituloLabel, font: { size: 14, weight: 'bold' }, padding: { bottom: 10 } },
-                    legend: { display: tipo !== 'bar', position: 'top', labels: { font: { size: 10 }, boxWidth: 15 } }, // Leyenda más compacta
+                    legend: { display: tipo !== 'bar', position: 'top', labels: { font: { size: 10 }, boxWidth: 15 } }, 
                     tooltip: { titleFont: {size: 12}, bodyFont: {size: 11} }
                 },
                 scales: tipo === 'bar' ? { 
-                    y: { beginAtZero: true, ticks: { precision: 0, stepSize: Math.max(1, Math.ceil(Math.max(...data, 0) / 8)), font: {size:10} } }, // precision 0 y stepSize ajustado
+                    y: { beginAtZero: true, ticks: { precision: 0, stepSize: Math.max(1, Math.ceil(Math.max(...numericData, 0) / 8)), font: {size:10} } }, 
                     x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 30, font: {size:10} } } 
                 } : {},
-                 // Evitar que las etiquetas largas en gráficos pie/doughnut se corten
                  layout: tipo !== 'bar' ? { padding: { left: 10, right: 10, top: 0, bottom: 10 } } : {}
             }
         });
@@ -566,10 +589,10 @@
               }
           });
       }
-       // Cerrar modal con tecla Escape
        document.addEventListener('keydown', function(event) {
          if (event.key === "Escape") {
-            cerrarModalAuditLog();
+            // Cerrar el modal activo (si hay varios modales, necesitaría lógica más compleja)
+            cerrarModalAuditLog(); 
          }
        });
     };
