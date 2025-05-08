@@ -1,219 +1,144 @@
---- START OF FILE admin.html ---
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Reportes Guardados | Districorr</title>
+  <title>Administrar Datos | Districorr</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Lato&display=swap" rel="stylesheet">
-  <!-- Firebase SDK (compat version para firestore() v8) -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    /* Estilos adicionales específicos para esta página */
+    .admin-data-section {
+      margin-bottom: 40px;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+    .admin-data-section h3 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 10px;
+      color: #0056b3;
+    }
+    .data-list {
+      list-style: none;
+      padding: 0;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      margin-bottom: 15px;
+    }
+    .data-list li, .data-table tr {
+      padding: 8px 12px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+     .data-list li:last-child, .data-table tr:last-child td {
+       border-bottom: none;
+     }
+     .data-list li span, .data-table td {
+       flex-grow: 1;
+       margin-right: 10px;
+       word-break: break-word;
+     }
+     .data-actions button {
+       padding: 3px 8px;
+       font-size: 12px;
+       margin-left: 5px;
+       min-width: 60px; /* Ancho mínimo para botones */
+     }
+     .btn-edit { background-color: #ffc107; color: #333; }
+     .btn-edit:hover { background-color: #e0a800; }
+     .btn-delete { background-color: #dc3545; }
+     .btn-delete:hover { background-color: #c82333; }
+     .add-form { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+     .add-form input { flex-grow: 1; }
+     .add-form button { flex-shrink: 0; }
+     #materialesTable th, #materialesTable td { white-space: normal; }
+     #loading-admin { text-align: center; padding: 15px; color: #555; }
+  </style>
 </head>
-
-<!-- Añadir clase 'admin-page' para estilos específicos si es necesario -->
 <body class="fondo-dinamico admin-page">
   <div class="container">
     <header style="margin-bottom: 30px;">
       <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 80px; display: block; margin: 0 auto 15px auto;" />
-      <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">📋 Reportes Guardados</h2>
+      <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">⚙️ Administrar Datos Maestros</h2>
     </header>
 
-    <!-- Opcional: Añadir un campo de búsqueda (requiere JS adicional para funcionar) -->
-    <!--
-    <div class="form-group" style="margin-bottom: 20px;">
-      <input type="text" id="searchInput" class="form-control" placeholder="Buscar por paciente o médico..." onkeyup="filtrarTabla()">
+    <!-- Sección Clientes -->
+    <div class="admin-data-section">
+      <h3>Clientes</h3>
+      <div class="add-form">
+        <input type="text" id="newClienteName" class="form-control" placeholder="Nuevo nombre de cliente...">
+        <button id="addClienteBtn" class="btn-primario">➕ Añadir</button>
+      </div>
+      <div id="clientesListContainer">
+         <p id="loading-clientes" style="text-align:center; color: #777;">Cargando clientes...</p>
+         <ul id="clientesList" class="data-list" style="display:none;">
+           <!-- Los clientes se cargarán aquí -->
+         </ul>
+      </div>
     </div>
-    -->
 
-    <div class="table-responsive">
-      <table id="reportesTable" style="width:100%;">
-        <thead>
-          <tr>
-            <!-- Columnas reordenadas y añadidas -->
-            <th>Fecha Cirugía</th>
-            <th>Paciente</th>
-            <th>Médico</th>
-            <th>Cliente</th> <!-- NUEVA COLUMNA -->
-            <th>Tipo Cirugía</th>
-            <th>Material (Inicio)</th>
-            <th>Usuario ID</th>
-            <th>Guardado En</th>
-          </tr>
-        </thead>
-        <tbody id="reporte-rows">
-          <!-- Las filas se cargarán aquí -->
-           <tr><td colspan="8" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr> <!-- Colspan AUMENTADO A 8 -->
-        </tbody>
-      </table>
+    <!-- Sección Tipos de Cirugía -->
+    <div class="admin-data-section">
+      <h3>Tipos de Cirugía</h3>
+      <div class="add-form">
+        <input type="text" id="newTipoCxName" class="form-control" placeholder="Nuevo tipo de cirugía...">
+        <button id="addTipoCxBtn" class="btn-primario">➕ Añadir</button>
+      </div>
+      <div id="tiposCxListContainer">
+         <p id="loading-tiposcx" style="text-align:center; color: #777;">Cargando tipos de cirugía...</p>
+         <ul id="tiposCxList" class="data-list" style="display:none;">
+           <!-- Los tipos de cirugía se cargarán aquí -->
+         </ul>
+      </div>
     </div>
+
+    <!-- Sección Materiales -->
+    <div class="admin-data-section">
+      <h3>Materiales</h3>
+      <div class="add-form">
+        <input type="text" id="newMaterialCode" class="form-control" placeholder="Código (*)" style="flex-basis: 150px; flex-grow: 0;">
+        <input type="text" id="newMaterialDesc" class="form-control" placeholder="Descripción (*)">
+        <input type="text" id="newMaterialCat" class="form-control" placeholder="Categoría (*)" style="flex-basis: 200px; flex-grow: 0;">
+        <button id="addMaterialBtn" class="btn-primario">➕ Añadir</button>
+      </div>
+       <div id="materialesListContainer">
+           <p id="loading-materiales" style="text-align:center; color: #777;">Cargando materiales...</p>
+           <div class="table-responsive">
+               <table id="materialesTable" style="width:100%; display:none;">
+                   <thead>
+                       <tr>
+                           <th>Código</th>
+                           <th>Descripción</th>
+                           <th>Categoría</th>
+                           <th>Acciones</th>
+                       </tr>
+                   </thead>
+                   <tbody id="materialesListBody">
+                       <!-- Los materiales se cargarán aquí -->
+                   </tbody>
+               </table>
+           </div>
+       </div>
+    </div>
+
+     <div id="toast" class="toast-notification" style="display:none;"></div>
 
     <div style="text-align: center; margin-top: 30px;">
-      <a href="index.html" class="btn-volver">← Volver al formulario</a>
+      <a href="index.html" class="btn-volver">← Volver al Formulario Principal</a>
     </div>
   </div>
 
-  <script>
-    // Configuración de Firebase (DEBE SER LA MISMA QUE EN script.js)
-    const firebaseConfig = {
-      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // ¡ASEGÚRATE DE QUE ESTA SEA TU API KEY REAL!
-      authDomain: "cirugia-reporte.firebaseapp.com",
-      projectId: "cirugia-reporte",
-      storageBucket: "cirugia-reporte.appspot.com",
-      messagingSenderId: "698831567840",
-      appId: "1:698831567840:web:fc6d6197f22beba4d88985",
-      measurementId: "G-HD7ZLL1GLZ"
-    };
-
-    // Inicializar Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // Habilitar persistencia (opcional pero bueno para offline)
-    db.enablePersistence()
-      .catch((err) => {
-         if (err.code == 'failed-precondition') {
-          console.warn("Persistencia admin falló: Múltiples pestañas?");
-        } else if (err.code == 'unimplemented') {
-          console.warn("Persistencia admin no soportada.");
-        } else {
-          console.error("Error habilitando persistencia admin:", err);
-        }
-      });
-
-    // Formatea la fecha ISO (YYYY-MM-DD) a formato local
-    function formatearFechaLocal(fechaISO) {
-        if (!fechaISO) return '-';
-        try {
-            // Interpretar la fecha como local añadiendo hora
-            const partes = fechaISO.split('-');
-            if (partes.length !== 3) return fechaISO;
-            const fecha = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]), 12, 0, 0);
-            return fecha.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-        } catch (e) { return fechaISO; }
-    }
-
-     // Formatea el timestamp de Firestore a fecha y hora local
-    function formatearTimestamp(timestamp) {
-        if (!timestamp || !timestamp.toDate) return '-';
-        try {
-            return timestamp.toDate().toLocaleString('es-AR', {
-                year: 'numeric', month: '2-digit', day: '2-digit',
-                hour: '2-digit', minute: '2-digit'
-            });
-        } catch (e) { return '-'; }
-    }
-
-    // Carga los reportes desde Firestore y los muestra en la tabla
-    function cargarReportes() {
-      const tbody = document.getElementById("reporte-rows");
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>'; // Colspan 8 ahora
-
-      db.collection("reportes")
-        .orderBy("timestamp", "desc") // Ordenar por fecha de guardado, más reciente primero
-        .limit(100) // Limitar a los últimos 100 para rendimiento
-        .get()
-        .then(snapshot => {
-          tbody.innerHTML = ''; // Limpiar 'Cargando...'
-          if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados todavía.</td></tr>';
-            return;
-          }
-
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            const fechaCirugiaFormateada = formatearFechaLocal(data.fechaCirugia);
-            const fechaGuardadoFormateada = formatearTimestamp(data.timestamp);
-            // Acortar material para visualización en tabla
-            const materialCortado = data.material
-                ? (data.material.substring(0, 40) + (data.material.length > 40 ? '...' : ''))
-                : '-'; // Mostrar guión si no hay material
-            const usuarioIdCorto = data.usuario ? data.usuario.substring(0, 6) : 'Anón.'; // Acortar ID y poner texto si es anónimo
-
-            const tr = document.createElement("tr");
-
-            // Helper para crear celdas de forma segura
-            const createCell = (text) => {
-                const td = document.createElement('td');
-                td.textContent = text || '-'; // Mostrar guión si el valor es null/undefined/vacío
-                return td;
-            };
-
-            // Añadir celdas en el orden correcto de las columnas
-            tr.appendChild(createCell(fechaCirugiaFormateada));
-            tr.appendChild(createCell(data.paciente));
-            tr.appendChild(createCell(data.medico));
-            tr.appendChild(createCell(data.cliente)); // NUEVA CELDA PARA CLIENTE
-            tr.appendChild(createCell(data.tipoCirugia));
-            tr.appendChild(createCell(materialCortado));
-            tr.appendChild(createCell(usuarioIdCorto));
-            tr.appendChild(createCell(fechaGuardadoFormateada));
-
-            tbody.appendChild(tr);
-          });
-        })
-        .catch(error => {
-          console.error('Error cargando reportes:', error);
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color:red;">Error al cargar los reportes. Revise la consola.</td></tr>';
-        });
-    }
-
-    // Aplica fondo dinámico (opcional) o un fondo fijo
-    function aplicarFondoDinamico() {
-        document.body.style.backgroundColor = "#f0f2f5"; // Un gris ligeramente diferente para admin
-    }
-
-    // Opcional: Función para filtrar la tabla (si descomentas el input de búsqueda)
-    /*
-    function filtrarTabla() {
-      const input = document.getElementById("searchInput");
-      const filter = input.value.toUpperCase();
-      const table = document.getElementById("reportesTable");
-      const tr = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
-
-      for (let i = 0; i < tr.length; i++) {
-        // Buscar en columna Paciente (índice 1), Médico (índice 2), Cliente (índice 3)
-        const tdPaciente = tr[i].getElementsByTagName("td")[1];
-        const tdMedico = tr[i].getElementsByTagName("td")[2];
-        const tdCliente = tr[i].getElementsByTagName("td")[3]; // NUEVO TD PARA FILTRO
-        let mostrar = false;
-
-        if (tdPaciente) {
-          const txtValuePaciente = tdPaciente.textContent || tdPaciente.innerText;
-          if (txtValuePaciente.toUpperCase().indexOf(filter) > -1) {
-            mostrar = true;
-          }
-        }
-        if (!mostrar && tdMedico) { 
-           const txtValueMedico = tdMedico.textContent || tdMedico.innerText;
-           if (txtValueMedico.toUpperCase().indexOf(filter) > -1) {
-            mostrar = true;
-          }
-        }
-        if (!mostrar && tdCliente) { // NUEVO FILTRO
-           const txtValueCliente = tdCliente.textContent || tdCliente.innerText;
-           if (txtValueCliente.toUpperCase().indexOf(filter) > -1) {
-            mostrar = true;
-          }
-        }
-
-        if (mostrar) {
-          tr[i].style.display = "";
-        } else {
-          tr[i].style.display = "none";
-        }
-      }
-    }
-    */
-
-    // Ejecutar al cargar la página
-    window.onload = function () {
-      aplicarFondoDinamico();
-      cargarReportes();
-    };
-  </script>
+  <script src="datos_admin.js"></script>
 </body>
 </html>
---- END OF FILE admin.html ---
+--- END OF FILE datos_admin.html ---
