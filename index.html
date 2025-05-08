@@ -1,3 +1,5 @@
+--- START OF FILE index.html ---
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -51,6 +53,19 @@
       <div class="mensaje-error" id="error-paciente">Este campo es requerido.</div>
     </div>
 
+    <!-- CAMPO CLIENTE (NUEVO) -->
+    <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+             <label for="cliente" style="margin-bottom: 0;">Cliente (*)</label>
+             <button type="button" onclick="abrirModalCliente()" class="btn-seleccionar-item">🔍 Seleccionar</button>
+        </div>
+      <input id="cliente" class="form-control" list="clientesList" placeholder="Escriba, seleccione o use el botón..." required />
+      <datalist id="clientesList"></datalist>
+      <small class="ayuda-texto">Nombre del cliente (institución, obra social, etc.).</small>
+      <div class="mensaje-error" id="error-cliente">Este campo es requerido.</div>
+    </div>
+    <!-- FIN CAMPO CLIENTE -->
+
     <div class="form-group">
       <label for="medico">Médico (*)</label>
       <input id="medico" class="form-control" list="medicosList" placeholder="Escriba o seleccione..." required />
@@ -60,58 +75,53 @@
     </div>
 
     <div class="form-group">
-      <label for="instrumentador">Instrumentador</label> <!-- Ya no es requerido -->
+      <label for="instrumentador">Instrumentador</label> 
       <input id="instrumentador" class="form-control" list="instrumentadoresList" placeholder="Escriba o seleccione..." />
       <datalist id="instrumentadoresList"></datalist>
       <small class="ayuda-texto">Nombre del instrumentador quirúrgico.</small>
     </div>
 
     <div class="form-group">
-      <label for="lugarCirugia">Lugar de Cirugía</label> <!-- Ya no es requerido -->
+      <label for="lugarCirugia">Lugar de Cirugía</label> 
       <input id="lugarCirugia" class="form-control" list="lugaresList" placeholder="Escriba o seleccione..." />
       <datalist id="lugaresList"></datalist>
       <small class="ayuda-texto">Hospital o clínica donde se realizará la cirugía.</small>
-      <!-- Mensaje de error eliminado, ya no es requerido -->
     </div>
 
     <div class="form-group">
       <label for="fechaCirugia">Fecha de Cirugía (*)</label>
       <input type="date" id="fechaCirugia" class="form-control" required />
       <small class="ayuda-texto">Fecha programada para la intervención.</small>
-      <div class="mensaje-error" id="error-fecha">Este campo es requerido.</div>
+      <div class="mensaje-error" id="error-fechaCirugia">Este campo es requerido.</div> <!-- ID de error corregido -->
     </div>
 
-    <!-- CAMBIO: Botón para Tipo de Cirugía -->
     <div class="form-group">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-             <label for="tipoCirugia" style="margin-bottom: 0;">Tipo de Cirugía</label> <!-- Ya no es requerido -->
-             <button type="button" onclick="abrirModalTipoCx()" class="btn-seleccionar-material">🔍 Seleccionar</button>
+             <label for="tipoCirugia" style="margin-bottom: 0;">Tipo de Cirugía</label> 
+             <button type="button" onclick="abrirModalTipoCx()" class="btn-seleccionar-item">🔍 Seleccionar</button> <!-- Clase btn-seleccionar-item -->
         </div>
       <input id="tipoCirugia" class="form-control" list="tiposCirugiaList" placeholder="Escriba, seleccione o use el botón..." />
       <datalist id="tiposCirugiaList"></datalist>
       <small class="ayuda-texto">Descripción del procedimiento quirúrgico.</small>
-      <!-- Mensaje de error eliminado -->
     </div>
-    <!-- Fin del cambio -->
 
     <div class="form-group">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label for="material" style="margin-bottom: 0;">Material Requerido</label> <!-- Ya no es requerido -->
-            <button type="button" onclick="abrirModalMateriales()" class="btn-seleccionar-material">🔍 Seleccionar</button>
+            <label for="material" style="margin-bottom: 0;">Material Requerido</label>
+            <button type="button" onclick="abrirModalMateriales()" class="btn-seleccionar-item">🔍 Seleccionar</button> <!-- Clase btn-seleccionar-item -->
         </div>
       <textarea id="material" class="form-control" rows="5" placeholder="Ingrese un ítem por línea o use el botón 'Seleccionar'..."></textarea>
       <small class="ayuda-texto">Lista de materiales necesarios.</small>
-      <!-- Mensaje de error eliminado -->
     </div>
 
     <div class="form-group">
-      <label for="observaciones">Observaciones</label> <!-- Ya no es requerido -->
+      <label for="observaciones">Observaciones</label> 
       <textarea id="observaciones" class="form-control" rows="3" placeholder="Alergias, condiciones especiales, etc."></textarea>
       <small class="ayuda-texto">Consideraciones especiales para el procedimiento.</small>
     </div>
 
     <div class="form-group">
-      <label for="infoAdicional">Información Adicional</label> <!-- Ya no es requerido -->
+      <label for="infoAdicional">Información Adicional</label>
       <textarea id="infoAdicional" class="form-control" rows="3" placeholder="Contacto alternativo, prepaga, etc."></textarea>
       <small class="ayuda-texto">Otros datos relevantes para el equipo.</small>
     </div>
@@ -147,8 +157,7 @@
 
   <!-- Notificación Toast -->
   <div id="toast" class="toast-notification" style="display:none;"></div>
-
-  <!-- Modal para Materiales -->
+    <!-- Modal para Materiales -->
   <div id="modalMateriales" class="modal-overlay" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
@@ -156,7 +165,6 @@
         <button class="modal-close-btn" onclick="cerrarModalMateriales()">×</button>
       </div>
       <div class="modal-body">
-        <!-- CAMBIO: Llamar a función debounced -->
         <input type="text" id="modalMaterialesSearchInput" class="form-control" placeholder="Buscar material por código o descripción..." onkeyup="debouncedFilterMateriales()">
         <div id="modalMaterialesLista" class="modal-lista-container">
           Cargando materiales...
@@ -177,7 +185,6 @@
         <button class="modal-close-btn" onclick="cerrarModalTipoCx()">×</button>
       </div>
       <div class="modal-body">
-         <!-- CAMBIO: Llamar a función debounced -->
         <input type="text" id="modalTipoCxSearchInput" class="form-control" placeholder="Buscar tipo de cirugía..." onkeyup="debouncedFilterTipoCx()">
         <div id="modalTipoCxLista" class="modal-lista-container">
           Cargando tipos de cirugía...
@@ -185,13 +192,34 @@
       </div>
       <div class="modal-footer">
          <button type="button" class="btn-link" onclick="cerrarModalTipoCx()">Cancelar</button>
-         <!-- No hay botón "Añadir", la selección es directa -->
       </div>
     </div>
   </div>
+
+  <!-- MODAL PARA CLIENTE (NUEVO) -->
+  <div id="modalCliente" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Seleccionar Cliente</h3>
+        <button class="modal-close-btn" onclick="cerrarModalCliente()">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="modalClienteSearchInput" class="form-control" placeholder="Buscar cliente..." onkeyup="debouncedFilterCliente()">
+        <div id="modalClienteLista" class="modal-lista-container">
+          Cargando clientes...
+        </div>
+      </div>
+      <div class="modal-footer">
+         <button type="button" class="btn-link" onclick="cerrarModalCliente()">Cancelar</button>
+         <!-- No hay botón "Añadir", la selección es directa como en Tipo Cx -->
+      </div>
+    </div>
+  </div>
+  <!-- FIN MODAL CLIENTE -->
 
 
   <!-- Script principal -->
   <script src="script.js"></script>
 </body>
 </html>
+--- END OF FILE index.html ---
