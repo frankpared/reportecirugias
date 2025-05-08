@@ -45,54 +45,61 @@ function mostrarToast(mensaje, tipo = 'info') {
     if (!toast) return;
     // Ocultar toast anterior si existe para evitar solapamientos
     toast.classList.remove('visible');
-    toast.style.display = 'none';
+    // toast.style.display = 'none'; // Evitar cambiar display directamente si usamos clases para animación
 
     toast.textContent = mensaje;
-    toast.className = 'toast-notification'; 
+    toast.className = 'toast-notification'; // Reset class list
     toast.classList.add(tipo); 
     
-    // Forzar reflow para reiniciar animación si es necesario
+    // Forzar reflow para reiniciar animación si es necesario (a veces útil)
     void toast.offsetWidth; 
 
-    toast.style.display = 'block'; // Hacer visible antes de añadir la clase
-    setTimeout(() => { // Añadir clase visible en el siguiente ciclo para que la transición funcione
+    // Usar clase 'visible' para controlar la animación/transición
+    toast.style.display = 'block'; // Asegurar display block ANTES de añadir 'visible'
+    setTimeout(() => { // Pequeño delay para asegurar que display:block se aplique
         toast.classList.add('visible');
-        toast.style.transform = 'translateY(0)';
     }, 10); 
     
+    // Ocultar después de un tiempo
     setTimeout(() => {
         toast.classList.remove('visible');
-        toast.style.transform = 'translateY(20px)';
         // Esperar que termine la transición para ocultar con display:none
-        setTimeout(() => { toast.style.display = 'none'; }, 300); 
-    }, 4000); 
+        // La duración debe coincidir con la transición CSS (0.3s = 300ms)
+        setTimeout(() => { 
+            // Solo ocultar si AÚN no es visible (evita ocultar un toast nuevo que apareció rápido)
+            if (!toast.classList.contains('visible')) {
+                toast.style.display = 'none'; 
+            }
+        }, 300); 
+    }, 4000); // Duración visible: 4 segundos
 }
+
 
 // --- Funciones Genéricas para CRUD de Listas Simples (Nombre) ---
 async function loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural) {
-    console.log(`Intentando cargar: ${itemNamePlural} desde ${collectionName}`); // Log de inicio
+    console.log(`Intentando cargar: ${itemNamePlural} desde ${collectionName}`); 
     loadingElement.style.display = 'block';
-    loadingElement.textContent = `Cargando ${itemNamePlural}...`; // Mensaje inicial
-    loadingElement.style.color = '#777'; // Color normal
+    loadingElement.textContent = `Cargando ${itemNamePlural}...`; 
+    loadingElement.style.color = '#777'; 
     listElement.style.display = 'none';
     listElement.innerHTML = '';
 
     try {
+        // Asegúrate que el índice para 'nombreLower' exista en Firestore para estas colecciones
         const snapshot = await db.collection(collectionName).orderBy('nombreLower').get();
-        console.log(`Snapshot recibido para ${itemNamePlural}. Vacío: ${snapshot.empty}, Tamaño: ${snapshot.size}`); // Log del resultado
+        console.log(`Snapshot recibido para ${itemNamePlural}. Vacío: ${snapshot.empty}, Tamaño: ${snapshot.size}`); 
 
         if (snapshot.empty) {
-            loadingElement.textContent = `No hay ${itemNamePlural} definidos.`;
-            // No mostrar error, solo el mensaje de vacío
-            loadingElement.style.display = 'block'; // Asegurarse que el mensaje sea visible
-            listElement.style.display = 'none'; // Ocultar la lista vacía
+            loadingElement.textContent = `No hay ${itemNamePlural} definidos. Añada el primero.`;
+            loadingElement.style.display = 'block'; 
+            listElement.style.display = 'none'; 
             return;
         }
         snapshot.forEach(doc => {
             const data = doc.data();
-            if (!data.nombre) { // Chequeo por si falta el campo nombre
+            if (!data.nombre) { 
                  console.warn(`Documento ${doc.id} en ${collectionName} no tiene campo 'nombre'. Omitiendo.`);
-                 return; // Saltar este documento
+                 return; 
             }
             const li = document.createElement('li');
             li.dataset.id = doc.id;
@@ -112,16 +119,16 @@ async function loadSimpleList(collectionName, listElement, loadingElement, itemN
             li.appendChild(actionsDiv);
             listElement.appendChild(li);
         });
-        loadingElement.style.display = 'none'; // Ocultar mensaje de carga
-        listElement.style.display = 'block'; // Mostrar la lista
+        loadingElement.style.display = 'none'; 
+        listElement.style.display = 'block'; 
 
     } catch (error) {
-        console.error(`Error cargando ${itemNamePlural} desde ${collectionName}:`, error); // Log detallado del error
-        loadingElement.textContent = 'Error al cargar datos.'; // Mensaje genérico de error
-        loadingElement.style.color = 'red'; // Color rojo para error
-        loadingElement.style.display = 'block'; // Asegurarse que el mensaje de error sea visible
-        listElement.style.display = 'none'; // Ocultar lista si hay error
-        mostrarToast(`Error cargando ${itemNamePlural}. Revise la consola.`, 'error'); // Toast con más info
+        console.error(`Error cargando ${itemNamePlural} desde ${collectionName}:`, error); 
+        loadingElement.textContent = `Error al cargar ${itemNamePlural}.`; 
+        loadingElement.style.color = 'red'; 
+        loadingElement.style.display = 'block'; 
+        listElement.style.display = 'none'; 
+        mostrarToast(`Error cargando ${itemNamePlural}: ${error.message}`, 'error'); 
     }
 }
 
@@ -134,22 +141,20 @@ async function addSimpleListItem(collectionName, inputElement, addButtonElement,
     addButtonElement.disabled = true; addButtonElement.textContent = 'Añadiendo...';
     try {
         const nombreLower = nombre.toLowerCase();
-        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', nombreLower).get();
+        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', nombreLower).limit(1).get(); // Limitar a 1
         if (!querySnapshot.empty) {
             mostrarToast(`El ${itemNameSingular} "${nombre}" ya existe.`, 'warning');
             inputElement.focus();
-            // No retornar aquí, permitir reactivar el botón en finally
         } else {
             await db.collection(collectionName).add({ nombre: nombre, nombreLower: nombreLower }); 
             mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} añadido con éxito.`, 'success');
             inputElement.value = '';
-            await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); // Recargar lista
+            await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); 
         }
     } catch (error) {
         console.error(`Error añadiendo ${itemNameSingular}:`, error);
         mostrarToast(`Error al añadir ${itemNameSingular}.`, 'error');
     } finally {
-        // Asegurarse de reactivar el botón incluso si ya existía o hubo error
         addButtonElement.disabled = false; addButtonElement.textContent = '➕ Añadir';
     }
 }
@@ -161,11 +166,12 @@ async function editSimpleListItem(collectionName, id, currentName, itemNameSingu
     const newNameTrimmed = newName.trim();
     const newNameLower = newNameTrimmed.toLowerCase();
     try {
-        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', newNameLower).get();
+        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', newNameLower).limit(1).get();
         let conflict = false;
-        querySnapshot.forEach(doc => {
-            if (doc.id !== id) conflict = true; 
-        });
+        if (!querySnapshot.empty && querySnapshot.docs[0].id !== id) {
+             conflict = true;
+        }
+       
         if (conflict) {
             mostrarToast(`El nombre "${newNameTrimmed}" ya existe para otro ${itemNameSingular}.`, 'warning');
             return;
@@ -173,7 +179,7 @@ async function editSimpleListItem(collectionName, id, currentName, itemNameSingu
 
         await db.collection(collectionName).doc(id).update({ nombre: newNameTrimmed, nombreLower: newNameLower });
         mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} actualizado.`, 'success');
-        await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); // Recargar lista
+        await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); 
     } catch (error) {
         console.error(`Error actualizando ${itemNameSingular}:`, error);
         mostrarToast('Error al actualizar.', 'error');
@@ -181,11 +187,11 @@ async function editSimpleListItem(collectionName, id, currentName, itemNameSingu
 }
 
 async function deleteSimpleListItem(collectionName, id, name, itemNameSingular, listElement, loadingElement, itemNamePlural) {
-    if (!confirm(`¿Está seguro de que desea eliminar el ${itemNameSingular} "${name}" (ID: ${id})?`)) return;
+    if (!confirm(`¿Está seguro de que desea eliminar el ${itemNameSingular} "${name}" (ID: ${id})?\nEsta acción no se puede deshacer.`)) return;
     try {
         await db.collection(collectionName).doc(id).delete();
         mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} eliminado.`, 'success');
-        await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); // Recargar lista
+        await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); 
     } catch (error) {
         console.error(`Error eliminando ${itemNameSingular}:`, error);
         mostrarToast('Error al eliminar.', 'error');
@@ -194,24 +200,26 @@ async function deleteSimpleListItem(collectionName, id, name, itemNameSingular, 
 
 // --- Funciones Específicas para Materiales ---
 async function loadMateriales() {
-    console.log("Intentando cargar: Materiales"); // Log
+    console.log("Intentando cargar: Materiales desde", COLECCION_MATERIALES); 
     loadingMateriales.style.display = 'block'; 
     loadingMateriales.textContent = 'Cargando materiales...';
     loadingMateriales.style.color = '#777';
     materialesTable.style.display = 'none'; 
     materialesTableBody.innerHTML = '';
     try {
+        // Asegúrate que existen índices compuestos en Firestore si son necesarios
+        // (categoria ASC, code ASC) es un índice automático común.
         const snapshot = await db.collection(COLECCION_MATERIALES).orderBy('categoria').orderBy('code').get();
-        console.log(`Snapshot recibido para Materiales. Vacío: ${snapshot.empty}, Tamaño: ${snapshot.size}`); // Log
+        console.log(`Snapshot recibido para Materiales. Vacío: ${snapshot.empty}, Tamaño: ${snapshot.size}`); 
         if (snapshot.empty) { 
-            loadingMateriales.textContent = 'No hay materiales definidos.'; 
+            loadingMateriales.textContent = 'No hay materiales definidos. Añada el primero.'; 
             loadingMateriales.style.display = 'block';
             materialesTable.style.display = 'none';
             return; 
         }
         snapshot.forEach(doc => {
             const data = doc.data(); 
-             if (!data.code || !data.description || !data.categoria) { // Chequeo campos requeridos
+             if (!data.code || !data.description || !data.categoria) { 
                  console.warn(`Documento ${doc.id} en ${COLECCION_MATERIALES} le faltan campos (code, description, categoria). Omitiendo.`);
                  return; 
             }
@@ -228,12 +236,12 @@ async function loadMateriales() {
         loadingMateriales.style.display = 'none'; 
         materialesTable.style.display = 'table';
     } catch (error) {
-        console.error(`Error cargando ${COLECCION_MATERIALES}:`, error); // Log detallado
-        loadingMateriales.textContent = 'Error al cargar datos.'; 
+        console.error(`Error cargando ${COLECCION_MATERIALES}:`, error); 
+        loadingMateriales.textContent = `Error al cargar materiales.`; 
         loadingMateriales.style.color = 'red'; 
         loadingMateriales.style.display = 'block';
         materialesTable.style.display = 'none';
-        mostrarToast('Error cargando materiales. Revise la consola.', 'error');
+        mostrarToast(`Error cargando materiales: ${error.message}`, 'error');
     }
 }
 
@@ -241,19 +249,19 @@ async function addMaterial() {
     const code = newMaterialCodeInput.value.trim();
     const description = newMaterialDescInput.value.trim();
     const categoria = newMaterialCatInput.value.trim();
-    if (!code || !description || !categoria) { mostrarToast('Complete todos los campos del material (*).', 'warning'); return; }
+    if (!code || !description || !categoria) { mostrarToast('Complete Código, Descripción y Categoría.', 'warning'); return; }
     addMaterialBtn.disabled = true; addMaterialBtn.textContent = 'Añadiendo...';
     try {
-        const existing = await db.collection(COLECCION_MATERIALES).where('code', '==', code).limit(1).get();
+        const q = db.collection(COLECCION_MATERIALES).where('code', '==', code).limit(1);
+        const existing = await q.get();
         if (!existing.empty) {
             mostrarToast(`El código de material "${code}" ya existe.`, 'warning');
             newMaterialCodeInput.focus();
-            // No retornar, dejar que finally reactive el botón
         } else {
             await db.collection(COLECCION_MATERIALES).add({ code: code, description: description, categoria: categoria });
             mostrarToast('Material añadido con éxito.', 'success');
             newMaterialCodeInput.value = ''; newMaterialDescInput.value = ''; newMaterialCatInput.value = '';
-            await loadMateriales(); // Recargar
+            await loadMateriales(); 
         }
     } catch (error) {
         console.error("Error añadiendo material:", error); mostrarToast('Error al añadir material.', 'error');
@@ -264,58 +272,51 @@ async function addMaterial() {
 
 async function editMaterial(id, currentData) {
     const newCode = prompt(`Editar Código (Actual: ${currentData.code}):`, currentData.code);
-    if (newCode === null) return; // Cancelado en el primer prompt
+    if (newCode === null) return; 
     const newDesc = prompt(`Editar Descripción (Actual: ${currentData.description}):`, currentData.description);
-    if (newDesc === null) return; // Cancelado en el segundo prompt
+    if (newDesc === null) return; 
     const newCat = prompt(`Editar Categoría (Actual: ${currentData.categoria}):`, currentData.categoria);
-    if (newCat === null) return; // Cancelado en el tercer prompt
+    if (newCat === null) return; 
 
     const newCodeTrimmed = newCode.trim();
     const newDescTrimmed = newDesc.trim();
     const newCatTrimmed = newCat.trim();
 
-    // Validar que los campos obligatorios no queden vacíos después de editar
     if (!newCodeTrimmed || !newDescTrimmed || !newCatTrimmed) {
-         mostrarToast('Los campos Código, Descripción y Categoría no pueden quedar vacíos.', 'warning');
+         mostrarToast('Código, Descripción y Categoría no pueden quedar vacíos.', 'warning');
          return;
     }
 
-    const updatedData = {
-        code: newCodeTrimmed,
-        description: newDescTrimmed,
-        categoria: newCatTrimmed
-    };
-    // Verificar si hubo cambios reales
+    const updatedData = { code: newCodeTrimmed, description: newDescTrimmed, categoria: newCatTrimmed };
+    
     if (updatedData.code === currentData.code && updatedData.description === currentData.description && updatedData.categoria === currentData.categoria) {
          mostrarToast('No se realizaron cambios.', 'info');
          return;
     }
 
     try {
-        // Verificar si el nuevo código ya existe en otro documento
         if (newCodeTrimmed !== currentData.code) {
-            const existing = await db.collection(COLECCION_MATERIALES).where('code', '==', newCodeTrimmed).limit(1).get();
-            let conflict = false;
-            existing.forEach(doc => { if(doc.id !== id) conflict = true; });
-            if (conflict) {
-                mostrarToast(`El código de material "${newCodeTrimmed}" ya existe.`, 'warning');
-                return;
+            const q = db.collection(COLECCION_MATERIALES).where('code', '==', newCodeTrimmed).limit(1);
+            const existing = await q.get();
+            if (!existing.empty && existing.docs[0].id !== id) {
+                 mostrarToast(`El código de material "${newCodeTrimmed}" ya existe.`, 'warning');
+                 return;
             }
         }
         await db.collection(COLECCION_MATERIALES).doc(id).update(updatedData);
         mostrarToast('Material actualizado.', 'success'); 
-        await loadMateriales(); // Recargar
+        await loadMateriales(); 
     } catch (error) {
         console.error("Error actualizando material:", error); mostrarToast('Error al actualizar.', 'error');
     }
 }
 
 async function deleteMaterial(id, code) {
-    if (!confirm(`¿Está seguro de que desea eliminar el material con código "${code}" (ID: ${id})?`)) return;
+    if (!confirm(`¿Está seguro de que desea eliminar el material "${code}" (ID: ${id})?\nEsta acción no se puede deshacer.`)) return;
     try {
         await db.collection(COLECCION_MATERIALES).doc(id).delete();
         mostrarToast('Material eliminado.', 'success'); 
-        await loadMateriales(); // Recargar
+        await loadMateriales(); 
     } catch (error) {
         console.error("Error eliminando material:", error); mostrarToast('Error al eliminar.', 'error');
     }
@@ -323,24 +324,22 @@ async function deleteMaterial(id, code) {
 
 // --- Inicialización ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM Cargado. Iniciando carga de datos...");
-    // Cargar listas
+    console.log("DOM Cargado. Iniciando carga de datos maestros...");
+    
     loadSimpleList(COLECCION_CLIENTES, clienteList, loadingClientes, 'cliente', 'clientes');
     loadSimpleList(COLECCION_TIPOS_CX, tipoCxList, loadingTiposCx, 'tipo de cirugía', 'tipos de cirugía');
     loadMateriales();
 
-    // Listeners para añadir
     addClienteBtn.addEventListener('click', () => addSimpleListItem(COLECCION_CLIENTES, newClienteNameInput, addClienteBtn, 'cliente', clienteList, loadingClientes, 'clientes'));
     addTipoCxBtn.addEventListener('click', () => addSimpleListItem(COLECCION_TIPOS_CX, newTipoCxNameInput, addTipoCxBtn, 'tipo de cirugía', tipoCxList, loadingTiposCx, 'tipos de cirugía'));
     addMaterialBtn.addEventListener('click', addMaterial);
 
-    // Listeners para Enter
     newClienteNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addClienteBtn.click(); });
     newTipoCxNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTipoCxBtn.click(); });
     [newMaterialCodeInput, newMaterialDescInput, newMaterialCatInput].forEach(input => {
         input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addMaterialBtn.click(); });
     });
-    console.log("Listeners añadidos.");
+    console.log("Listeners de Admin añadidos.");
 });
 
 // --- END OF FILE datos_admin.js ---
