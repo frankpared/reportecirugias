@@ -1,3 +1,4 @@
+--- START OF FILE index.html ---
 
 <!DOCTYPE html>
 <html lang="es">
@@ -74,14 +75,14 @@
     </div>
 
     <div class="form-group">
-      <label for="instrumentador">Instrumentador</label> 
+      <label for="instrumentador">Instrumentador</label>
       <input id="instrumentador" class="form-control" list="instrumentadoresList" placeholder="Escriba o seleccione..." />
       <datalist id="instrumentadoresList"></datalist>
       <small class="ayuda-texto">Nombre del instrumentador quirúrgico.</small>
     </div>
 
     <div class="form-group">
-      <label for="lugarCirugia">Lugar de Cirugía</label> 
+      <label for="lugarCirugia">Lugar de Cirugía</label>
       <input id="lugarCirugia" class="form-control" list="lugaresList" placeholder="Escriba o seleccione..." />
       <datalist id="lugaresList"></datalist>
       <small class="ayuda-texto">Hospital o clínica donde se realizará la cirugía.</small>
@@ -96,7 +97,7 @@
 
     <div class="form-group">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-             <label for="tipoCirugia" style="margin-bottom: 0;">Tipo de Cirugía</label> 
+             <label for="tipoCirugia" style="margin-bottom: 0;">Tipo de Cirugía</label>
              <button type="button" onclick="abrirModalTipoCx()" class="btn-seleccionar-item">🔍 Seleccionar</button>
         </div>
       <input id="tipoCirugia" class="form-control" list="tiposCirugiaList" placeholder="Escriba, seleccione o use el botón..." />
@@ -116,12 +117,12 @@
     <div class="form-group">
         <label for="archivosAdjuntos">Adjuntar Archivos (Opcional)</label>
         <input type="file" id="archivosAdjuntos" class="form-control" multiple onchange="mostrarArchivosSeleccionados()">
-        <small class="ayuda-texto">Seleccione uno o más archivos (PDF, JPG, PNG, HEIC). Máx 5MB por archivo.</small> 
+        <small class="ayuda-texto">Seleccione uno o más archivos (PDF, JPG, PNG, HEIC). Máx 5MB por archivo.</small>
         <div id="listaArchivosSeleccionados" style="margin-top: 5px; font-size: 0.9em;"></div>
     </div>
 
     <div class="form-group">
-      <label for="observaciones">Observaciones</label> 
+      <label for="observaciones">Observaciones</label>
       <textarea id="observaciones" class="form-control" rows="3" placeholder="Alergias, condiciones especiales, etc."></textarea>
       <small class="ayuda-texto">Consideraciones especiales para el procedimiento.</small>
     </div>
@@ -217,3 +218,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+--- END OF FILE index.html ---
