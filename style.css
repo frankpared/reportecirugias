@@ -87,8 +87,8 @@ button:disabled { /* Estilo para botones deshabilitados */
     background-color: #5a6268;
 }
 
-/* --- Estilos para el Botón de Selección (Material y Tipo Cx) --- */
-.btn-seleccionar-material { /* Reutilizado para ambos botones */
+/* --- Estilos para el Botón de Selección (Material y Tipo Cx, Cliente) --- */
+.btn-seleccionar-material, .btn-seleccionar-item { /* Clase genérica .btn-seleccionar-item */
     padding: 5px 12px;
     font-size: 13px;
     background-color: #6c757d; /* Gris */
@@ -101,7 +101,7 @@ button:disabled { /* Estilo para botones deshabilitados */
     font-family: 'Lato', sans-serif; /* Usar fuente base */
 }
 
-.btn-seleccionar-material:hover {
+.btn-seleccionar-material:hover, .btn-seleccionar-item:hover {
     background-color: #5a6268;
 }
 
@@ -121,7 +121,8 @@ button:disabled { /* Estilo para botones deshabilitados */
 /* Añadir asterisco visual para campos requeridos */
 .form-group label[for="paciente"]:after,
 .form-group label[for="medico"]:after,
-.form-group label[for="fechaCirugia"]:after {
+.form-group label[for="fechaCirugia"]:after,
+.form-group label[for="cliente"]:after { /* Añadido para cliente */
     content: " (*)";
     color: #dc3545; /* Rojo */
     font-weight: normal; /* No tan fuerte como el label */
@@ -379,13 +380,14 @@ textarea.form-control {
     /* Contenedor de la lista */
 }
 
-.modal-item {
-    display: block; /* Hacer que ocupe toda la línea */
+.modal-item { /* Estilo base para items en modales de selección */
+    display: block; 
     margin-bottom: 8px;
-    padding: 5px;
+    padding: 8px 10px; 
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.15s ease;
+    font-size: 16px; /* Tamaño de fuente base para items */
 }
 
 .modal-item:hover {
@@ -421,25 +423,25 @@ textarea.form-control {
     z-index: 1; /* Encima de los items */
 }
 
-#modalMateriales .modal-item input[type="checkbox"] {
+#modalMateriales .modal-item input[type="checkbox"] { /* Estilos para checkbox dentro del modal-item */
     margin-right: 10px;
-    vertical-align: middle; /* Alinear checkbox con texto */
+    vertical-align: middle; 
     cursor: pointer;
-    transform: scale(1.1); /* Checkbox un poco más grande */
+    transform: scale(1.1); 
 }
 
-#modalMateriales .modal-item label {
+#modalMateriales .modal-item label { /* Estilos para label dentro del modal-item */
     font-size: 15px;
     color: #333;
     vertical-align: middle;
     cursor: pointer;
-    display: inline-block; /* Para que el hover funcione bien */
-    width: calc(100% - 30px); /* Ajustar ancho para el checkbox */
+    display: inline-block; 
+    width: calc(100% - 30px); 
 }
 #modalMateriales .modal-item .item-code {
     font-weight: 600;
     color: #555;
-    display: inline-block; /* Evitar wrap indeseado */
+    display: inline-block; 
     margin-right: 5px;
 }
 #modalMateriales .modal-item .item-desc {
@@ -448,11 +450,8 @@ textarea.form-control {
 }
 
 
-/* --- Estilos Específicos Modal Tipo Cirugía --- */
-#modalTipoCx .modal-item { /* Hereda estilos de .modal-item */
-    padding: 8px 10px; /* Más padding vertical */
-    font-size: 16px;
-}
+/* --- Estilos Específicos Modal Tipo Cirugía y Cliente --- */
+/* #modalTipoCx .modal-item, #modalCliente .modal-item  heredan de .modal-item */
 
 
 /* --- Créditos --- */
@@ -487,8 +486,9 @@ body.admin-page td {
 /* Permitir que algunas columnas específicas puedan romper línea si es necesario */
 body.admin-page td:nth-child(2), /* Paciente */
 body.admin-page td:nth-child(3), /* Medico */
-body.admin-page td:nth-child(4), /* Tipo Cirugia */
-body.admin-page td:nth-child(5) { /* Material */
+body.admin-page td:nth-child(4), /* Cliente (NUEVO) */
+body.admin-page td:nth-child(5), /* Tipo Cirugia */
+body.admin-page td:nth-child(6) { /* Material */
     white-space: normal;
 }
 
@@ -527,7 +527,7 @@ body.admin-page tbody tr:hover {
    .toast-notification { width: calc(100% - 40px); right: 20px; bottom: 20px; }
    .modal-content { padding: 15px; }
    .modal-header h3 { font-size: 1.1em; }
-   .modal-item label, #modalTipoCx .modal-item { font-size: 14px; }
+   .modal-item, #modalMateriales .modal-item label { font-size: 14px; }
 }
 
 /* --- END OF FILE style.css --- */
