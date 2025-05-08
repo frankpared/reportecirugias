@@ -76,7 +76,7 @@ function setActionButtonsDisabled(disabled) {
 
 // --- Funciones para Adjuntar Archivos ---
 function mostrarArchivosSeleccionados() {
-    archivosParaSubir = Array.from(inputArchivosAdjuntos.files);
+    archivosParaSubir = inputArchivosAdjuntos ? Array.from(inputArchivosAdjuntos.files) : []; // Actualizar desde input
     listaArchivosSeleccionadosDiv.innerHTML = '';
     if (archivosParaSubir.length > 0) {
         const ul = document.createElement('ul');
@@ -101,15 +101,22 @@ function mostrarArchivosSeleccionados() {
         });
         listaArchivosSeleccionadosDiv.appendChild(ul);
     }
+    // Revalidar el formulario al cambiar archivos para actualizar estado de botones/mensajes
+    validarFormulario(); 
 }
 
 async function subirArchivos(reporteId) {
     const urlsArchivos = [];
-    if (archivosParaSubir.length === 0) return urlsArchivos;
+    // Usar los archivos que están actualmente en el input, no la variable global 'archivosParaSubir'
+    // porque 'archivosParaSubir' podría estar desactualizada si 'mostrarArchivosSeleccionados' no se llamó justo antes.
+    const archivosActualesDelInput = inputArchivosAdjuntos ? Array.from(inputArchivosAdjuntos.files) : []; 
+    
+    if (archivosActualesDelInput.length === 0) return urlsArchivos;
 
-    mostrarToast("Subiendo archivos adjuntos...", "info");
+    mostrarToast(`Subiendo ${archivosActualesDelInput.length} archivo(s)...`, "info");
+    let alMenosUnError = false;
 
-    for (const file of archivosParaSubir) {
+    for (const file of archivosActualesDelInput) {
         let isValidType = ALLOWED_FILE_TYPES.includes(file.type.toLowerCase()) || 
                           (!file.type && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
 
@@ -125,15 +132,23 @@ async function subirArchivos(reporteId) {
             urlsArchivos.push({ nombre: file.name, url: url, path: filePath, tipo: file.type || 'unknown' });
             console.log(`Archivo ${file.name} subido a ${url}`);
         } catch (error) {
+            alMenosUnError = true;
             console.error(`Error subiendo archivo ${file.name}:`, error);
             mostrarToast(`Error al subir ${file.name}.`, "error");
-            // Considerar si se debe detener la subida de los demás o continuar
         }
     }
-    // Limpiar el input de archivos DESPUÉS de intentar subir todos
+    
+    // Limpiar el input de archivos y la lista visual DESPUÉS de intentar subir todos
     if (inputArchivosAdjuntos) inputArchivosAdjuntos.value = null; 
-    archivosParaSubir = []; // Limpiar el array global
-    listaArchivosSeleccionadosDiv.innerHTML = ''; // Limpiar la lista visual
+    archivosParaSubir = []; // Limpiar el array global también
+    listaArchivosSeleccionadosDiv.innerHTML = ''; 
+
+    if (alMenosUnError) {
+        mostrarToast("Algunos archivos no se pudieron subir.", "warning");
+    } else if (urlsArchivos.length > 0) {
+         mostrarToast(`${urlsArchivos.length} archivo(s) subido(s) con éxito.`, "success");
+    }
+
     return urlsArchivos;
 }
 
@@ -174,7 +189,7 @@ function validarCampo(input) {
     return esValido;
 }
 
-function validarFormulario() {
+function validarFormulario(mostrarErrorToast = true) { // Añadir flag para controlar toast
     let esFormularioValido = true;
     const camposRequeridos = ['paciente', 'cliente', 'medico', 'fechaCirugia']; 
 
@@ -185,32 +200,37 @@ function validarFormulario() {
         }
     });
     
-    // Re-validar archivos justo antes de guardar, por si el usuario cambió la selección
-    archivosParaSubir = inputArchivosAdjuntos ? Array.from(inputArchivosAdjuntos.files) : [];
+    // Usar el array global 'archivosParaSubir' que se actualiza con 'onchange'
+    let errorArchivos = false;
     for (const file of archivosParaSubir) {
         if (file.size > MAX_FILE_SIZE) {
-            mostrarToast(`Archivo ${file.name} excede 5MB.`, 'warning');
+            if (mostrarErrorToast) mostrarToast(`Archivo ${file.name} excede 5MB.`, 'warning');
             esFormularioValido = false;
-            inputArchivosAdjuntos?.classList.add('campo-invalido'); // Marcar input file como inválido
+            errorArchivos = true;
             break; 
         }
         let isValidType = ALLOWED_FILE_TYPES.includes(file.type.toLowerCase()) ||
                           (!file.type && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
         
         if (!isValidType) {
-            mostrarToast(`Archivo ${file.name}: formato no permitido.`, 'warning');
+            if (mostrarErrorToast) mostrarToast(`Archivo ${file.name}: formato no permitido.`, 'warning');
             esFormularioValido = false;
-             inputArchivosAdjuntos?.classList.add('campo-invalido');
+            errorArchivos = true;
             break;
         }
     }
-     // Limpiar marca de inválido si ya no hay error de archivos
-    if (esFormularioValido && inputArchivosAdjuntos?.classList.contains('campo-invalido')) {
-         inputArchivosAdjuntos.classList.remove('campo-invalido');
+    
+    // Marcar/desmarcar input de archivos basado en errorArchivos
+    if (inputArchivosAdjuntos) {
+        if (errorArchivos) {
+             inputArchivosAdjuntos.classList.add('campo-invalido');
+        } else {
+             inputArchivosAdjuntos.classList.remove('campo-invalido');
+        }
     }
 
 
-    if (!esFormularioValido && !document.querySelector('.toast-notification.visible')) { 
+    if (!esFormularioValido && mostrarErrorToast && !document.querySelector('.toast-notification.visible')) { 
         mostrarToast('Corrija los campos requeridos (*) o los archivos adjuntos.', 'warning');
     }
     return esFormularioValido;
@@ -275,7 +295,6 @@ async function cargarSugerenciasIniciales(idInput, idList) {
         const snapshot = await db.collection(COLECCION_SUGERENCIAS).doc(campo).get();
         if (snapshot.exists && snapshot.data().valores) {
             const valoresUnicos = [...new Set(snapshot.data().valores)]; 
-            // Ordenar alfabéticamente insensible a mayúsculas/minúsculas
             valoresUnicos.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
             actualizarListaDatalist(datalistElement, valoresUnicos);
         } else {
@@ -301,7 +320,6 @@ async function guardarSugerencia(campo, valor) {
             if (!valores.map(v => v.toLowerCase()).includes(valorLimpio.toLowerCase())) {
                 valores.push(valorLimpio);
                 valores.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())); 
-                // if (valores.length > 100) { valores = valores.slice(0, 100); } 
                 transaction.set(docRef, { valores: valores }, { merge: true }); 
 
                 const datalistElement = document.getElementById(`${campo}List`); 
@@ -311,7 +329,6 @@ async function guardarSugerencia(campo, valor) {
             }
         });
     } catch (error) {
-        // Silenciar errores de transacción si ocurren concurrentemente (puede pasar con offline)
         if (error.code !== 'transaction-retry') {
              console.error(`Error guardando sugerencia para ${campo}:`, error);
         }
@@ -343,10 +360,8 @@ function obtenerDatos(establecerOriginal = false) {
         observaciones: document.getElementById('observaciones')?.value.trim() || '',
         infoAdicional: document.getElementById('infoAdicional')?.value.trim() || '',
     };
-    // Establecer como original solo si se pide explícitamente o si no existe y hay datos
     if (establecerOriginal || (!datosReporteOriginal && datosActuales.paciente)) {
         datosReporteOriginal = { ...datosActuales };
-        console.log("Datos originales establecidos para auditoría.");
     }
     return datosActuales;
 }
@@ -357,7 +372,7 @@ function formatearMaterialParaHTML(materialTexto) {
     if (lineas.length === 0) return '<p>No especificado.</p>';
     let tablaHTML = '<table class="material-table">';
     lineas.forEach(linea => {
-        tablaHTML += `<tr><td>${linea.trim().replace(/</g, "<").replace(/>/g, ">")}</td></tr>`; // Escapar HTML
+        tablaHTML += `<tr><td>${escapeHtml(linea.trim())}</td></tr>`; 
     });
     tablaHTML += '</table>';
     return tablaHTML;
@@ -372,6 +387,17 @@ function formatearFechaUsuario(fechaISO) {
         return fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     } catch (e) { return fechaISO; }
 }
+
+// Helper para escapar HTML
+function escapeHtml(unsafe) {
+    if (unsafe === null || unsafe === undefined) return '';
+    return String(unsafe)
+         .replace(/&/g, "&")
+         .replace(/</g, "<")
+         .replace(/>/g, ">")
+         .replace(/"/g, """)
+         .replace(/'/g, "'");
+ }
 
 // --- Función de Auditoría ---
 async function registrarAuditoria(reporteId, accion, cambios = [], usuarioId) {
@@ -395,8 +421,6 @@ function generarListaDeCambios(datosNuevos, datosAntiguos) {
         'fechaCirugia', 'tipoCirugia', 'material', 'observaciones', 'infoAdicional',
         'formato', 'mensajeInicio' 
     ];
-
-    // Asegurarse que datosAntiguos no sea null o undefined
     const datosAntiguosValidos = datosAntiguos || {};
 
     for (const campo of camposAuditables) {
@@ -416,25 +440,26 @@ function generarListaDeCambios(datosNuevos, datosAntiguos) {
 
 // --- Acciones Principales ---
 function generarTexto() {
-    if (!validarFormulario()) return;
+    if (!validarFormulario(false)) { // Validar sin mostrar toast aquí
+         mostrarToast('Corrija los campos marcados antes de generar.', 'warning');
+         return;
+    }; 
     
-    const datos = obtenerDatos(true); // Forzar establecer original al generar texto
+    const datos = obtenerDatos(true); 
     const fechaFormateada = formatearFechaUsuario(datos.fechaCirugia);
     const contenidoMaterialHTML = formatearMaterialParaHTML(datos.material);
     const fraseFinal = "\n\nSaludos, quedo al pendiente.";
     let archivosHtmlParaReporte = '';
-    const currentFiles = inputArchivosAdjuntos ? Array.from(inputArchivosAdjuntos.files) : [];
 
-
-    if (currentFiles.length > 0) {
+    if (archivosParaSubir.length > 0) { // Usar array global actualizado por onchange
         archivosHtmlParaReporte += `<h4>Archivos Adjuntos Propuestos:</h4><ul>`;
-        currentFiles.forEach(file => {
+        archivosParaSubir.forEach(file => {
             let isValidType = ALLOWED_FILE_TYPES.includes(file.type.toLowerCase()) ||
                               (!file.type && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
             if (file.size <= MAX_FILE_SIZE && isValidType) {
-                archivosHtmlParaReporte += `<li>${file.name} (${(file.size / 1024).toFixed(1)} KB)</li>`;
+                archivosHtmlParaReporte += `<li>${escapeHtml(file.name)} (${(file.size / 1024).toFixed(1)} KB)</li>`;
             } else {
-                 archivosHtmlParaReporte += `<li style="color:red;">${file.name} (INVÁLIDO - no se subirá)</li>`;
+                 archivosHtmlParaReporte += `<li style="color:red;">${escapeHtml(file.name)} (INVÁLIDO - no se subirá)</li>`;
             }
         });
         archivosHtmlParaReporte += `</ul>`;
@@ -444,22 +469,22 @@ function generarTexto() {
       <div class="reporte-contenido reporte-box">
         <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 70px; margin-bottom: 15px; display: block; margin-left: auto; margin-right: auto;">
         <h3>📝 Reporte de Cirugía</h3>
-        <p>${datos.mensajeInicio || 'Detalles de la cirugía programada:'}</p>
+        <p>${escapeHtml(datos.mensajeInicio) || 'Detalles de la cirugía programada:'}</p>
         <ul>
-          <li><strong>Paciente:</strong> ${datos.paciente || '-'}</li>
-          <li><strong>Cliente:</strong> ${datos.cliente || '-'}</li>
-          <li><strong>Tipo de Cirugía:</strong> ${datos.tipoCirugia || '-'}</li>
-          <li><strong>Médico:</strong> ${datos.medico || '-'}</li>
-          <li><strong>Instrumentador:</strong> ${datos.instrumentador || '-'}</li>
+          <li><strong>Paciente:</strong> ${escapeHtml(datos.paciente) || '-'}</li>
+          <li><strong>Cliente:</strong> ${escapeHtml(datos.cliente) || '-'}</li>
+          <li><strong>Tipo de Cirugía:</strong> ${escapeHtml(datos.tipoCirugia) || '-'}</li>
+          <li><strong>Médico:</strong> ${escapeHtml(datos.medico) || '-'}</li>
+          <li><strong>Instrumentador:</strong> ${escapeHtml(datos.instrumentador) || '-'}</li>
           <li><strong>Fecha Cirugía:</strong> ${fechaFormateada}</li>
-          <li><strong>Lugar:</strong> ${datos.lugarCirugia || '-'}</li>
+          <li><strong>Lugar:</strong> ${escapeHtml(datos.lugarCirugia) || '-'}</li>
         </ul>
         <h4>Material Requerido:</h4>
-        ${contenidoMaterialHTML}
-        ${archivosHtmlParaReporte}
-        ${datos.observaciones ? `<h4>Observaciones:</h4><p>${datos.observaciones.replace(/\n/g, '<br>')}</p>` : ''}
-        ${datos.infoAdicional ? `<h4>Información Adicional:</h4><p>${datos.infoAdicional.replace(/\n/g, '<br>')}</p>` : ''}
-        <p style="margin-top: 20px;">${fraseFinal.trim().replace(/\n/g, '<br>')}</p>
+        ${contenidoMaterialHTML} {/* Ya escapado en su función */}
+        ${archivosHtmlParaReporte} {/* Nombres de archivo escapados arriba */}
+        ${datos.observaciones ? `<h4>Observaciones:</h4><p>${escapeHtml(datos.observaciones).replace(/\n/g, '<br>')}</p>` : ''}
+        ${datos.infoAdicional ? `<h4>Información Adicional:</h4><p>${escapeHtml(datos.infoAdicional).replace(/\n/g, '<br>')}</p>` : ''}
+        <p style="margin-top: 20px;">${escapeHtml(fraseFinal.trim()).replace(/\n/g, '<br>')}</p>
       </div>`;
 
     const resultadoContainer = document.getElementById('resultado-container');
@@ -474,24 +499,22 @@ function generarTexto() {
 }
 
 async function copiarTexto() {
-    if (!validarFormulario()) return;
+    if (!validarFormulario()) return; // Validar antes de continuar
     if (guardandoReporte) { mostrarToast("Guardado en proceso...", "info"); return; }
     
     ocultarBotonReintento(); 
     const resultadoContainer = document.getElementById('resultado-container');
     let reporteContenidoElement = resultadoContainer?.querySelector('.reporte-contenido');
 
-    // Si el reporte no está visible, generarlo primero
     if (!reporteContenidoElement || resultadoContainer.style.display === 'none') {
         generarTexto(); 
         reporteContenidoElement = document.getElementById('resultado-container')?.querySelector('.reporte-contenido');
         if (!reporteContenidoElement) { mostrarToast('Error al generar reporte antes de copiar.', 'error'); return; }
-        // Esperar un instante para que el DOM se actualice
         await new Promise(resolve => setTimeout(resolve, 50)); 
     } else {
-         // Si ya estaba generado, asegurarse que los datos originales están seteados
+         // Forzar setear original si no existía y hay datos
          if (!datosReporteOriginal && document.getElementById('paciente').value.trim()) {
-            obtenerDatos(true); // Forzar setear original si no existía
+            obtenerDatos(true); 
          }
     }
     await copiarYGuardarInterno(reporteContenidoElement);
@@ -504,7 +527,7 @@ async function copiarYGuardarInterno(reporteElement) {
     setActionButtonsDisabled(true);
     ocultarBotonReintento();
 
-    const datosParaGuardar = obtenerDatos(); // Obtiene datos actuales, NO setea original aquí
+    const datosParaGuardar = obtenerDatos(); // Obtiene datos actuales
     const textoPlanoParaCopiar = reporteElement.innerText;
     let copiadoExitoso = false;
     let guardadoExitoso = false;
@@ -515,13 +538,12 @@ async function copiarYGuardarInterno(reporteElement) {
     } catch (err) { console.error('Error al copiar:', err); }
 
     try {
-        // Siempre es creación desde la interfaz principal
         await guardarEnFirebase(datosParaGuardar, null); 
         guardadoExitoso = true;
         reportePendiente = null; 
         ocultarBotonReintento();
         
-        // Limpiar formulario y estado
+        // Limpiar formulario solo si el guardado fue exitoso
         ['paciente', 'cliente', 'medico', 'tipoCirugia', 'material', 'observaciones', 'infoAdicional', 'instrumentador', 'lugarCirugia'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
@@ -532,26 +554,31 @@ async function copiarYGuardarInterno(reporteElement) {
             fechaInput.value = hoyLocal.toISOString().split('T')[0];
              validarCampo(fechaInput); // Re-validar fecha default
         }
-        if (inputArchivosAdjuntos) inputArchivosAdjuntos.value = null; 
-        archivosParaSubir = [];
-        listaArchivosSeleccionadosDiv.innerHTML = '';
-        datosReporteOriginal = null; // Resetear para el próximo reporte
+        // Limpiar archivos ya se hace en subirArchivos
+        // if (inputArchivosAdjuntos) inputArchivosAdjuntos.value = null; 
+        // archivosParaSubir = []; // Limpiar array global
+        // listaArchivosSeleccionadosDiv.innerHTML = ''; // Limpiar lista visual
+        datosReporteOriginal = null; 
         
-        // Ocultar resultado y limpiar validaciones de campos limpiados
-         ['paciente', 'cliente', 'medico'].forEach(id => validarCampo(document.getElementById(id))); // Revalidar vacíos
+        // Limpiar validaciones y ocultar resultado
+        ['paciente', 'cliente', 'medico'].forEach(id => validarCampo(document.getElementById(id))); 
+        if (inputArchivosAdjuntos) inputArchivosAdjuntos.classList.remove('campo-invalido');
         const resultadoContainer = document.getElementById('resultado-container');
         if (resultadoContainer) resultadoContainer.style.display = 'none';
 
+
     } catch (err) { 
         console.error('Error guardando:', err); 
-        // No limpiar formulario si falla el guardado para que el usuario no pierda datos
+        // No limpiar formulario si falla el guardado
     }
 
+    // Mostrar mensajes de estado
     if (copiadoExitoso && guardadoExitoso) mostrarToast('✅ Copiado y Guardado!', 'success');
     else if (copiadoExitoso) mostrarToast('⚠️ Copiado, pero falló el guardado.', 'warning');
     else if (guardadoExitoso) mostrarToast('⚠️ Guardado, pero falló la copia.', 'warning');
     else mostrarToast('❌ Falló copia y guardado.', 'error');
 
+    // Restaurar UI si no hay reintento pendiente
     if (!reportePendiente) {
         loadingIndicator.style.display = 'none';
         setActionButtonsDisabled(false);
@@ -569,114 +596,118 @@ function obtenerUsuarioId() {
 }
 
 async function guardarEnFirebase(data, reporteIdExistente = null) {
-    // Ya no es necesario setear 'guardandoReporte', 'loadingIndicator', etc. aquí, 
-    // porque se hace en la función que llama (copiarYGuardarInterno)
 
     if (!data.paciente || !data.cliente || !data.medico || !data.fechaCirugia) { 
-        throw new Error("Datos insuficientes."); // Lanzar error para que la función llamante lo maneje
+        throw new Error("Datos insuficientes."); 
     }
 
     const usuarioActualId = obtenerUsuarioId();
     let docRef;
     let esNuevaCreacion = !reporteIdExistente;
     const idParaOperacion = reporteIdExistente || db.collection(COLECCION_REPORTES).doc().id; 
-    const archivosActuales = inputArchivosAdjuntos ? Array.from(inputArchivosAdjuntos.files) : []; // Obtener archivos actuales del input
+    
+    // Subir archivos y obtener sus URLs ANTES de escribir en Firestore
+    const urlsDeArchivosSubidos = await subirArchivos(idParaOperacion); 
 
-    // Filtrar archivos válidos para subir
-    const archivosValidosParaSubir = archivosActuales.filter(file => {
-         let isValidType = ALLOWED_FILE_TYPES.includes(file.type.toLowerCase()) ||
-                           (!file.type && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
-        return file.size <= MAX_FILE_SIZE && isValidType;
-    });
-
-    const urlsDeArchivosSubidos = await subirArchivos(idParaOperacion); // subirArchivos ahora limpia el input y el array global
-
-    // Asegurarse que los datos originales estén disponibles para comparación si es edición
-    if (!esNuevaCreacion && !datosReporteOriginal) {
-        console.warn("Intentando editar sin datos originales cargados. Auditoría puede ser incompleta.");
-         // Podríamos intentar cargarlos aquí, pero es mejor hacerlo al iniciar la edición.
-         // const snapshot = await db.collection(COLECCION_REPORTES).doc(idParaOperacion).get();
-         // datosReporteOriginal = snapshot.data(); // Asignar si existe
-    }
-
-    const reporte = { ...data, usuario: usuarioActualId }; // No incluir archivos aquí inicialmente
+    const reporteBase = { ...data }; // Copia de los datos del formulario
+    let writePromise; // Promesa para la operación de escritura (set o update)
+    let auditChanges = []; // Cambios para auditoría
 
     try {
         if (esNuevaCreacion) {
-            reporte.creadoEn = firebase.firestore.FieldValue.serverTimestamp(); 
-            reporte.creadoPor = usuarioActualId; 
-            reporte.modificadoEn = reporte.creadoEn; 
-            reporte.modificadoPor = usuarioActualId; 
-            reporte.archivosAdjuntos = urlsDeArchivosSubidos; // Añadir archivos subidos
-            
+            const reporteCompleto = { 
+                ...reporteBase, 
+                creadoEn: firebase.firestore.FieldValue.serverTimestamp(), 
+                creadoPor: usuarioActualId, 
+                modificadoEn: firebase.firestore.FieldValue.serverTimestamp(), // Inicialmente igual
+                modificadoPor: usuarioActualId,
+                archivosAdjuntos: urlsDeArchivosSubidos 
+            };
             docRef = db.collection(COLECCION_REPORTES).doc(idParaOperacion);
-            await docRef.set(reporte);
-            await registrarAuditoria(idParaOperacion, "Creación", [], usuarioActualId);
-            if (urlsDeArchivosSubidos.length > 0) {
-                 const cambiosArchivos = urlsDeArchivosSubidos.map(a => ({ campo: 'archivoAdjunto', anterior: '(ninguno)', nuevo: a.nombre }));
-                 await registrarAuditoria(idParaOperacion, "Archivos Subidos", cambiosArchivos, usuarioActualId);
-            }
+            writePromise = docRef.set(reporteCompleto);
+            auditChanges = []; // No hay cambios detectables en creación
+            
         } else { 
             docRef = db.collection(COLECCION_REPORTES).doc(idParaOperacion);
-            const datosAntiguos = datosReporteOriginal || {}; // Usar original si existe
-            const cambiosDetectados = generarListaDeCambios(data, datosAntiguos);
-            const archivosExistentes = datosAntiguos.archivosAdjuntos || [];
+            // Obtener datos antiguos para comparar ANTES de actualizar
+             const docSnap = await docRef.get();
+             const datosAntiguos = docSnap.exists() ? docSnap.data() : {};
+             datosReporteOriginal = datosAntiguos; // Actualizar el 'original' para auditoría
+             
+             auditChanges = generarListaDeCambios(data, datosAntiguos);
+             const archivosExistentes = datosAntiguos.archivosAdjuntos || [];
             
             const datosParaActualizar = {
-                 ...data, // Campos principales actualizados
+                 ...reporteBase, 
                  modificadoEn: firebase.firestore.FieldValue.serverTimestamp(),
                  modificadoPor: usuarioActualId,
-                 archivosAdjuntos: [...archivosExistentes, ...urlsDeArchivosSubidos] // Combinar archivos
+                 archivosAdjuntos: [...archivosExistentes, ...urlsDeArchivosSubidos] 
             };
-
-            await docRef.update(datosParaActualizar);
-            if (cambiosDetectados.length > 0) {
-                await registrarAuditoria(idParaOperacion, "Modificación", cambiosDetectados, usuarioActualId);
-            }
-            if (urlsDeArchivosSubidos.length > 0) {
-                 const cambiosArchivos = urlsDeArchivosSubidos.map(a => ({ campo: 'archivoAdjunto', anterior: `(${archivosExistentes.length} existentes)`, nuevo: a.nombre }));
-                 await registrarAuditoria(idParaOperacion, "Archivos Subidos", cambiosArchivos, usuarioActualId);
-            }
-            // Resetear original DESPUÉS de una edición exitosa
-             datosReporteOriginal = null;
+            writePromise = docRef.update(datosParaActualizar);
         }
 
-        // Guardar sugerencias (solo si el valor no está vacío)
+        // Esperar a que la escritura principal termine
+        await writePromise;
+        console.log(esNuevaCreacion ? "Reporte creado:" : "Reporte actualizado:", idParaOperacion);
+
+        // Registrar auditoría DESPUÉS de la escritura exitosa
+        const accionAuditoria = esNuevaCreacion ? "Creación" : (auditChanges.length > 0 ? "Modificación" : "Actualización sin cambios detectados");
+        await registrarAuditoria(idParaOperacion, accionAuditoria, auditChanges, usuarioActualId);
+
+        // Registrar subida de archivos si hubo
+        if (urlsDeArchivosSubidos.length > 0) {
+            const cambiosArchivos = urlsDeArchivosSubidos.map(a => ({ 
+                 campo: 'archivoAdjunto', 
+                 anterior: esNuevaCreacion ? '(ninguno)' : `(${datosReporteOriginal?.archivosAdjuntos?.length || 0} existentes)`, 
+                 nuevo: a.nombre 
+            }));
+            await registrarAuditoria(idParaOperacion, "Archivos Subidos", cambiosArchivos, usuarioActualId);
+        }
+        
+        // Guardar sugerencias
         ['cliente', 'medico', 'instrumentador', 'lugarCirugia', 'tipoCirugia'].forEach(async (campo) => {
             if(data[campo]) await guardarSugerencia(campo, data[campo]);
         });
         
-        return idParaOperacion; // Devolver el ID del reporte
+        return idParaOperacion; // Devolver el ID
 
     } catch (error) {
         console.error("Error Firebase en guardarEnFirebase:", error);
-        // Re-lanzar el error para que la función llamante (copiarYGuardarInterno) lo maneje (ponga toast, botón reintento, etc.)
-        throw error; 
+        // Guardar datos pendientes para reintento SÓLO si es error de red/offline
+        if (error.code === 'unavailable' || error.code === 'cancelled' || String(error.message).includes('offline')) {
+             reportePendiente = { ...data, id: idParaOperacion }; // Guardar datos y el ID para reintento
+        } else {
+             reportePendiente = null; // No reintentar otros errores
+        }
+        throw error; // Re-lanzar para que copiarYGuardarInterno maneje UI
     } 
-    // No manejar UI (loading, botones) aquí, se hace en copiarYGuardarInterno
 }
 
 // --- Funciones Auxiliares y de Interfaz (Toast, Botón Reintento) ---
 function mostrarToast(mensaje, tipo = 'info') {
     const toast = document.getElementById('toast');
     if (!toast) return;
-    // Ocultar toast anterior si existe
     toast.classList.remove('visible');
-    toast.style.display = 'none'; // Ocultar inmediatamente antes de mostrar el nuevo
+    // toast.style.display = 'none'; 
 
     toast.textContent = mensaje;
     toast.className = 'toast-notification'; 
     toast.classList.add(tipo); 
-    toast.style.display = 'block';
-    void toast.offsetWidth; // Forzar reflow
-    toast.classList.add('visible'); // Añadir clase para transición
-    toast.style.transform = 'translateY(0)'; // Asegurar posición final
+    
+    void toast.offsetWidth; 
 
-    // Ocultar después de un tiempo
+    toast.style.display = 'block'; 
+    setTimeout(() => { 
+        toast.classList.add('visible');
+    }, 10); 
+    
     setTimeout(() => {
         toast.classList.remove('visible');
-        toast.style.transform = 'translateY(20px)';
-        setTimeout(() => { toast.style.display = 'none'; }, 300); 
+        setTimeout(() => { 
+            if (!toast.classList.contains('visible')) {
+                toast.style.display = 'none'; 
+            }
+        }, 300); 
     }, 4000); 
 }
 
@@ -684,7 +715,7 @@ function mostrarBotonReintento() {
     if (retrySaveBtn) {
         retrySaveBtn.style.display = 'inline-block';
         loadingIndicator.style.display = 'none';
-        setActionButtonsDisabled(false); // Habilitar botones para poder reintentar
+        setActionButtonsDisabled(false); 
     }
 }
 function ocultarBotonReintento() {
@@ -694,23 +725,27 @@ function ocultarBotonReintento() {
 function reintentarGuardado() {
     if (reportePendiente) {
         console.log("Reintentando guardar reporte pendiente...");
-        loadingIndicator.style.display = 'block'; // Mostrar carga durante reintento
+        loadingIndicator.style.display = 'block'; 
         setActionButtonsDisabled(true);
         ocultarBotonReintento();
         
-        const idExistente = reportePendiente.id; // Asumir que el ID estaría en el objeto pendiente si fuera edición
-        guardarEnFirebase(reportePendiente, idExistente)
+        const idExistente = reportePendiente.id; // El ID se guardó en reportePendiente
+        // Extraer los datos del formulario del objeto pendiente (excluir 'id')
+        const { id, ...datosParaReintentar } = reportePendiente; 
+
+        guardarEnFirebase(datosParaReintentar, idExistente) // Pasar el ID original
             .then(() => {
                 mostrarToast("✅ Guardado tras reintento.", "success");
                 reportePendiente = null; 
-                ocultarBotonReintento(); // Ocultar al tener éxito
+                ocultarBotonReintento(); 
             })
             .catch(err => { 
                 console.error("Fallo el reintento:", err);
-                // El error ya se maneja en guardarEnFirebase (muestra toast/botón si falla de nuevo)
+                // Error ya manejado en guardarEnFirebase, mostrará toast/botón si falla de nuevo
             })
             .finally(() => {
-                 if (!reportePendiente) { // Si tuvo éxito o fue error no recuperable
+                 // Restaurar UI solo si ya no hay pendiente (éxito o error no recuperable)
+                 if (!reportePendiente) { 
                     loadingIndicator.style.display = 'none';
                     setActionButtonsDisabled(false);
                 }
@@ -722,7 +757,7 @@ function reintentarGuardado() {
 
 // --- Otras Acciones (Compartir, Email, Imprimir, Imagen) ---
 function compartirWhatsApp() {
-    if (!validarFormulario()) return;
+    if (!validarFormulario(false)) { mostrarToast('Corrija errores antes de compartir.', 'warning'); return;}
     const resultadoContainer = document.getElementById('resultado-container');
     const reporteContenidoElement = resultadoContainer?.querySelector('.reporte-contenido');
     if (!reporteContenidoElement || resultadoContainer.style.display === 'none') {
@@ -738,7 +773,7 @@ function compartirWhatsApp() {
 }
 
 function enviarPorEmail() {
-    if (!validarFormulario()) return;
+    if (!validarFormulario(false)) { mostrarToast('Corrija errores antes de enviar.', 'warning'); return;}
     const resultadoContainer = document.getElementById('resultado-container');
     let reporteContenidoElement = resultadoContainer?.querySelector('.reporte-contenido');
     if (!reporteContenidoElement || resultadoContainer.style.display === 'none') {
@@ -761,12 +796,12 @@ function imprimirReporte() {
     }
     const contenidoParaImprimir = resultadoContainer.querySelector('.reporte-contenido').cloneNode(true);
     const ventanaImpresion = window.open('', '_blank');
-    ventanaImpresion.document.write('<html><head><title>Imprimir Reporte</title><link rel="stylesheet" href="style.css"><style>body{padding:20px;background-color:#fff;font-size:10pt;}.reporte-box{box-shadow:none;border:1px solid #ccc;border-left:5px solid #007bff;margin:0;max-width:100%;}.reporte-contenido ul{padding-left:20px;list-style:disc;} table.material-table{font-size:9pt;width:100%;border:1px solid #eee;} table.material-table td{padding:4px 6px;} button,.btn-link,.btn-volver,.modal-overlay,.toast-notification,.credit,header,.form-group,.text-center,#loading-indicator,#retry-save-btn, .btn-seleccionar-item{display:none!important;} @page { size: A4; margin: 20mm; } @media print{body{padding:0;}.reporte-box{border:none;border-left:5px solid #007bff;} .reporte-contenido img{max-height:50px!important;}}</style></head><body>');
+    ventanaImpresion.document.write('<html><head><title>Imprimir Reporte</title><link rel="stylesheet" href="style.css"><style>body{padding:20mm;background-color:#fff;font-size:10pt;}.reporte-box{box-shadow:none;border:none;border-left:5px solid #007bff;margin:0;max-width:100%;padding:15px;}.reporte-contenido ul{padding-left:20px;list-style:disc;} table.material-table{font-size:9pt;width:100%;border:1px solid #eee;} table.material-table td{padding:4px 6px;} button,.btn-link,.btn-volver,.modal-overlay,.toast-notification,.credit,header,.form-group,.text-center,#loading-indicator,#retry-save-btn, .btn-seleccionar-item{display:none!important;} @page { size: A4; margin: 15mm; } @media print{body{padding:0;}.reporte-box{border-left:5px solid #007bff;} .reporte-contenido img{max-height:50px!important;}}</style></head><body>');
     ventanaImpresion.document.body.appendChild(contenidoParaImprimir);
     ventanaImpresion.document.write('</body></html>');
     ventanaImpresion.document.close(); 
     ventanaImpresion.onload = function() {
-        setTimeout(() => { // Dar tiempo a renderizar
+        setTimeout(() => { 
              ventanaImpresion.focus(); ventanaImpresion.print(); setTimeout(() => { ventanaImpresion.close(); }, 500);
         }, 250);
     };
@@ -784,24 +819,35 @@ async function generarImagen() {
     }
     mostrarToast('🖼️ Generando imagen...', 'info');
     try {
-        // Asegurar que las imágenes externas se carguen antes de renderizar
         const images = reporteElement.querySelectorAll('img');
         const promises = [];
         images.forEach(img => {
-            if (!img.complete) { // Si la imagen no está cargada
+            if (!img.complete || img.naturalWidth === 0) { // Check if loaded and has size
+                // Reset src to try reloading if needed, or handle CORS proxy if applicable
+                const originalSrc = img.src;
+                 img.crossOrigin = "anonymous"; // Intenta forzar CORS
+                img.src = ''; 
+                img.src = originalSrc; 
                 promises.push(new Promise((resolve, reject) => {
                     img.onload = resolve;
-                    img.onerror = reject;
+                    // Considerar un timeout o rechazar si falla la carga repetidamente
+                    img.onerror = () => { 
+                         console.warn(`No se pudo cargar imagen ${originalSrc} para canvas.`);
+                         resolve(); // Resolver igualmente para no detener la generación
+                     }; 
                 }));
             }
         });
-        await Promise.all(promises); // Esperar a que todas las imágenes se carguen
+        await Promise.all(promises); 
 
         const canvas = await html2canvas(reporteElement, { 
             scale: 2, 
-            useCORS: true, // Necesario para imágenes de imgur
-            allowTaint: true, // Puede ayudar con CORS en algunos casos
-            backgroundColor: '#ffffff' 
+            useCORS: true, 
+            allowTaint: true, // Puede ayudar con CORS
+            backgroundColor: '#ffffff',
+             onclone: (clonedDoc) => { // Eliminar elementos interactivos del clon antes de renderizar
+                 clonedDoc.querySelectorAll('button, a').forEach(el => el.style.display = 'none');
+             }
         });
         const link = document.createElement('a');
         link.download = `reporte_cirugia_${obtenerDatos().paciente||'paciente'}_${Date.now()}.png`;
@@ -825,7 +871,7 @@ async function abrirModalMateriales() {
     if (listaMaterialesCargada === null || Object.keys(listaMaterialesCargada).length === 0) {
          mostrarToast("No hay materiales disponibles.", "warning"); return;
     }
-    searchInput.value = ''; listaContainer.innerHTML = 'Cargando...'; 
+    searchInput.value = ''; listaContainer.innerHTML = '<p class="loading-placeholder">Cargando lista...</p>'; 
     setTimeout(() => {
         listaContainer.innerHTML = ''; 
         for (const categoria in listaMaterialesCargada) {
@@ -837,7 +883,7 @@ async function abrirModalMateriales() {
                 itemDiv.dataset.code = item.code; itemDiv.dataset.description = item.description;
                 const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.id = `mat-${item.code}`; checkbox.value = item.code; checkbox.classList.add('modal-item-checkbox');
                 const label = document.createElement('label'); label.htmlFor = `mat-${item.code}`;
-                label.innerHTML = `<span class="item-code">${item.code}</span> - <span class="item-desc">${item.description}</span>`;
+                label.innerHTML = `<span class="item-code">${item.code}</span> - <span class="item-desc">${escapeHtml(item.description)}</span>`;
                 itemDiv.appendChild(checkbox); itemDiv.appendChild(label); categoriaDiv.appendChild(itemDiv);
             });
             listaContainer.appendChild(categoriaDiv);
@@ -903,14 +949,17 @@ async function abrirModalTipoCx() {
     if (!listaTiposCxCargada || listaTiposCxCargada.length === 0) {
         mostrarToast("No hay tipos de cirugía disponibles.", "warning"); return; 
     }
-    searchInput.value = ''; listaContainer.innerHTML = ''; 
-    listaTiposCxCargada.forEach(tipo => {
-        const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-item', 'tipo-cx-item'); 
-        itemDiv.dataset.value = tipo; itemDiv.textContent = tipo;
-        itemDiv.onclick = () => anadirTipoCxSeleccionado(tipo);
-        listaContainer.appendChild(itemDiv);
-    });
-    modal.classList.add('visible'); modal.style.display = 'flex'; searchInput.focus(); 
+    searchInput.value = ''; listaContainer.innerHTML = '<p class="loading-placeholder">Cargando lista...</p>';
+    setTimeout(() => {
+        listaContainer.innerHTML = ''; 
+        listaTiposCxCargada.forEach(tipo => {
+            const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-item', 'tipo-cx-item'); 
+            itemDiv.dataset.value = tipo; itemDiv.textContent = tipo;
+            itemDiv.onclick = () => anadirTipoCxSeleccionado(tipo);
+            listaContainer.appendChild(itemDiv);
+        });
+        modal.classList.add('visible'); modal.style.display = 'flex'; searchInput.focus(); 
+     }, 10);
 }
 function cerrarModalTipoCx() {
     const modal = document.getElementById('modalTipoCx');
@@ -944,14 +993,17 @@ async function abrirModalCliente() {
     if (!listaClientesCargada || listaClientesCargada.length === 0) {
         mostrarToast("No hay clientes disponibles.", "warning"); return; 
     }
-    searchInput.value = ''; listaContainer.innerHTML = ''; 
-    listaClientesCargada.forEach(cliente => {
-        const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-item', 'cliente-item');
-        itemDiv.dataset.value = cliente; itemDiv.textContent = cliente;
-        itemDiv.onclick = () => anadirClienteSeleccionado(cliente);
-        listaContainer.appendChild(itemDiv);
-    });
-    modal.classList.add('visible'); modal.style.display = 'flex'; searchInput.focus(); 
+    searchInput.value = ''; listaContainer.innerHTML = '<p class="loading-placeholder">Cargando lista...</p>'; 
+    setTimeout(() => {
+        listaContainer.innerHTML = ''; 
+        listaClientesCargada.forEach(cliente => {
+            const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-item', 'cliente-item');
+            itemDiv.dataset.value = cliente; itemDiv.textContent = cliente;
+            itemDiv.onclick = () => anadirClienteSeleccionado(cliente);
+            listaContainer.appendChild(itemDiv);
+        });
+        modal.classList.add('visible'); modal.style.display = 'flex'; searchInput.focus(); 
+     }, 10);
 }
 function cerrarModalCliente() {
     const modal = document.getElementById('modalCliente');
@@ -978,15 +1030,16 @@ const debouncedFilterCliente = debounce(filtrarModalCliente, DEBOUNCE_DELAY);
 // --- Inicialización ---
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("DOM Cargado");
-    Promise.all([ fetchClientes(), fetchTiposCirugia(), fetchMateriales() ])
-    .then(() => {
-        console.log("Datos maestros cargados.");
-        cargarSugerenciasIniciales('cliente', 'clientesList'); 
-        cargarSugerenciasIniciales('medico', 'medicosList');
-        cargarSugerenciasIniciales('instrumentador', 'instrumentadoresList');
-        cargarSugerenciasIniciales('lugarCirugia', 'lugaresList');
-        cargarSugerenciasIniciales('tipoCirugia', 'tiposCirugiaList');
-    });
+    // Cargar datos maestros esenciales primero
+    await Promise.all([ fetchClientes(), fetchTiposCirugia(), fetchMateriales() ]);
+    console.log("Datos maestros cargados.");
+    // Luego cargar sugerencias
+    cargarSugerenciasIniciales('cliente', 'clientesList'); 
+    cargarSugerenciasIniciales('medico', 'medicosList');
+    cargarSugerenciasIniciales('instrumentador', 'instrumentadoresList');
+    cargarSugerenciasIniciales('lugarCirugia', 'lugaresList');
+    cargarSugerenciasIniciales('tipoCirugia', 'tiposCirugiaList');
+    console.log("Sugerencias cargadas.");
 
     setupValidacion();
 
@@ -1000,10 +1053,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (retrySaveBtn) retrySaveBtn.addEventListener('click', reintentarGuardado);
 
-    // Listeners para cerrar modales al hacer click fuera
+    // Listeners para cerrar modales
     ['modalMateriales', 'modalTipoCx', 'modalCliente'].forEach(modalId => {
         const modalElement = document.getElementById(modalId);
         if (modalElement) {
+            // Cerrar al hacer click fuera
             modalElement.addEventListener('click', function(event) {
                 if (event.target === this) { 
                     if (modalId === 'modalMateriales') cerrarModalMateriales();
@@ -1011,11 +1065,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     else if (modalId === 'modalCliente') cerrarModalCliente();
                 }
             });
+             // Cerrar con Escape (listener global)
         }
     });
+     document.addEventListener('keydown', function(event) {
+         if (event.key === "Escape") {
+             cerrarModalMateriales(); 
+             cerrarModalTipoCx();
+             cerrarModalCliente();
+         }
+       });
     
-    // Validar campos requeridos inicialmente
-    ['paciente', 'cliente', 'medico'].forEach(id => {
+    // Validar campos requeridos inicialmente para mostrar errores si están vacíos
+    ['paciente', 'cliente', 'medico', 'fechaCirugia'].forEach(id => {
         const input = document.getElementById(id);
         if (input && input.hasAttribute('required')) { validarCampo(input); }
     });
