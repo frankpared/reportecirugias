@@ -300,12 +300,12 @@
             tr.appendChild(createCell(materialCortado));
             tr.appendChild(createCell(archivosHtml, true)); 
             tr.appendChild(createCell(usuarioIdCorto));
-            tr.appendChild(createCell(fechaCreadoFormateada)); // Columna "Creado En"
+            tr.appendChild(createCell(fechaCreadoFormateada)); 
             tr.appendChild(createCell(fechaModificacionFormateada)); 
             
             const tdActions = document.createElement('td');
             const auditButton = document.createElement('button');
-            auditButton.textContent = 'Log'; // Más corto
+            auditButton.textContent = 'Log'; 
             auditButton.classList.add('btn-audit');
             auditButton.onclick = () => abrirModalAuditLog(doc.id, data.paciente);
             tdActions.appendChild(auditButton);
@@ -335,7 +335,7 @@
 
         modalTitle.textContent = `Historial: ${pacienteNombre || 'Reporte ' + reporteId.substring(0,6)}`;
         modalBody.innerHTML = '<p style="text-align:center;">Cargando historial...</p>';
-        modal.classList.add('visible'); // Asegurar que el modal sea visible
+        modal.classList.add('visible'); 
         modal.style.display = 'flex'; 
 
         db.collection('reportes').doc(reporteId).collection('auditLog')
@@ -388,7 +388,7 @@
         const modal = document.getElementById('auditLogModal');
         if (modal) {
             modal.classList.remove('visible');
-            setTimeout(() => { // Esperar transición
+            setTimeout(() => { 
                  modal.style.display = 'none';
             }, 300);
         }
@@ -458,6 +458,8 @@
         const ctx = document.getElementById(canvasId);
         if (!ctx) {
             console.warn(`Canvas con ID ${canvasId} no encontrado para gráfico.`);
+            const wrapper = document.getElementById(canvasId + 'Wrapper'); // Asumiendo que el wrapper tiene ID como 'canvasIdWrapper'
+            if(wrapper) wrapper.innerHTML = `<p style="text-align:center;color:#777;">Error al cargar gráfico ${tituloLabel}.</p>`;
             return;
         }
         charts[canvasId] = new Chart(ctx.getContext('2d'), {
@@ -485,7 +487,7 @@
                     tooltip: { titleFont: {size: 12}, bodyFont: {size: 11} }
                 },
                 scales: tipo === 'bar' ? { 
-                    y: { beginAtZero: true, ticks: { stepSize: Math.max(1, Math.ceil(Math.max(...data) / 10)), font: {size:10} } }, // Ajustar stepSize
+                    y: { beginAtZero: true, ticks: { stepSize: Math.max(1, Math.ceil(Math.max(...data, 0) / 10)), font: {size:10} } }, 
                     x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 30, font: {size:10} } } 
                 } : {}
             }
@@ -508,4 +510,4 @@
   </script>
 </body>
 </html>
-Tu salud, nuestra prioridad.
+--- END OF FILE admin.html ---
