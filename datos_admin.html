@@ -1,3 +1,5 @@
+--- START OF FILE datos_admin.html ---
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -28,25 +30,34 @@
     .data-list {
       list-style: none;
       padding: 0;
-      max-height: 400px;
+      max-height: 300px; /* Altura máxima ajustada */
       overflow-y: auto;
       border: 1px solid #eee;
       margin-bottom: 15px;
+      background-color: #fff; /* Fondo blanco para la lista */
     }
-    .data-list li, .data-table tr {
+    .data-list li, .data-table tr { /* Aplicar a ambos */
       padding: 8px 12px;
       border-bottom: 1px solid #eee;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-size: 0.95em; /* Tamaño de fuente ligeramente reducido */
     }
-     .data-list li:last-child, .data-table tr:last-child td {
+     .data-list li:last-child, 
+     .data-table tr:last-child td {
        border-bottom: none;
+     }
+     .data-list li:nth-child(even) {
+         background-color: #f8f9fa; /* Filas alternas */
      }
      .data-list li span, .data-table td {
        flex-grow: 1;
        margin-right: 10px;
        word-break: break-word;
+     }
+     .data-actions { /* Contenedor de botones */
+        flex-shrink: 0; /* Evitar que se encoja */
      }
      .data-actions button {
        padding: 3px 8px;
@@ -56,13 +67,29 @@
      }
      .btn-edit { background-color: #ffc107; color: #333; }
      .btn-edit:hover { background-color: #e0a800; }
-     .btn-delete { background-color: #dc3545; }
+     .btn-delete { background-color: #dc3545; color: white; } /* Color de texto explícito */
      .btn-delete:hover { background-color: #c82333; }
+
      .add-form { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-     .add-form input { flex-grow: 1; }
+     .add-form input { flex-grow: 1; min-width: 200px; } /* Ancho mínimo para inputs */
      .add-form button { flex-shrink: 0; }
-     #materialesTable th, #materialesTable td { white-space: normal; }
-     #loading-admin { text-align: center; padding: 15px; color: #555; }
+
+     #materialesTable th, #materialesTable td { 
+         white-space: normal; 
+         vertical-align: middle; /* Centrar verticalmente */
+      }
+     #materialesTable th {
+         background-color: #e9ecef; /* Fondo ligero para encabezados de tabla */
+     }
+     #materialesTable td:last-child { /* Alinear botones en la tabla */
+        text-align: right;
+     }
+     .loading-placeholder { /* Estilo para mensajes de carga/vacío */
+         text-align:center; 
+         color: #777; 
+         padding: 15px;
+         font-style: italic;
+     }
   </style>
 </head>
 <body class="fondo-dinamico admin-page">
@@ -80,9 +107,9 @@
         <button id="addClienteBtn" class="btn-primario">➕ Añadir</button>
       </div>
       <div id="clientesListContainer">
-         <p id="loading-clientes" style="text-align:center; color: #777;">Cargando clientes...</p>
+         <div id="loading-clientes" class="loading-placeholder">Cargando clientes...</div>
          <ul id="clientesList" class="data-list" style="display:none;">
-           <!-- Los clientes se cargarán aquí -->
+           <!-- Los clientes se cargarán aquí dinámicamente -->
          </ul>
       </div>
     </div>
@@ -95,9 +122,9 @@
         <button id="addTipoCxBtn" class="btn-primario">➕ Añadir</button>
       </div>
       <div id="tiposCxListContainer">
-         <p id="loading-tiposcx" style="text-align:center; color: #777;">Cargando tipos de cirugía...</p>
+         <div id="loading-tiposcx" class="loading-placeholder">Cargando tipos de cirugía...</div>
          <ul id="tiposCxList" class="data-list" style="display:none;">
-           <!-- Los tipos de cirugía se cargarán aquí -->
+           <!-- Los tipos de cirugía se cargarán aquí dinámicamente -->
          </ul>
       </div>
     </div>
@@ -112,32 +139,35 @@
         <button id="addMaterialBtn" class="btn-primario">➕ Añadir</button>
       </div>
        <div id="materialesListContainer">
-           <p id="loading-materiales" style="text-align:center; color: #777;">Cargando materiales...</p>
+           <div id="loading-materiales" class="loading-placeholder">Cargando materiales...</div>
            <div class="table-responsive">
-               <table id="materialesTable" style="width:100%; display:none;">
+               <table id="materialesTable" class="data-table" style="width:100%; display:none; border: 1px solid #dee2e6; border-radius: 4px; background-color: #fff;">
                    <thead>
                        <tr>
                            <th>Código</th>
                            <th>Descripción</th>
                            <th>Categoría</th>
-                           <th>Acciones</th>
+                           <th style="text-align: right; padding-right: 12px;">Acciones</th> <!-- Alinear encabezado -->
                        </tr>
                    </thead>
                    <tbody id="materialesListBody">
-                       <!-- Los materiales se cargarán aquí -->
+                       <!-- Los materiales se cargarán aquí dinámicamente -->
                    </tbody>
                </table>
            </div>
        </div>
     </div>
 
+     <!-- Notificación Toast -->
      <div id="toast" class="toast-notification" style="display:none;"></div>
 
     <div style="text-align: center; margin-top: 30px;">
+      <!-- Enlace corregido para volver al formulario principal -->
       <a href="index.html" class="btn-volver">← Volver al Formulario Principal</a>
     </div>
   </div>
 
+  <!-- Script específico de esta página -->
   <script src="datos_admin.js"></script>
 </body>
 </html>
