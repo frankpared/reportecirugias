@@ -64,7 +64,7 @@ async function loadSimpleList(collectionName, listElement, loadingElement, itemN
     listElement.innerHTML = '';
 
     try {
-        const snapshot = await db.collection(collectionName).orderBy('nombre').get();
+        const snapshot = await db.collection(collectionName).orderBy('nombreLower').get(); // Ordenar por nombreLower
         if (snapshot.empty) {
             loadingElement.textContent = `No hay ${itemNamePlural} definidos.`;
             return;
@@ -74,7 +74,7 @@ async function loadSimpleList(collectionName, listElement, loadingElement, itemN
             const li = document.createElement('li');
             li.dataset.id = doc.id;
             const nameSpan = document.createElement('span');
-            nameSpan.textContent = data.nombre;
+            nameSpan.textContent = data.nombre; // Mostrar el nombre original con mayúsculas/minúsculas
             li.appendChild(nameSpan);
             const actionsDiv = document.createElement('div');
             actionsDiv.classList.add('data-actions');
@@ -106,14 +106,14 @@ async function addSimpleListItem(collectionName, inputElement, addButtonElement,
     }
     addButtonElement.disabled = true; addButtonElement.textContent = 'Añadiendo...';
     try {
-        // Verificar si ya existe (insensible a mayúsculas/minúsculas)
-        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', nombre.toLowerCase()).get();
+        const nombreLower = nombre.toLowerCase();
+        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', nombreLower).get();
         if (!querySnapshot.empty) {
             mostrarToast(`El ${itemNameSingular} "${nombre}" ya existe.`, 'warning');
             inputElement.focus();
             return;
         }
-        await db.collection(collectionName).add({ nombre: nombre, nombreLower: nombre.toLowerCase() });
+        await db.collection(collectionName).add({ nombre: nombre, nombreLower: nombreLower }); // Guardar también en minúsculas
         mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} añadido con éxito.`, 'success');
         inputElement.value = '';
         await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural);
@@ -130,19 +130,19 @@ async function editSimpleListItem(collectionName, id, currentName, itemNameSingu
     if (newName === null || newName.trim() === '' || newName.trim() === currentName) return;
     
     const newNameTrimmed = newName.trim();
+    const newNameLower = newNameTrimmed.toLowerCase();
     try {
-        // Verificar si el nuevo nombre (insensible a mayúsculas/minúsculas) ya existe en otro documento
-        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', newNameTrimmed.toLowerCase()).get();
+        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', newNameLower).get();
         let conflict = false;
         querySnapshot.forEach(doc => {
-            if (doc.id !== id) conflict = true; // Conflicto si el nombre existe en un ID diferente
+            if (doc.id !== id) conflict = true; 
         });
         if (conflict) {
             mostrarToast(`El nombre "${newNameTrimmed}" ya existe para otro ${itemNameSingular}.`, 'warning');
             return;
         }
 
-        await db.collection(collectionName).doc(id).update({ nombre: newNameTrimmed, nombreLower: newNameTrimmed.toLowerCase() });
+        await db.collection(collectionName).doc(id).update({ nombre: newNameTrimmed, nombreLower: newNameLower });
         mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} actualizado.`, 'success');
         await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural);
     } catch (error) {
@@ -199,6 +199,7 @@ async function addMaterial() {
         if (!existing.empty) {
             mostrarToast(`El código de material "${code}" ya existe.`, 'warning');
             newMaterialCodeInput.focus();
+            addMaterialBtn.disabled = false; addMaterialBtn.textContent = '➕ Añadir'; // Reactivar botón
             return;
         }
         await db.collection(COLECCION_MATERIALES).add({ code: code, description: description, categoria: categoria });
