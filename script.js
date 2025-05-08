@@ -88,11 +88,10 @@ function mostrarArchivosSeleccionados() {
             if (file.size > MAX_FILE_SIZE) {
                 li.style.color = 'red';
                 li.textContent += ' - Excede el tamaño máximo!';
-            } else if (!ALLOWED_FILE_TYPES.includes(file.type.toLowerCase()) && file.type) { // Añadir chequeo de file.type
+            } else if (!ALLOWED_FILE_TYPES.includes(file.type.toLowerCase()) && file.type) { 
                 li.style.color = 'red';
                 li.textContent += ' - Tipo de archivo no permitido!';
             } else if (!file.type && !ALLOWED_FILE_TYPES.some(type => file.name.toLowerCase().endsWith(type.split('/')[1]))) {
-                // Fallback para iOS HEIC/HEIF que a veces no reportan MIME type, chequear extensión
                  if (!(file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif'))) {
                     li.style.color = 'red';
                     li.textContent += ' - Tipo de archivo no reconocido / no permitido!';
@@ -128,8 +127,13 @@ async function subirArchivos(reporteId) {
         } catch (error) {
             console.error(`Error subiendo archivo ${file.name}:`, error);
             mostrarToast(`Error al subir ${file.name}.`, "error");
+            // Considerar si se debe detener la subida de los demás o continuar
         }
     }
+    // Limpiar el input de archivos DESPUÉS de intentar subir todos
+    if (inputArchivosAdjuntos) inputArchivosAdjuntos.value = null; 
+    archivosParaSubir = []; // Limpiar el array global
+    listaArchivosSeleccionadosDiv.innerHTML = ''; // Limpiar la lista visual
     return urlsArchivos;
 }
 
@@ -181,24 +185,33 @@ function validarFormulario() {
         }
     });
     
+    // Re-validar archivos justo antes de guardar, por si el usuario cambió la selección
+    archivosParaSubir = inputArchivosAdjuntos ? Array.from(inputArchivosAdjuntos.files) : [];
     for (const file of archivosParaSubir) {
         if (file.size > MAX_FILE_SIZE) {
-            mostrarToast(`El archivo ${file.name} excede el tamaño máximo de 5MB.`, 'warning');
+            mostrarToast(`Archivo ${file.name} excede 5MB.`, 'warning');
             esFormularioValido = false;
+            inputArchivosAdjuntos?.classList.add('campo-invalido'); // Marcar input file como inválido
             break; 
         }
         let isValidType = ALLOWED_FILE_TYPES.includes(file.type.toLowerCase()) ||
                           (!file.type && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
         
         if (!isValidType) {
-            mostrarToast(`El archivo ${file.name} tiene un formato no permitido.`, 'warning');
+            mostrarToast(`Archivo ${file.name}: formato no permitido.`, 'warning');
             esFormularioValido = false;
+             inputArchivosAdjuntos?.classList.add('campo-invalido');
             break;
         }
     }
+     // Limpiar marca de inválido si ya no hay error de archivos
+    if (esFormularioValido && inputArchivosAdjuntos?.classList.contains('campo-invalido')) {
+         inputArchivosAdjuntos.classList.remove('campo-invalido');
+    }
 
-    if (!esFormularioValido && !document.querySelector('.toast-notification[style*="display: block"]')) { 
-        mostrarToast('Por favor, complete todos los campos requeridos (*) y verifique los archivos adjuntos.', 'warning');
+
+    if (!esFormularioValido && !document.querySelector('.toast-notification.visible')) { 
+        mostrarToast('Corrija los campos requeridos (*) o los archivos adjuntos.', 'warning');
     }
     return esFormularioValido;
 }
@@ -208,7 +221,7 @@ async function fetchClientes() {
     if (listaClientesCargada !== null) return; 
     listaClientesCargada = []; 
     try {
-        const snapshot = await db.collection(COLECCION_CLIENTES).orderBy('nombre').get();
+        const snapshot = await db.collection(COLECCION_CLIENTES).orderBy('nombreLower').get();
         listaClientesCargada = snapshot.docs.map(doc => doc.data().nombre);
     } catch (error) {
         console.error("Error fetching clientes:", error);
@@ -220,7 +233,7 @@ async function fetchTiposCirugia() {
     if (listaTiposCxCargada !== null) return; 
     listaTiposCxCargada = []; 
     try {
-        const snapshot = await db.collection(COLECCION_TIPOS_CX).orderBy('nombre').get();
+        const snapshot = await db.collection(COLECCION_TIPOS_CX).orderBy('nombreLower').get();
         listaTiposCxCargada = snapshot.docs.map(doc => doc.data().nombre);
     } catch (error) {
         console.error("Error fetching tipos de cirugía:", error);
@@ -262,7 +275,9 @@ async function cargarSugerenciasIniciales(idInput, idList) {
         const snapshot = await db.collection(COLECCION_SUGERENCIAS).doc(campo).get();
         if (snapshot.exists && snapshot.data().valores) {
             const valoresUnicos = [...new Set(snapshot.data().valores)]; 
-            actualizarListaDatalist(datalistElement, valoresUnicos.sort());
+            // Ordenar alfabéticamente insensible a mayúsculas/minúsculas
+            valoresUnicos.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+            actualizarListaDatalist(datalistElement, valoresUnicos);
         } else {
             datalistElement.innerHTML = ''; 
         }
@@ -272,7 +287,7 @@ async function cargarSugerenciasIniciales(idInput, idList) {
 }
 
 async function guardarSugerencia(campo, valor) {
-    if (!valor || valor.trim().length < 2) return; // Permitir valores un poco más cortos
+    if (!valor || valor.trim().length < 2) return; 
     const valorLimpio = valor.trim();
     const docRef = db.collection(COLECCION_SUGERENCIAS).doc(campo);
 
@@ -283,23 +298,23 @@ async function guardarSugerencia(campo, valor) {
             if (doc.exists && doc.data().valores) {
                 valores = doc.data().valores;
             }
-            // Convertir a minúsculas para comparación insensible a mayúsculas/minúsculas
             if (!valores.map(v => v.toLowerCase()).includes(valorLimpio.toLowerCase())) {
                 valores.push(valorLimpio);
-                // Opcional: Limitar y ordenar
                 valores.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())); 
-                // if (valores.length > 100) { valores = valores.slice(0, 100); } // Limitar
-                
+                // if (valores.length > 100) { valores = valores.slice(0, 100); } 
                 transaction.set(docRef, { valores: valores }, { merge: true }); 
 
                 const datalistElement = document.getElementById(`${campo}List`); 
                 if (datalistElement) {
-                     actualizarListaDatalist(datalistElement, [...new Set(valores)]); // No re-ordenar aquí, ya está hecho
+                     actualizarListaDatalist(datalistElement, valores); 
                 }
             }
         });
     } catch (error) {
-        console.error(`Error guardando sugerencia para ${campo}:`, error);
+        // Silenciar errores de transacción si ocurren concurrentemente (puede pasar con offline)
+        if (error.code !== 'transaction-retry') {
+             console.error(`Error guardando sugerencia para ${campo}:`, error);
+        }
     }
 }
 
@@ -313,7 +328,7 @@ function actualizarListaDatalist(datalistElement, valores) {
 }
 
 // --- Obtención y Formateo de Datos ---
-function obtenerDatos() {
+function obtenerDatos(establecerOriginal = false) {
     const datosActuales = {
         formato: document.getElementById('formato')?.value || 'formal',
         mensajeInicio: document.getElementById('mensajeInicio')?.value || '',
@@ -328,8 +343,10 @@ function obtenerDatos() {
         observaciones: document.getElementById('observaciones')?.value.trim() || '',
         infoAdicional: document.getElementById('infoAdicional')?.value.trim() || '',
     };
-    if (!datosReporteOriginal && document.getElementById('paciente').value.trim()) { // Solo setear si hay paciente (indica datos ingresados)
+    // Establecer como original solo si se pide explícitamente o si no existe y hay datos
+    if (establecerOriginal || (!datosReporteOriginal && datosActuales.paciente)) {
         datosReporteOriginal = { ...datosActuales };
+        console.log("Datos originales establecidos para auditoría.");
     }
     return datosActuales;
 }
@@ -340,7 +357,7 @@ function formatearMaterialParaHTML(materialTexto) {
     if (lineas.length === 0) return '<p>No especificado.</p>';
     let tablaHTML = '<table class="material-table">';
     lineas.forEach(linea => {
-        tablaHTML += `<tr><td>${linea.trim()}</td></tr>`;
+        tablaHTML += `<tr><td>${linea.trim().replace(/</g, "<").replace(/>/g, ">")}</td></tr>`; // Escapar HTML
     });
     tablaHTML += '</table>';
     return tablaHTML;
@@ -352,11 +369,7 @@ function formatearFechaUsuario(fechaISO) {
         const partes = fechaISO.split('-');
         if (partes.length !== 3) return fechaISO; 
         const fecha = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]), 12, 0, 0);
-        return fecha.toLocaleDateString('es-AR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
+        return fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     } catch (e) { return fechaISO; }
 }
 
@@ -371,7 +384,7 @@ async function registrarAuditoria(reporteId, accion, cambios = [], usuarioId) {
     try {
         await db.collection(COLECCION_REPORTES).doc(reporteId).collection('auditLog').add(logEntry);
     } catch (error) {
-        console.error(`Error registrando log de auditoría para ${reporteId}:`, error);
+        console.error(`Error registrando log auditoría para ${reporteId}:`, error);
     }
 }
 
@@ -383,9 +396,12 @@ function generarListaDeCambios(datosNuevos, datosAntiguos) {
         'formato', 'mensajeInicio' 
     ];
 
+    // Asegurarse que datosAntiguos no sea null o undefined
+    const datosAntiguosValidos = datosAntiguos || {};
+
     for (const campo of camposAuditables) {
         const valorNuevo = datosNuevos[campo] !== undefined ? String(datosNuevos[campo]).trim() : '';
-        const valorAntiguo = datosAntiguos[campo] !== undefined ? String(datosAntiguos[campo]).trim() : '';
+        const valorAntiguo = datosAntiguosValidos[campo] !== undefined ? String(datosAntiguosValidos[campo]).trim() : '';
 
         if (valorNuevo !== valorAntiguo) {
             cambios.push({
@@ -402,15 +418,17 @@ function generarListaDeCambios(datosNuevos, datosAntiguos) {
 function generarTexto() {
     if (!validarFormulario()) return;
     
-    const datos = obtenerDatos(); 
+    const datos = obtenerDatos(true); // Forzar establecer original al generar texto
     const fechaFormateada = formatearFechaUsuario(datos.fechaCirugia);
     const contenidoMaterialHTML = formatearMaterialParaHTML(datos.material);
     const fraseFinal = "\n\nSaludos, quedo al pendiente.";
     let archivosHtmlParaReporte = '';
+    const currentFiles = inputArchivosAdjuntos ? Array.from(inputArchivosAdjuntos.files) : [];
 
-    if (archivosParaSubir.length > 0) {
+
+    if (currentFiles.length > 0) {
         archivosHtmlParaReporte += `<h4>Archivos Adjuntos Propuestos:</h4><ul>`;
-        archivosParaSubir.forEach(file => {
+        currentFiles.forEach(file => {
             let isValidType = ALLOWED_FILE_TYPES.includes(file.type.toLowerCase()) ||
                               (!file.type && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
             if (file.size <= MAX_FILE_SIZE && isValidType) {
@@ -424,7 +442,7 @@ function generarTexto() {
 
     const reporteHTML = `
       <div class="reporte-contenido reporte-box">
-        <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr">
+        <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 70px; margin-bottom: 15px; display: block; margin-left: auto; margin-right: auto;">
         <h3>📝 Reporte de Cirugía</h3>
         <p>${datos.mensajeInicio || 'Detalles de la cirugía programada:'}</p>
         <ul>
@@ -457,28 +475,26 @@ function generarTexto() {
 
 async function copiarTexto() {
     if (!validarFormulario()) return;
-    if (guardandoReporte) {
-        mostrarToast("Espere, guardado anterior en proceso...", "info");
-        return;
-    }
+    if (guardandoReporte) { mostrarToast("Guardado en proceso...", "info"); return; }
+    
     ocultarBotonReintento(); 
     const resultadoContainer = document.getElementById('resultado-container');
-    const reporteContenidoElement = resultadoContainer.querySelector('.reporte-contenido');
+    let reporteContenidoElement = resultadoContainer?.querySelector('.reporte-contenido');
 
+    // Si el reporte no está visible, generarlo primero
     if (!reporteContenidoElement || resultadoContainer.style.display === 'none') {
         generarTexto(); 
-        const nuevoReporteElement = document.getElementById('resultado-container').querySelector('.reporte-contenido');
-        if (!nuevoReporteElement) {
-             mostrarToast('Primero debe generar un reporte.', 'warning');
-             return;
-        }
-        await copiarYGuardarInterno(nuevoReporteElement);
+        reporteContenidoElement = document.getElementById('resultado-container')?.querySelector('.reporte-contenido');
+        if (!reporteContenidoElement) { mostrarToast('Error al generar reporte antes de copiar.', 'error'); return; }
+        // Esperar un instante para que el DOM se actualice
+        await new Promise(resolve => setTimeout(resolve, 50)); 
     } else {
+         // Si ya estaba generado, asegurarse que los datos originales están seteados
          if (!datosReporteOriginal && document.getElementById('paciente').value.trim()) {
-            obtenerDatos(); 
+            obtenerDatos(true); // Forzar setear original si no existía
          }
-         await copiarYGuardarInterno(reporteContenidoElement);
     }
+    await copiarYGuardarInterno(reporteContenidoElement);
 }
 
 async function copiarYGuardarInterno(reporteElement) {
@@ -488,7 +504,7 @@ async function copiarYGuardarInterno(reporteElement) {
     setActionButtonsDisabled(true);
     ocultarBotonReintento();
 
-    const datosParaGuardar = obtenerDatos(); 
+    const datosParaGuardar = obtenerDatos(); // Obtiene datos actuales, NO setea original aquí
     const textoPlanoParaCopiar = reporteElement.innerText;
     let copiadoExitoso = false;
     let guardadoExitoso = false;
@@ -499,33 +515,37 @@ async function copiarYGuardarInterno(reporteElement) {
     } catch (err) { console.error('Error al copiar:', err); }
 
     try {
+        // Siempre es creación desde la interfaz principal
         await guardarEnFirebase(datosParaGuardar, null); 
         guardadoExitoso = true;
         reportePendiente = null; 
         ocultarBotonReintento();
         
-        // Limpiar formulario
+        // Limpiar formulario y estado
         ['paciente', 'cliente', 'medico', 'tipoCirugia', 'material', 'observaciones', 'infoAdicional', 'instrumentador', 'lugarCirugia'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
+            const el = document.getElementById(id); if (el) el.value = '';
         });
         const fechaInput = document.getElementById('fechaCirugia');
-        if (fechaInput) { // Resetear a hoy
-            const hoy = new Date();
-            const offset = hoy.getTimezoneOffset();
+        if (fechaInput) { 
+            const hoy = new Date(); const offset = hoy.getTimezoneOffset();
             const hoyLocal = new Date(hoy.getTime() - (offset*60*1000));
             fechaInput.value = hoyLocal.toISOString().split('T')[0];
+             validarCampo(fechaInput); // Re-validar fecha default
         }
         if (inputArchivosAdjuntos) inputArchivosAdjuntos.value = null; 
         archivosParaSubir = [];
         listaArchivosSeleccionadosDiv.innerHTML = '';
-        datosReporteOriginal = null; 
+        datosReporteOriginal = null; // Resetear para el próximo reporte
         
+        // Ocultar resultado y limpiar validaciones de campos limpiados
+         ['paciente', 'cliente', 'medico'].forEach(id => validarCampo(document.getElementById(id))); // Revalidar vacíos
         const resultadoContainer = document.getElementById('resultado-container');
         if (resultadoContainer) resultadoContainer.style.display = 'none';
 
-
-    } catch (err) { console.error('Error guardando:', err); }
+    } catch (err) { 
+        console.error('Error guardando:', err); 
+        // No limpiar formulario si falla el guardado para que el usuario no pierda datos
+    }
 
     if (copiadoExitoso && guardadoExitoso) mostrarToast('✅ Copiado y Guardado!', 'success');
     else if (copiadoExitoso) mostrarToast('⚠️ Copiado, pero falló el guardado.', 'warning');
@@ -549,24 +569,37 @@ function obtenerUsuarioId() {
 }
 
 async function guardarEnFirebase(data, reporteIdExistente = null) {
-    guardandoReporte = true; 
-    loadingIndicator.style.display = 'block';
-    setActionButtonsDisabled(true);
-    ocultarBotonReintento();
-    
+    // Ya no es necesario setear 'guardandoReporte', 'loadingIndicator', etc. aquí, 
+    // porque se hace en la función que llama (copiarYGuardarInterno)
+
     if (!data.paciente || !data.cliente || !data.medico || !data.fechaCirugia) { 
-        mostrarToast('Faltan Paciente, Cliente, Médico o Fecha.', 'error');
-        loadingIndicator.style.display = 'none'; setActionButtonsDisabled(false); guardandoReporte = false;
-        throw new Error("Datos insuficientes.");
+        throw new Error("Datos insuficientes."); // Lanzar error para que la función llamante lo maneje
     }
 
     const usuarioActualId = obtenerUsuarioId();
     let docRef;
     let esNuevaCreacion = !reporteIdExistente;
-    const idParaArchivos = reporteIdExistente || db.collection(COLECCION_REPORTES).doc().id; // Generar ID si es nuevo, para ruta de archivos
-    const urlsDeArchivosSubidos = await subirArchivos(idParaArchivos);
+    const idParaOperacion = reporteIdExistente || db.collection(COLECCION_REPORTES).doc().id; 
+    const archivosActuales = inputArchivosAdjuntos ? Array.from(inputArchivosAdjuntos.files) : []; // Obtener archivos actuales del input
 
-    const reporte = { ...data, usuario: usuarioActualId, archivosAdjuntos: urlsDeArchivosSubidos };
+    // Filtrar archivos válidos para subir
+    const archivosValidosParaSubir = archivosActuales.filter(file => {
+         let isValidType = ALLOWED_FILE_TYPES.includes(file.type.toLowerCase()) ||
+                           (!file.type && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
+        return file.size <= MAX_FILE_SIZE && isValidType;
+    });
+
+    const urlsDeArchivosSubidos = await subirArchivos(idParaOperacion); // subirArchivos ahora limpia el input y el array global
+
+    // Asegurarse que los datos originales estén disponibles para comparación si es edición
+    if (!esNuevaCreacion && !datosReporteOriginal) {
+        console.warn("Intentando editar sin datos originales cargados. Auditoría puede ser incompleta.");
+         // Podríamos intentar cargarlos aquí, pero es mejor hacerlo al iniciar la edición.
+         // const snapshot = await db.collection(COLECCION_REPORTES).doc(idParaOperacion).get();
+         // datosReporteOriginal = snapshot.data(); // Asignar si existe
+    }
+
+    const reporte = { ...data, usuario: usuarioActualId }; // No incluir archivos aquí inicialmente
 
     try {
         if (esNuevaCreacion) {
@@ -574,75 +607,74 @@ async function guardarEnFirebase(data, reporteIdExistente = null) {
             reporte.creadoPor = usuarioActualId; 
             reporte.modificadoEn = reporte.creadoEn; 
             reporte.modificadoPor = usuarioActualId; 
+            reporte.archivosAdjuntos = urlsDeArchivosSubidos; // Añadir archivos subidos
             
-            // Si usamos un ID pre-generado para archivos, usamos set en lugar de add
-            docRef = db.collection(COLECCION_REPORTES).doc(idParaArchivos);
+            docRef = db.collection(COLECCION_REPORTES).doc(idParaOperacion);
             await docRef.set(reporte);
-            await registrarAuditoria(idParaArchivos, "Creación", [], usuarioActualId);
+            await registrarAuditoria(idParaOperacion, "Creación", [], usuarioActualId);
             if (urlsDeArchivosSubidos.length > 0) {
                  const cambiosArchivos = urlsDeArchivosSubidos.map(a => ({ campo: 'archivoAdjunto', anterior: '(ninguno)', nuevo: a.nombre }));
-                 await registrarAuditoria(idParaArchivos, "Archivos Subidos", cambiosArchivos, usuarioActualId);
+                 await registrarAuditoria(idParaOperacion, "Archivos Subidos", cambiosArchivos, usuarioActualId);
             }
-        } else { /* Lógica de Modificación (requiere UI para cargar reporte) */
-            docRef = db.collection(COLECCION_REPORTES).doc(reporteIdExistente);
-            reporte.modificadoEn = firebase.firestore.FieldValue.serverTimestamp();
-            reporte.modificadoPor = usuarioActualId;
-            const datosAntiguosParaComparar = datosReporteOriginal || (await docRef.get()).data() || {};
-            const cambiosDetectados = generarListaDeCambios(data, datosAntiguosParaComparar);
-            // Si hay nuevos archivos, se añaden. Si se quieren borrar, se necesitaría otra lógica.
-            const archivosExistentes = datosAntiguosParaComparar.archivosAdjuntos || [];
-            reporte.archivosAdjuntos = [...archivosExistentes, ...urlsDeArchivosSubidos];
+        } else { 
+            docRef = db.collection(COLECCION_REPORTES).doc(idParaOperacion);
+            const datosAntiguos = datosReporteOriginal || {}; // Usar original si existe
+            const cambiosDetectados = generarListaDeCambios(data, datosAntiguos);
+            const archivosExistentes = datosAntiguos.archivosAdjuntos || [];
+            
+            const datosParaActualizar = {
+                 ...data, // Campos principales actualizados
+                 modificadoEn: firebase.firestore.FieldValue.serverTimestamp(),
+                 modificadoPor: usuarioActualId,
+                 archivosAdjuntos: [...archivosExistentes, ...urlsDeArchivosSubidos] // Combinar archivos
+            };
 
-
-            await docRef.update(reporte);
+            await docRef.update(datosParaActualizar);
             if (cambiosDetectados.length > 0) {
-                await registrarAuditoria(reporteIdExistente, "Modificación", cambiosDetectados, usuarioActualId);
+                await registrarAuditoria(idParaOperacion, "Modificación", cambiosDetectados, usuarioActualId);
             }
             if (urlsDeArchivosSubidos.length > 0) {
-                 const cambiosArchivos = urlsDeArchivosSubidos.map(a => ({ campo: 'archivoAdjunto', anterior: '(existentes)', nuevo: a.nombre }));
-                 await registrarAuditoria(reporteIdExistente, "Archivos Subidos", cambiosArchivos, usuarioActualId);
+                 const cambiosArchivos = urlsDeArchivosSubidos.map(a => ({ campo: 'archivoAdjunto', anterior: `(${archivosExistentes.length} existentes)`, nuevo: a.nombre }));
+                 await registrarAuditoria(idParaOperacion, "Archivos Subidos", cambiosArchivos, usuarioActualId);
             }
+            // Resetear original DESPUÉS de una edición exitosa
+             datosReporteOriginal = null;
         }
+
+        // Guardar sugerencias (solo si el valor no está vacío)
         ['cliente', 'medico', 'instrumentador', 'lugarCirugia', 'tipoCirugia'].forEach(async (campo) => {
             if(data[campo]) await guardarSugerencia(campo, data[campo]);
         });
-        reportePendiente = null; 
-        ocultarBotonReintento();
-        return esNuevaCreacion ? idParaArchivos : reporteIdExistente; 
+        
+        return idParaOperacion; // Devolver el ID del reporte
+
     } catch (error) {
-        console.error("Error Firebase:", error);
-        if (error.code === 'unavailable' || error.code === 'cancelled' || error.message.includes('offline')) {
-            reportePendiente = reporte; 
-            mostrarToast('⚠️ Falló guardado (offline?). Reintentar.', 'warning');
-            mostrarBotonReintento();
-        } else {
-            mostrarToast(`❌ Error guardando: ${error.message}`, 'error');
-            reportePendiente = null; 
-            ocultarBotonReintento();
-        }
+        console.error("Error Firebase en guardarEnFirebase:", error);
+        // Re-lanzar el error para que la función llamante (copiarYGuardarInterno) lo maneje (ponga toast, botón reintento, etc.)
         throw error; 
-    } finally {
-        if (!reportePendiente) {
-            loadingIndicator.style.display = 'none';
-            setActionButtonsDisabled(false);
-        }
-        guardandoReporte = false; 
-    }
+    } 
+    // No manejar UI (loading, botones) aquí, se hace en copiarYGuardarInterno
 }
 
 // --- Funciones Auxiliares y de Interfaz (Toast, Botón Reintento) ---
 function mostrarToast(mensaje, tipo = 'info') {
     const toast = document.getElementById('toast');
     if (!toast) return;
+    // Ocultar toast anterior si existe
+    toast.classList.remove('visible');
+    toast.style.display = 'none'; // Ocultar inmediatamente antes de mostrar el nuevo
+
     toast.textContent = mensaje;
     toast.className = 'toast-notification'; 
     toast.classList.add(tipo); 
     toast.style.display = 'block';
-    void toast.offsetWidth;
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateY(0)';
+    void toast.offsetWidth; // Forzar reflow
+    toast.classList.add('visible'); // Añadir clase para transición
+    toast.style.transform = 'translateY(0)'; // Asegurar posición final
+
+    // Ocultar después de un tiempo
     setTimeout(() => {
-        toast.style.opacity = '0';
+        toast.classList.remove('visible');
         toast.style.transform = 'translateY(20px)';
         setTimeout(() => { toast.style.display = 'none'; }, 300); 
     }, 4000); 
@@ -652,7 +684,7 @@ function mostrarBotonReintento() {
     if (retrySaveBtn) {
         retrySaveBtn.style.display = 'inline-block';
         loadingIndicator.style.display = 'none';
-        setActionButtonsDisabled(false);
+        setActionButtonsDisabled(false); // Habilitar botones para poder reintentar
     }
 }
 function ocultarBotonReintento() {
@@ -661,15 +693,28 @@ function ocultarBotonReintento() {
 
 function reintentarGuardado() {
     if (reportePendiente) {
-        // Asumimos que reportePendiente tiene el ID si era una edición, o es el objeto para crear
-        const idExistente = reportePendiente.id; // Suponiendo que si es edicion, el id esta en el obj pendiente
+        console.log("Reintentando guardar reporte pendiente...");
+        loadingIndicator.style.display = 'block'; // Mostrar carga durante reintento
+        setActionButtonsDisabled(true);
+        ocultarBotonReintento();
+        
+        const idExistente = reportePendiente.id; // Asumir que el ID estaría en el objeto pendiente si fuera edición
         guardarEnFirebase(reportePendiente, idExistente)
             .then(() => {
                 mostrarToast("✅ Guardado tras reintento.", "success");
                 reportePendiente = null; 
-                ocultarBotonReintento();
+                ocultarBotonReintento(); // Ocultar al tener éxito
             })
-            .catch(err => { /* Error ya manejado en guardarEnFirebase */ });
+            .catch(err => { 
+                console.error("Fallo el reintento:", err);
+                // El error ya se maneja en guardarEnFirebase (muestra toast/botón si falla de nuevo)
+            })
+            .finally(() => {
+                 if (!reportePendiente) { // Si tuvo éxito o fue error no recuperable
+                    loadingIndicator.style.display = 'none';
+                    setActionButtonsDisabled(false);
+                }
+            });
     } else {
         ocultarBotonReintento(); 
     }
@@ -679,10 +724,10 @@ function reintentarGuardado() {
 function compartirWhatsApp() {
     if (!validarFormulario()) return;
     const resultadoContainer = document.getElementById('resultado-container');
-    const reporteContenidoElement = resultadoContainer.querySelector('.reporte-contenido');
+    const reporteContenidoElement = resultadoContainer?.querySelector('.reporte-contenido');
     if (!reporteContenidoElement || resultadoContainer.style.display === 'none') {
-        generarTexto(); // Generar si no existe
-        const nuevoReporteElement = document.getElementById('resultado-container').querySelector('.reporte-contenido');
+        generarTexto(); 
+        const nuevoReporteElement = document.getElementById('resultado-container')?.querySelector('.reporte-contenido');
         if (!nuevoReporteElement) { mostrarToast('Genere reporte primero.', 'warning'); return; }
         const textoPlano = `*Reporte Cirugía Districorr*\n\n${nuevoReporteElement.innerText}`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoPlano)}`, '_blank');
@@ -695,10 +740,10 @@ function compartirWhatsApp() {
 function enviarPorEmail() {
     if (!validarFormulario()) return;
     const resultadoContainer = document.getElementById('resultado-container');
-    let reporteContenidoElement = resultadoContainer.querySelector('.reporte-contenido');
+    let reporteContenidoElement = resultadoContainer?.querySelector('.reporte-contenido');
     if (!reporteContenidoElement || resultadoContainer.style.display === 'none') {
         generarTexto();
-        reporteContenidoElement = document.getElementById('resultado-container').querySelector('.reporte-contenido');
+        reporteContenidoElement = document.getElementById('resultado-container')?.querySelector('.reporte-contenido');
         if (!reporteContenidoElement) { mostrarToast('Genere reporte primero.', 'warning'); return; }
     }
     const datos = obtenerDatos();
@@ -711,17 +756,19 @@ function enviarPorEmail() {
 
 function imprimirReporte() {
     const resultadoContainer = document.getElementById('resultado-container');
-    if (!resultadoContainer.querySelector('.reporte-contenido') || resultadoContainer.style.display === 'none') {
+    if (!resultadoContainer?.querySelector('.reporte-contenido') || resultadoContainer.style.display === 'none') {
         mostrarToast('Genere reporte primero.', 'warning'); return;
     }
     const contenidoParaImprimir = resultadoContainer.querySelector('.reporte-contenido').cloneNode(true);
     const ventanaImpresion = window.open('', '_blank');
-    ventanaImpresion.document.write('<html><head><title>Imprimir Reporte</title><link rel="stylesheet" href="style.css"><style>body{padding:20px;background-color:#fff;}.reporte-box{box-shadow:none;border:1px solid #ccc;border-left:5px solid #007bff;margin:0;max-width:100%;}button,.btn-link,.btn-volver,.modal-overlay,.toast-notification,.credit,header,.form-group,.text-center,#loading-indicator,#retry-save-btn{display:none!important;}@media print{body{padding:0;}.reporte-box{border:none;border-left:5px solid #007bff;}}</style></head><body>');
+    ventanaImpresion.document.write('<html><head><title>Imprimir Reporte</title><link rel="stylesheet" href="style.css"><style>body{padding:20px;background-color:#fff;font-size:10pt;}.reporte-box{box-shadow:none;border:1px solid #ccc;border-left:5px solid #007bff;margin:0;max-width:100%;}.reporte-contenido ul{padding-left:20px;list-style:disc;} table.material-table{font-size:9pt;width:100%;border:1px solid #eee;} table.material-table td{padding:4px 6px;} button,.btn-link,.btn-volver,.modal-overlay,.toast-notification,.credit,header,.form-group,.text-center,#loading-indicator,#retry-save-btn, .btn-seleccionar-item{display:none!important;} @page { size: A4; margin: 20mm; } @media print{body{padding:0;}.reporte-box{border:none;border-left:5px solid #007bff;} .reporte-contenido img{max-height:50px!important;}}</style></head><body>');
     ventanaImpresion.document.body.appendChild(contenidoParaImprimir);
     ventanaImpresion.document.write('</body></html>');
     ventanaImpresion.document.close(); 
     ventanaImpresion.onload = function() {
-        ventanaImpresion.focus(); ventanaImpresion.print(); setTimeout(() => { ventanaImpresion.close(); }, 500);
+        setTimeout(() => { // Dar tiempo a renderizar
+             ventanaImpresion.focus(); ventanaImpresion.print(); setTimeout(() => { ventanaImpresion.close(); }, 500);
+        }, 250);
     };
 }
 
@@ -737,13 +784,32 @@ async function generarImagen() {
     }
     mostrarToast('🖼️ Generando imagen...', 'info');
     try {
-        const canvas = await html2canvas(reporteElement, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        // Asegurar que las imágenes externas se carguen antes de renderizar
+        const images = reporteElement.querySelectorAll('img');
+        const promises = [];
+        images.forEach(img => {
+            if (!img.complete) { // Si la imagen no está cargada
+                promises.push(new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                }));
+            }
+        });
+        await Promise.all(promises); // Esperar a que todas las imágenes se carguen
+
+        const canvas = await html2canvas(reporteElement, { 
+            scale: 2, 
+            useCORS: true, // Necesario para imágenes de imgur
+            allowTaint: true, // Puede ayudar con CORS en algunos casos
+            backgroundColor: '#ffffff' 
+        });
         const link = document.createElement('a');
         link.download = `reporte_cirugia_${obtenerDatos().paciente||'paciente'}_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png'); 
         link.click(); 
         mostrarToast('✅ Imagen PNG descargada.', 'success');
     } catch (error) {
+        console.error("Error generando imagen:", error);
         mostrarToast('❌ Error al generar imagen.', 'error');
     }
 }
@@ -798,7 +864,7 @@ function anadirMaterialesSeleccionados() {
             const itemDiv = cb.closest('.modal-item');
             return itemDiv && itemDiv.dataset.code && itemDiv.dataset.description ? `${itemDiv.dataset.code} - ${itemDiv.dataset.description}` : '';
         })
-        .filter(Boolean) // Quitar vacíos
+        .filter(Boolean) 
         .join('\n');
 
     if (textoParaAnadir) {
@@ -911,15 +977,10 @@ const debouncedFilterCliente = debounce(filtrarModalCliente, DEBOUNCE_DELAY);
 
 // --- Inicialización ---
 document.addEventListener('DOMContentLoaded', async () => {
-    // Carga de datos maestros en paralelo
-    Promise.all([
-        fetchClientes(),
-        fetchTiposCirugia(),
-        fetchMateriales()
-    ]).then(() => {
-        console.log("Datos maestros iniciales cargados o en proceso.");
-        // Cargar sugerencias DESPUÉS que los datos base (clientes, tiposCx) estén disponibles
-        // para que los modales se llenen correctamente si se abren rápido.
+    console.log("DOM Cargado");
+    Promise.all([ fetchClientes(), fetchTiposCirugia(), fetchMateriales() ])
+    .then(() => {
+        console.log("Datos maestros cargados.");
         cargarSugerenciasIniciales('cliente', 'clientesList'); 
         cargarSugerenciasIniciales('medico', 'medicosList');
         cargarSugerenciasIniciales('instrumentador', 'instrumentadoresList');
@@ -929,20 +990,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setupValidacion();
 
-    try {
-        const hoy = new Date();
-        const offset = hoy.getTimezoneOffset();
+    try { // Setear fecha default
+        const hoy = new Date(); const offset = hoy.getTimezoneOffset();
         const hoyLocal = new Date(hoy.getTime() - (offset*60*1000));
         const fechaISO = hoyLocal.toISOString().split('T')[0];
         const fechaInput = document.getElementById('fechaCirugia');
-        if(fechaInput) {
-            fechaInput.value = fechaISO;
-            validarCampo(fechaInput); 
-        }
-    } catch (e) { console.error("Error fecha por defecto:", e); }
+        if(fechaInput) { fechaInput.value = fechaISO; validarCampo(fechaInput); }
+    } catch (e) { console.error("Error fecha default:", e); }
 
     if (retrySaveBtn) retrySaveBtn.addEventListener('click', reintentarGuardado);
 
+    // Listeners para cerrar modales al hacer click fuera
     ['modalMateriales', 'modalTipoCx', 'modalCliente'].forEach(modalId => {
         const modalElement = document.getElementById(modalId);
         if (modalElement) {
@@ -956,11 +1014,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
+    // Validar campos requeridos inicialmente
     ['paciente', 'cliente', 'medico'].forEach(id => {
         const input = document.getElementById(id);
-        if (input && input.value.trim() === '' && input.hasAttribute('required')) { 
-             validarCampo(input); 
-        }
+        if (input && input.hasAttribute('required')) { validarCampo(input); }
     });
     console.log("App Districorr inicializada.");
 });
