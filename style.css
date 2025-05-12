@@ -29,7 +29,7 @@ body.fondo-dinamico {
 }
 
 /* --- Botones y Enlaces --- */
-button, .btn-volver, .btn-link {
+button, .btn-volver, .btn-link, .btn-admin-action { /* Añadido .btn-admin-action */
   display: inline-block;
   padding: 10px 20px;
   margin: 5px;
@@ -47,15 +47,15 @@ button, .btn-volver, .btn-link {
   text-align: center;
 }
 
-button:hover, .btn-volver:hover, .btn-link:hover {
+button:hover, .btn-volver:hover, .btn-link:hover, .btn-admin-action:hover {
   background-color: #0056b3; /* Azul más oscuro */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
-button:active, .btn-volver:active, .btn-link:active {
+button:active, .btn-volver:active, .btn-link:active, .btn-admin-action:active {
     transform: translateY(1px); /* Efecto presionado */
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
-button:disabled { /* Estilo para botones deshabilitados */
+button:disabled, .btn-admin-action:disabled { 
     background-color: #adb5bd;
     cursor: not-allowed;
     box-shadow: none;
@@ -73,6 +73,14 @@ button:disabled { /* Estilo para botones deshabilitados */
     background-color: #6fbf73 !important; /* Verde más claro deshabilitado */
 }
 
+.btn-secundario { /* Nuevo estilo para botones como "Limpiar" o "Cargar Último" */
+  background-color: #6c757d !important; 
+}
+.btn-secundario:hover {
+  background-color: #5a6268 !important;
+}
+
+
 .btn-link {
   background-color: #6c757d; /* Gris para acciones secundarias */
 }
@@ -86,6 +94,18 @@ button:disabled { /* Estilo para botones deshabilitados */
 .btn-volver:hover {
     background-color: #5a6268;
 }
+
+/* Estilos para botones de acción en admin.html (Ver Detalle, Reenviar) */
+.btn-admin-action {
+  padding: 6px 10px;
+  font-size: 12px;
+  margin: 2px;
+}
+.btn-admin-ver { background-color: #17a2b8; } /* Azul info */
+.btn-admin-ver:hover { background-color: #138496; }
+.btn-admin-wsp { background-color: #25D366; } /* Verde WhatsApp */
+.btn-admin-wsp:hover { background-color: #1DAE50; }
+
 
 /* --- Estilos para el Botón de Selección (Material y Tipo Cx) --- */
 .btn-seleccionar-material { /* Reutilizado para Cliente, Material y Tipo Cx */
@@ -119,7 +139,7 @@ button:disabled { /* Estilo para botones deshabilitados */
   font-size: 15px;
 }
 /* Añadir asterisco visual para campos requeridos */
-.form-group label[for="cliente"]:after, /* AÑADIDO */
+.form-group label[for="cliente"]:after,
 .form-group label[for="paciente"]:after,
 .form-group label[for="medico"]:after,
 .form-group label[for="fechaCirugia"]:after {
@@ -198,6 +218,7 @@ textarea.form-control {
   font-size: 16px;
   line-height: 1.7; /* Un poco más de espacio entre líneas */
   color: #212529; /* Texto más oscuro */
+  word-break: break-word; /* Para que textos largos no rompan el layout */
 }
 
 .reporte-contenido img {
@@ -375,6 +396,12 @@ textarea.form-control {
 .modal-body input[type="text"].form-control {
     margin-bottom: 15px; /* Input de búsqueda */
 }
+/* Foco visible en inputs de modales */
+.modal-body input[type="text"].form-control:focus {
+  border-color: #007bff; /* Coincidir con color primario para consistencia */
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
 
 .modal-lista-container {
     /* Contenedor de la lista */
@@ -451,9 +478,24 @@ textarea.form-control {
 
 /* --- Estilos Específicos Modal Tipo Cirugía y Clientes --- */
 #modalTipoCx .modal-item,
-#modalClientes .modal-item { /* Hereda estilos de .modal-item */
-    padding: 8px 10px; /* Más padding vertical */
+#modalClientes .modal-item,
+#modalReporteDetalle .reporte-contenido { /* Añadido #modalReporteDetalle */
+    padding: 8px 10px; 
     font-size: 16px;
+}
+/* Para el modal de detalle del reporte */
+#modalReporteDetalle .reporte-contenido {
+    font-size: 15px; /* Un poco más pequeño para que quepa más */
+    line-height: 1.6;
+}
+#modalReporteDetalle .reporte-box {
+    margin-top: 0; /* Sin margen superior dentro del modal */
+    box-shadow: none; /* Sin sombra extra */
+    border-left-width: 3px;
+    padding: 15px;
+}
+#modalReporteDetalle .modal-body {
+    padding-right: 0; /* Quitar padding extra si no hay scroll forzado */
 }
 
 
@@ -467,11 +509,19 @@ textarea.form-control {
 }
 
 /* --- Estilos para admin.html --- */
+.admin-controls { /* Contenedor para el buscador */
+    margin-bottom: 20px;
+}
+.admin-controls input.form-control {
+    max-width: 400px; /* Limitar ancho del buscador */
+    margin: 0 auto; /* Centrar si es más angosto */
+}
+
 .table-responsive {
     overflow-x: auto; /* Permitir scroll horizontal en tablas grandes */
     margin-bottom: 20px;
 }
-/* Prefijo para evitar colisiones si admin.html usa más estilos */
+
 body.admin-page table {
     border-collapse: collapse;
     width: 100%;
@@ -480,57 +530,72 @@ body.admin-page table {
 }
 body.admin-page th,
 body.admin-page td {
-    padding: 12px 15px; /* Buen padding */
+    padding: 12px 15px; 
     text-align: left;
-    border-bottom: 1px solid #dee2e6; /* Separador de filas */
-    vertical-align: top; /* Alinear arriba si el contenido es largo */
-    white-space: nowrap; /* Evitar que el texto largo rompa la celda (combinado con overflow) */
+    border-bottom: 1px solid #dee2e6; 
+    vertical-align: top; 
+    /* white-space: nowrap;  QUITADO TEMPORALMENTE para mejorar visualización de botones */
 }
 /* Permitir que algunas columnas específicas puedan romper línea si es necesario */
-body.admin-page td:nth-child(2), /* Cliente */
-body.admin-page td:nth-child(3), /* Paciente */
-body.admin-page td:nth-child(4), /* Medico */
-body.admin-page td:nth-child(5), /* Tipo Cirugia */
-body.admin-page td:nth-child(6) { /* Material */
-    white-space: normal;
+body.admin-page td.col-cliente,
+body.admin-page td.col-paciente,
+body.admin-page td.col-medico,
+body.admin-page td.col-tipocx,
+body.admin-page td.col-material {
+    white-space: normal; /* Permitir wrap */
+    min-width: 120px; /* Ancho mínimo para estas columnas */
 }
+body.admin-page td.col-acciones { /* Columna de acciones */
+    white-space: nowrap; /* Evitar que los botones se rompan en dos líneas */
+    text-align: right; /* Alinear botones a la derecha */
+    min-width: 150px; /* Espacio para botones */
+}
+
 
 body.admin-page thead th {
     background-color: #007bff;
     color: #ffffff;
     font-weight: 600;
     font-family: 'Poppins', sans-serif;
-    position: sticky; /* Encabezado fijo al hacer scroll vertical (si la tabla es muy larga) */
+    position: sticky; 
     top: 0;
     z-index: 10;
 }
 body.admin-page tbody tr:nth-child(even) {
-    background-color: #f8f9fa; /* Filas alternas */
+    background-color: #f8f9fa; 
 }
 body.admin-page tbody tr:hover {
-    background-color: #e9ecef; /* Hover suave */
+    background-color: #e9ecef; 
 }
+body.admin-page tbody tr.fila-oculta { /* Para el buscador */
+    display: none;
+}
+
 
 /* --- Responsividad --- */
 @media (max-width: 768px) {
   .container { padding: 20px; }
-  button, .btn-volver, .btn-link { padding: 8px 15px; font-size: 14px; }
+  button, .btn-volver, .btn-link, .btn-admin-action { padding: 8px 15px; font-size: 14px; }
   .text-center { gap: 5px; }
   h4 { font-size: 1.2em; }
-  body.admin-page th, body.admin-page td { font-size: 14px; white-space: normal; }
-  .modal-content { width: 95%; padding: 20px; } /* Modal más ancho en tablets */
+  body.admin-page th, body.admin-page td { font-size: 14px; white-space: normal; padding: 10px 8px;}
+  body.admin-page td.col-acciones { text-align: left; } /* En móvil, botones a la izquierda */
+  .modal-content { width: 95%; padding: 20px; } 
+  .admin-controls input.form-control { max-width: 100%; }
 }
 
 @media (max-width: 480px) {
    body { padding: 10px; }
    .container { padding: 15px; margin: 15px auto; }
    body.admin-page th, body.admin-page td { padding: 8px 10px; font-size: 13px; }
-   button, .btn-volver, .btn-link { width: 100%; margin: 5px 0; } /* Botones full width */
-   .text-center { flex-direction: column; } /* Apilar botones */
+   button, .btn-volver, .btn-link, .btn-admin-action { width: 100%; margin: 5px 0; } 
+   .form-actions-inline button { width: auto; margin: 5px; } /* Para Limpiar y Cargar Último */
+   .text-center { flex-direction: column; } 
    .toast-notification { width: calc(100% - 40px); right: 20px; bottom: 20px; }
    .modal-content { padding: 15px; }
    .modal-header h3 { font-size: 1.1em; }
    .modal-item label, #modalTipoCx .modal-item, #modalClientes .modal-item { font-size: 14px; }
+   body.admin-page td.col-acciones .btn-admin-action { width: auto; display: inline-block; margin-right: 5px; } /* Botones de admin en línea */
 }
 
 /* --- END OF FILE style.css --- */
