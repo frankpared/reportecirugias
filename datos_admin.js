@@ -1,8 +1,7 @@
 // --- START OF FILE datos_admin.js ---
 
-// Configuración de Firebase (DEBE SER LA MISMA QUE EN script.js y admin.html)
 const firebaseConfig = {
-  apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // ¡TU API KEY REAL!
+  apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E",
   authDomain: "cirugia-reporte.firebaseapp.com",
   projectId: "cirugia-reporte",
   storageBucket: "cirugia-reporte.appspot.com",
@@ -11,26 +10,28 @@ const firebaseConfig = {
   measurementId: "G-HD7ZLL1GLZ"
 };
 
-// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // --- Constantes ---
-const COLECCION_CLIENTES = 'clientes'; 
+const COLECCION_CLIENTES = 'clientes'; // NUEVA
 const COLECCION_TIPOS_CX = 'tiposCirugia';
 const COLECCION_MATERIALES = 'materiales';
 
 // --- Referencias a Elementos DOM ---
-const clienteList = document.getElementById('clientesList');
+// Clientes (NUEVO)
+const clienteListEl = document.getElementById('clienteList'); // 'clienteList' es el ul
 const newClienteNameInput = document.getElementById('newClienteName');
 const addClienteBtn = document.getElementById('addClienteBtn');
 const loadingClientes = document.getElementById('loading-clientes');
 
-const tipoCxList = document.getElementById('tiposCxList');
+// Tipos Cirugía
+const tipoCxListEl = document.getElementById('tiposCxList'); // 'tiposCxList' es el ul
 const newTipoCxNameInput = document.getElementById('newTipoCxName');
 const addTipoCxBtn = document.getElementById('addTipoCxBtn');
 const loadingTiposCx = document.getElementById('loading-tiposcx');
 
+// Materiales
 const materialesTableBody = document.getElementById('materialesListBody');
 const newMaterialCodeInput = document.getElementById('newMaterialCode');
 const newMaterialDescInput = document.getElementById('newMaterialDesc');
@@ -43,205 +44,246 @@ const materialesTable = document.getElementById('materialesTable');
 function mostrarToast(mensaje, tipo = 'info') {
     const toast = document.getElementById('toast');
     if (!toast) return;
-    // Ocultar toast anterior si existe para evitar solapamientos
-    toast.classList.remove('visible');
-    // toast.style.display = 'none'; // Evitar cambiar display directamente si usamos clases para animación
-
     toast.textContent = mensaje;
-    toast.className = 'toast-notification'; // Reset class list
-    toast.classList.add(tipo); 
-    
-    // Forzar reflow para reiniciar animación si es necesario (a veces útil)
-    void toast.offsetWidth; 
-
-    // Usar clase 'visible' para controlar la animación/transición
-    toast.style.display = 'block'; // Asegurar display block ANTES de añadir 'visible'
-    setTimeout(() => { // Pequeño delay para asegurar que display:block se aplique
-        toast.classList.add('visible');
-    }, 10); 
-    
-    // Ocultar después de un tiempo
+    toast.className = 'toast-notification';
+    toast.classList.add(tipo);
+    toast.style.display = 'block';
+    void toast.offsetWidth;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
     setTimeout(() => {
-        toast.classList.remove('visible');
-        // Esperar que termine la transición para ocultar con display:none
-        // La duración debe coincidir con la transición CSS (0.3s = 300ms)
-        setTimeout(() => { 
-            // Solo ocultar si AÚN no es visible (evita ocultar un toast nuevo que apareció rápido)
-            if (!toast.classList.contains('visible')) {
-                toast.style.display = 'none'; 
-            }
-        }, 300); 
-    }, 4000); // Duración visible: 4 segundos
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+        setTimeout(() => { toast.style.display = 'none'; }, 300);
+    }, 4000);
 }
 
-
-// --- Funciones Genéricas para CRUD de Listas Simples (Nombre) ---
-async function loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural) {
-    console.log(`Intentando cargar: ${itemNamePlural} desde ${collectionName}`); 
-    loadingElement.style.display = 'block';
-    loadingElement.textContent = `Cargando ${itemNamePlural}...`; 
-    loadingElement.style.color = '#777'; 
-    listElement.style.display = 'none';
-    listElement.innerHTML = '';
+// --- Funciones para Clientes (NUEVAS) ---
+async function loadClientes() {
+    loadingClientes.style.display = 'block';
+    clienteListEl.style.display = 'none';
+    clienteListEl.innerHTML = '';
 
     try {
-        // Asegúrate que el índice para 'nombreLower' exista en Firestore para estas colecciones
-        const snapshot = await db.collection(collectionName).orderBy('nombreLower').get();
-        console.log(`Snapshot recibido para ${itemNamePlural}. Vacío: ${snapshot.empty}, Tamaño: ${snapshot.size}`); 
-
+        const snapshot = await db.collection(COLECCION_CLIENTES).orderBy('nombre').get();
         if (snapshot.empty) {
-            loadingElement.textContent = `No hay ${itemNamePlural} definidos. Añada el primero.`;
-            loadingElement.style.display = 'block'; 
-            listElement.style.display = 'none'; 
+            loadingClientes.textContent = 'No hay clientes definidos.';
             return;
         }
         snapshot.forEach(doc => {
             const data = doc.data();
-            if (!data.nombre) { 
-                 console.warn(`Documento ${doc.id} en ${collectionName} no tiene campo 'nombre'. Omitiendo.`);
-                 return; 
-            }
             const li = document.createElement('li');
             li.dataset.id = doc.id;
             const nameSpan = document.createElement('span');
-            nameSpan.textContent = data.nombre; 
+            nameSpan.textContent = data.nombre;
             li.appendChild(nameSpan);
             const actionsDiv = document.createElement('div');
             actionsDiv.classList.add('data-actions');
             const editBtn = document.createElement('button');
-            editBtn.textContent = 'Editar'; editBtn.classList.add('btn-edit');
-            editBtn.onclick = () => editSimpleListItem(collectionName, doc.id, data.nombre, itemNameSingular, listElement, loadingElement, itemNamePlural);
+            editBtn.textContent = 'Editar';
+            editBtn.classList.add('btn-edit');
+            editBtn.onclick = () => editCliente(doc.id, data.nombre);
             actionsDiv.appendChild(editBtn);
             const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = 'Borrar'; deleteBtn.classList.add('btn-delete');
-            deleteBtn.onclick = () => deleteSimpleListItem(collectionName, doc.id, data.nombre, itemNameSingular, listElement, loadingElement, itemNamePlural);
+            deleteBtn.textContent = 'Borrar';
+            deleteBtn.classList.add('btn-delete');
+            deleteBtn.onclick = () => deleteCliente(doc.id, data.nombre);
             actionsDiv.appendChild(deleteBtn);
             li.appendChild(actionsDiv);
-            listElement.appendChild(li);
+            clienteListEl.appendChild(li);
         });
-        loadingElement.style.display = 'none'; 
-        listElement.style.display = 'block'; 
-
+        loadingClientes.style.display = 'none';
+        clienteListEl.style.display = 'block';
     } catch (error) {
-        console.error(`Error cargando ${itemNamePlural} desde ${collectionName}:`, error); 
-        loadingElement.textContent = `Error al cargar ${itemNamePlural}.`; 
-        loadingElement.style.color = 'red'; 
-        loadingElement.style.display = 'block'; 
-        listElement.style.display = 'none'; 
-        mostrarToast(`Error cargando ${itemNamePlural}: ${error.message}`, 'error'); 
+        console.error("Error cargando clientes:", error);
+        loadingClientes.textContent = 'Error al cargar datos.';
+        loadingClientes.style.color = 'red';
+        mostrarToast('Error cargando clientes.', 'error');
     }
 }
 
-async function addSimpleListItem(collectionName, inputElement, addButtonElement, itemNameSingular, listElement, loadingElement, itemNamePlural) {
-    const nombre = inputElement.value.trim();
+async function addCliente() {
+    const nombre = newClienteNameInput.value.trim();
     if (!nombre) {
-        mostrarToast(`Ingrese un nombre para el ${itemNameSingular}.`, 'warning');
+        mostrarToast('Ingrese un nombre para el cliente.', 'warning');
         return;
     }
-    addButtonElement.disabled = true; addButtonElement.textContent = 'Añadiendo...';
+    addClienteBtn.disabled = true;
+    addClienteBtn.textContent = 'Añadiendo...';
     try {
-        const nombreLower = nombre.toLowerCase();
-        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', nombreLower).limit(1).get(); // Limitar a 1
-        if (!querySnapshot.empty) {
-            mostrarToast(`El ${itemNameSingular} "${nombre}" ya existe.`, 'warning');
-            inputElement.focus();
-        } else {
-            await db.collection(collectionName).add({ nombre: nombre, nombreLower: nombreLower }); 
-            mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} añadido con éxito.`, 'success');
-            inputElement.value = '';
-            await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); 
-        }
+        await db.collection(COLECCION_CLIENTES).add({ nombre: nombre });
+        mostrarToast('Cliente añadido con éxito.', 'success');
+        newClienteNameInput.value = '';
+        await loadClientes();
     } catch (error) {
-        console.error(`Error añadiendo ${itemNameSingular}:`, error);
-        mostrarToast(`Error al añadir ${itemNameSingular}.`, 'error');
+        console.error("Error añadiendo cliente:", error);
+        mostrarToast('Error al añadir cliente.', 'error');
     } finally {
-        addButtonElement.disabled = false; addButtonElement.textContent = '➕ Añadir';
+        addClienteBtn.disabled = false;
+        addClienteBtn.textContent = '➕ Añadir';
     }
 }
 
-async function editSimpleListItem(collectionName, id, currentName, itemNameSingular, listElement, loadingElement, itemNamePlural) {
-    const newName = prompt(`Editar nombre del ${itemNameSingular}:\n(Actual: ${currentName})`, currentName);
+async function editCliente(id, currentName) {
+    const newName = prompt(`Editar cliente:\n(ID: ${id})`, currentName);
     if (newName === null || newName.trim() === '' || newName.trim() === currentName) return;
-    
-    const newNameTrimmed = newName.trim();
-    const newNameLower = newNameTrimmed.toLowerCase();
     try {
-        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', newNameLower).limit(1).get();
-        let conflict = false;
-        if (!querySnapshot.empty && querySnapshot.docs[0].id !== id) {
-             conflict = true;
-        }
-       
-        if (conflict) {
-            mostrarToast(`El nombre "${newNameTrimmed}" ya existe para otro ${itemNameSingular}.`, 'warning');
-            return;
-        }
-
-        await db.collection(collectionName).doc(id).update({ nombre: newNameTrimmed, nombreLower: newNameLower });
-        mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} actualizado.`, 'success');
-        await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); 
+        await db.collection(COLECCION_CLIENTES).doc(id).update({ nombre: newName.trim() });
+        mostrarToast('Cliente actualizado.', 'success');
+        await loadClientes();
     } catch (error) {
-        console.error(`Error actualizando ${itemNameSingular}:`, error);
+        console.error("Error actualizando cliente:", error);
         mostrarToast('Error al actualizar.', 'error');
     }
 }
 
-async function deleteSimpleListItem(collectionName, id, name, itemNameSingular, listElement, loadingElement, itemNamePlural) {
-    if (!confirm(`¿Está seguro de que desea eliminar el ${itemNameSingular} "${name}" (ID: ${id})?\nEsta acción no se puede deshacer.`)) return;
+async function deleteCliente(id, name) {
+    if (!confirm(`¿Está seguro de que desea eliminar el cliente "${name}" (ID: ${id})?`)) return;
     try {
-        await db.collection(collectionName).doc(id).delete();
-        mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} eliminado.`, 'success');
-        await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); 
+        await db.collection(COLECCION_CLIENTES).doc(id).delete();
+        mostrarToast('Cliente eliminado.', 'success');
+        await loadClientes();
     } catch (error) {
-        console.error(`Error eliminando ${itemNameSingular}:`, error);
+        console.error("Error eliminando cliente:", error);
         mostrarToast('Error al eliminar.', 'error');
     }
 }
 
-// --- Funciones Específicas para Materiales ---
-async function loadMateriales() {
-    console.log("Intentando cargar: Materiales desde", COLECCION_MATERIALES); 
-    loadingMateriales.style.display = 'block'; 
-    loadingMateriales.textContent = 'Cargando materiales...';
-    loadingMateriales.style.color = '#777';
-    materialesTable.style.display = 'none'; 
-    materialesTableBody.innerHTML = '';
+// --- Funciones para Tipos de Cirugía ---
+async function loadTiposCirugia() {
+    loadingTiposCx.style.display = 'block';
+    tipoCxListEl.style.display = 'none';
+    tipoCxListEl.innerHTML = '';
     try {
-        // Asegúrate que existen índices compuestos en Firestore si son necesarios
-        // (categoria ASC, code ASC) es un índice automático común.
-        const snapshot = await db.collection(COLECCION_MATERIALES).orderBy('categoria').orderBy('code').get();
-        console.log(`Snapshot recibido para Materiales. Vacío: ${snapshot.empty}, Tamaño: ${snapshot.size}`); 
-        if (snapshot.empty) { 
-            loadingMateriales.textContent = 'No hay materiales definidos. Añada el primero.'; 
-            loadingMateriales.style.display = 'block';
-            materialesTable.style.display = 'none';
-            return; 
+        const snapshot = await db.collection(COLECCION_TIPOS_CX).orderBy('nombre').get();
+        if (snapshot.empty) {
+            loadingTiposCx.textContent = 'No hay tipos de cirugía definidos.';
+            return;
         }
         snapshot.forEach(doc => {
-            const data = doc.data(); 
-             if (!data.code || !data.description || !data.categoria) { 
-                 console.warn(`Documento ${doc.id} en ${COLECCION_MATERIALES} le faltan campos (code, description, categoria). Omitiendo.`);
-                 return; 
-            }
-            const tr = document.createElement('tr'); tr.dataset.id = doc.id;
-            const createCell = (text) => { const td = document.createElement('td'); td.textContent = text || '-'; return td; };
-            tr.appendChild(createCell(data.code)); tr.appendChild(createCell(data.description)); tr.appendChild(createCell(data.categoria));
-            const tdActions = document.createElement('td'); tdActions.classList.add('data-actions');
-            const editBtn = document.createElement('button'); editBtn.textContent = 'Editar'; editBtn.classList.add('btn-edit');
-            editBtn.onclick = () => editMaterial(doc.id, data); tdActions.appendChild(editBtn);
-            const deleteBtn = document.createElement('button'); deleteBtn.textContent = 'Borrar'; deleteBtn.classList.add('btn-delete');
-            deleteBtn.onclick = () => deleteMaterial(doc.id, data.code); tdActions.appendChild(deleteBtn);
-            tr.appendChild(tdActions); materialesTableBody.appendChild(tr);
+            const data = doc.data();
+            const li = document.createElement('li');
+            li.dataset.id = doc.id;
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = data.nombre;
+            li.appendChild(nameSpan);
+            const actionsDiv = document.createElement('div');
+            actionsDiv.classList.add('data-actions');
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Editar';
+            editBtn.classList.add('btn-edit');
+            editBtn.onclick = () => editTipoCirugia(doc.id, data.nombre);
+            actionsDiv.appendChild(editBtn);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Borrar';
+            deleteBtn.classList.add('btn-delete');
+            deleteBtn.onclick = () => deleteTipoCirugia(doc.id, data.nombre);
+            actionsDiv.appendChild(deleteBtn);
+            li.appendChild(actionsDiv);
+            tipoCxListEl.appendChild(li);
         });
-        loadingMateriales.style.display = 'none'; 
+        loadingTiposCx.style.display = 'none';
+        tipoCxListEl.style.display = 'block';
+    } catch (error) {
+        console.error("Error cargando tipos de cirugía:", error);
+        loadingTiposCx.textContent = 'Error al cargar datos.';
+        loadingTiposCx.style.color = 'red';
+        mostrarToast('Error cargando tipos de cirugía.', 'error');
+    }
+}
+
+async function addTipoCirugia() {
+    const nombre = newTipoCxNameInput.value.trim();
+    if (!nombre) {
+        mostrarToast('Ingrese un nombre para el tipo de cirugía.', 'warning');
+        return;
+    }
+    addTipoCxBtn.disabled = true;
+    addTipoCxBtn.textContent = 'Añadiendo...';
+    try {
+        await db.collection(COLECCION_TIPOS_CX).add({ nombre: nombre });
+        mostrarToast('Tipo de cirugía añadido con éxito.', 'success');
+        newTipoCxNameInput.value = '';
+        await loadTiposCirugia();
+    } catch (error) {
+        console.error("Error añadiendo tipo de cirugía:", error);
+        mostrarToast('Error al añadir tipo de cirugía.', 'error');
+    } finally {
+        addTipoCxBtn.disabled = false;
+        addTipoCxBtn.textContent = '➕ Añadir';
+    }
+}
+
+async function editTipoCirugia(id, currentName) {
+    const newName = prompt(`Editar tipo de cirugía:\n(ID: ${id})`, currentName);
+    if (newName === null || newName.trim() === '' || newName.trim() === currentName) return;
+    try {
+        await db.collection(COLECCION_TIPOS_CX).doc(id).update({ nombre: newName.trim() });
+        mostrarToast('Tipo de cirugía actualizado.', 'success');
+        await loadTiposCirugia();
+    } catch (error) {
+        console.error("Error actualizando tipo de cirugía:", error);
+        mostrarToast('Error al actualizar.', 'error');
+    }
+}
+
+async function deleteTipoCirugia(id, name) {
+    if (!confirm(`¿Está seguro de que desea eliminar el tipo de cirugía "${name}" (ID: ${id})?`)) return;
+    try {
+        await db.collection(COLECCION_TIPOS_CX).doc(id).delete();
+        mostrarToast('Tipo de cirugía eliminado.', 'success');
+        await loadTiposCirugia();
+    } catch (error) {
+        console.error("Error eliminando tipo de cirugía:", error);
+        mostrarToast('Error al eliminar.', 'error');
+    }
+}
+
+// --- Funciones para Materiales ---
+async function loadMateriales() {
+    loadingMateriales.style.display = 'block';
+    materialesTable.style.display = 'none';
+    materialesTableBody.innerHTML = '';
+    try {
+        const snapshot = await db.collection(COLECCION_MATERIALES).orderBy('categoria').orderBy('code').get();
+        if (snapshot.empty) {
+            loadingMateriales.textContent = 'No hay materiales definidos.';
+            return;
+        }
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const tr = document.createElement('tr');
+            tr.dataset.id = doc.id;
+            const createCell = (text) => {
+                const td = document.createElement('td');
+                td.textContent = text || '-';
+                return td;
+            };
+            tr.appendChild(createCell(data.code));
+            tr.appendChild(createCell(data.description));
+            tr.appendChild(createCell(data.categoria));
+            const tdActions = document.createElement('td');
+            tdActions.classList.add('data-actions');
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Editar';
+            editBtn.classList.add('btn-edit');
+            editBtn.onclick = () => editMaterial(doc.id, data);
+            tdActions.appendChild(editBtn);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Borrar';
+            deleteBtn.classList.add('btn-delete');
+            deleteBtn.onclick = () => deleteMaterial(doc.id, data.code);
+            tdActions.appendChild(deleteBtn);
+            tr.appendChild(tdActions);
+            materialesTableBody.appendChild(tr);
+        });
+        loadingMateriales.style.display = 'none';
         materialesTable.style.display = 'table';
     } catch (error) {
-        console.error(`Error cargando ${COLECCION_MATERIALES}:`, error); 
-        loadingMateriales.textContent = `Error al cargar materiales.`; 
-        loadingMateriales.style.color = 'red'; 
-        loadingMateriales.style.display = 'block';
-        materialesTable.style.display = 'none';
-        mostrarToast(`Error cargando materiales: ${error.message}`, 'error');
+        console.error("Error cargando materiales:", error);
+        loadingMateriales.textContent = 'Error al cargar datos.';
+        loadingMateriales.style.color = 'red';
+        mostrarToast('Error cargando materiales.', 'error');
     }
 }
 
@@ -249,97 +291,82 @@ async function addMaterial() {
     const code = newMaterialCodeInput.value.trim();
     const description = newMaterialDescInput.value.trim();
     const categoria = newMaterialCatInput.value.trim();
-    if (!code || !description || !categoria) { mostrarToast('Complete Código, Descripción y Categoría.', 'warning'); return; }
-    addMaterialBtn.disabled = true; addMaterialBtn.textContent = 'Añadiendo...';
+    if (!code || !description || !categoria) {
+        mostrarToast('Complete todos los campos del material (*).', 'warning');
+        return;
+    }
+    addMaterialBtn.disabled = true;
+    addMaterialBtn.textContent = 'Añadiendo...';
     try {
-        const q = db.collection(COLECCION_MATERIALES).where('code', '==', code).limit(1);
-        const existing = await q.get();
-        if (!existing.empty) {
-            mostrarToast(`El código de material "${code}" ya existe.`, 'warning');
-            newMaterialCodeInput.focus();
-        } else {
-            await db.collection(COLECCION_MATERIALES).add({ code: code, description: description, categoria: categoria });
-            mostrarToast('Material añadido con éxito.', 'success');
-            newMaterialCodeInput.value = ''; newMaterialDescInput.value = ''; newMaterialCatInput.value = '';
-            await loadMateriales(); 
-        }
+        await db.collection(COLECCION_MATERIALES).add({
+            code: code, description: description, categoria: categoria
+        });
+        mostrarToast('Material añadido con éxito.', 'success');
+        newMaterialCodeInput.value = '';
+        newMaterialDescInput.value = '';
+        newMaterialCatInput.value = '';
+        await loadMateriales();
     } catch (error) {
-        console.error("Error añadiendo material:", error); mostrarToast('Error al añadir material.', 'error');
+        console.error("Error añadiendo material:", error);
+        mostrarToast('Error al añadir material.', 'error');
     } finally {
-        addMaterialBtn.disabled = false; addMaterialBtn.textContent = '➕ Añadir';
+        addMaterialBtn.disabled = false;
+        addMaterialBtn.textContent = '➕ Añadir';
     }
 }
 
 async function editMaterial(id, currentData) {
-    const newCode = prompt(`Editar Código (Actual: ${currentData.code}):`, currentData.code);
-    if (newCode === null) return; 
-    const newDesc = prompt(`Editar Descripción (Actual: ${currentData.description}):`, currentData.description);
-    if (newDesc === null) return; 
-    const newCat = prompt(`Editar Categoría (Actual: ${currentData.categoria}):`, currentData.categoria);
-    if (newCat === null) return; 
-
-    const newCodeTrimmed = newCode.trim();
-    const newDescTrimmed = newDesc.trim();
-    const newCatTrimmed = newCat.trim();
-
-    if (!newCodeTrimmed || !newDescTrimmed || !newCatTrimmed) {
-         mostrarToast('Código, Descripción y Categoría no pueden quedar vacíos.', 'warning');
-         return;
-    }
-
-    const updatedData = { code: newCodeTrimmed, description: newDescTrimmed, categoria: newCatTrimmed };
-    
-    if (updatedData.code === currentData.code && updatedData.description === currentData.description && updatedData.categoria === currentData.categoria) {
-         mostrarToast('No se realizaron cambios.', 'info');
-         return;
-    }
-
+    const newCode = prompt(`Editar Código (ID: ${id}):`, currentData.code);
+    if (newCode === null) return;
+    const newDesc = prompt(`Editar Descripción:`, currentData.description);
+    if (newDesc === null) return;
+    const newCat = prompt(`Editar Categoría:`, currentData.categoria);
+    if (newCat === null) return;
+    const updatedData = {
+        code: newCode.trim() || currentData.code,
+        description: newDesc.trim() || currentData.description,
+        categoria: newCat.trim() || currentData.categoria
+    };
+    if (updatedData.code === currentData.code && updatedData.description === currentData.description && updatedData.categoria === currentData.categoria) return;
     try {
-        if (newCodeTrimmed !== currentData.code) {
-            const q = db.collection(COLECCION_MATERIALES).where('code', '==', newCodeTrimmed).limit(1);
-            const existing = await q.get();
-            if (!existing.empty && existing.docs[0].id !== id) {
-                 mostrarToast(`El código de material "${newCodeTrimmed}" ya existe.`, 'warning');
-                 return;
-            }
-        }
         await db.collection(COLECCION_MATERIALES).doc(id).update(updatedData);
-        mostrarToast('Material actualizado.', 'success'); 
-        await loadMateriales(); 
+        mostrarToast('Material actualizado.', 'success');
+        await loadMateriales();
     } catch (error) {
-        console.error("Error actualizando material:", error); mostrarToast('Error al actualizar.', 'error');
+        console.error("Error actualizando material:", error);
+        mostrarToast('Error al actualizar.', 'error');
     }
 }
 
 async function deleteMaterial(id, code) {
-    if (!confirm(`¿Está seguro de que desea eliminar el material "${code}" (ID: ${id})?\nEsta acción no se puede deshacer.`)) return;
+    if (!confirm(`¿Está seguro de que desea eliminar el material con código "${code}" (ID: ${id})?`)) return;
     try {
         await db.collection(COLECCION_MATERIALES).doc(id).delete();
-        mostrarToast('Material eliminado.', 'success'); 
-        await loadMateriales(); 
+        mostrarToast('Material eliminado.', 'success');
+        await loadMateriales();
     } catch (error) {
-        console.error("Error eliminando material:", error); mostrarToast('Error al eliminar.', 'error');
+        console.error("Error eliminando material:", error);
+        mostrarToast('Error al eliminar.', 'error');
     }
 }
 
 // --- Inicialización ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM Cargado. Iniciando carga de datos maestros...");
-    
-    loadSimpleList(COLECCION_CLIENTES, clienteList, loadingClientes, 'cliente', 'clientes');
-    loadSimpleList(COLECCION_TIPOS_CX, tipoCxList, loadingTiposCx, 'tipo de cirugía', 'tipos de cirugía');
+    loadClientes(); // NUEVO
+    loadTiposCirugia();
     loadMateriales();
 
-    addClienteBtn.addEventListener('click', () => addSimpleListItem(COLECCION_CLIENTES, newClienteNameInput, addClienteBtn, 'cliente', clienteList, loadingClientes, 'clientes'));
-    addTipoCxBtn.addEventListener('click', () => addSimpleListItem(COLECCION_TIPOS_CX, newTipoCxNameInput, addTipoCxBtn, 'tipo de cirugía', tipoCxList, loadingTiposCx, 'tipos de cirugía'));
-    addMaterialBtn.addEventListener('click', addMaterial);
+    addClienteBtn.addEventListener('click', addCliente); // NUEVO
+    newClienteNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addClienteBtn.click(); }); // NUEVO
 
-    newClienteNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addClienteBtn.click(); });
+    addTipoCxBtn.addEventListener('click', addTipoCirugia);
     newTipoCxNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTipoCxBtn.click(); });
-    [newMaterialCodeInput, newMaterialDescInput, newMaterialCatInput].forEach(input => {
-        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addMaterialBtn.click(); });
-    });
-    console.log("Listeners de Admin añadidos.");
+    
+    addMaterialBtn.addEventListener('click', addMaterial);
+    // Listeners para Enter en campos de material si se desea
+    newMaterialCodeInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addMaterialBtn.click(); });
+    newMaterialDescInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addMaterialBtn.click(); });
+    newMaterialCatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addMaterialBtn.click(); });
 });
 
 // --- END OF FILE datos_admin.js ---
