@@ -38,10 +38,7 @@
                 <label for="cliente" style="margin-bottom: 0;">Cliente (*)</label>
                 <button type="button" onclick="abrirModalClientes()" class="btn-seleccionar-material">🔍 Seleccionar</button>
             </div>
-            <div class="input-group-mic">
-                <input id="cliente" class="form-control" list="clientesList" placeholder="Escriba, seleccione o use el botón..." required />
-                <button type="button" class="btn-mic" onclick="iniciarReconocimientoVoz('cliente')" title="Ingresar Cliente por voz">🎤</button>
-            </div>
+            <input id="cliente" class="form-control" list="clientesList" placeholder="Escriba, seleccione o use el botón..." required />
             <datalist id="clientesList"></datalist>
             <small class="ayuda-texto">Nombre de la institución o cliente principal.</small>
             <div class="mensaje-error" id="error-cliente">Este campo es requerido.</div>
@@ -49,20 +46,14 @@
 
         <div class="form-group">
             <label for="paciente">Paciente (*)</label>
-            <div class="input-group-mic">
-                <input id="paciente" class="form-control" required />
-                <button type="button" class="btn-mic" onclick="iniciarReconocimientoVoz('paciente')" title="Ingresar Paciente por voz">🎤</button>
-            </div>
+            <input id="paciente" class="form-control" required />
             <small class="ayuda-texto">Nombre completo del paciente.</small>
             <div class="mensaje-error" id="error-paciente">Este campo es requerido.</div>
         </div>
 
         <div class="form-group">
             <label for="medico">Médico (*)</label>
-            <div class="input-group-mic">
-                <input id="medico" class="form-control" list="medicosList" placeholder="Escriba o seleccione..." required />
-                <button type="button" class="btn-mic" onclick="iniciarReconocimientoVoz('medico')" title="Ingresar Médico por voz">🎤</button>
-            </div>
+            <input id="medico" class="form-control" list="medicosList" placeholder="Escriba o seleccione..." required />
             <datalist id="medicosList"></datalist>
             <small class="ayuda-texto">Seleccione o escriba el nombre del médico responsable.</small>
             <div class="mensaje-error" id="error-medico">Este campo es requerido.</div>
@@ -70,20 +61,14 @@
 
         <div class="form-group">
             <label for="instrumentador">Instrumentador</label>
-            <div class="input-group-mic">
-                <input id="instrumentador" class="form-control" list="instrumentadoresList" placeholder="Escriba o seleccione..." />
-                <button type="button" class="btn-mic" onclick="iniciarReconocimientoVoz('instrumentador')" title="Ingresar Instrumentador por voz">🎤</button>
-            </div>
+            <input id="instrumentador" class="form-control" list="instrumentadoresList" placeholder="Escriba o seleccione..." />
             <datalist id="instrumentadoresList"></datalist>
             <small class="ayuda-texto">Nombre del instrumentador quirúrgico.</small>
         </div>
 
         <div class="form-group">
             <label for="lugarCirugia">Lugar de Cirugía</label>
-            <div class="input-group-mic">
-                <input id="lugarCirugia" class="form-control" list="lugaresList" placeholder="Escriba o seleccione..." />
-                <button type="button" class="btn-mic" onclick="iniciarReconocimientoVoz('lugarCirugia')" title="Ingresar Lugar por voz">🎤</button>
-            </div>
+            <input id="lugarCirugia" class="form-control" list="lugaresList" placeholder="Escriba o seleccione..." />
             <datalist id="lugaresList"></datalist>
             <small class="ayuda-texto">Hospital o clínica donde se realizará la cirugía.</small>
         </div>
@@ -100,10 +85,7 @@
                 <label for="tipoCirugia" style="margin-bottom: 0;">Tipo de Cirugía</label>
                 <button type="button" onclick="abrirModalTipoCx()" class="btn-seleccionar-material">🔍 Seleccionar</button>
             </div>
-            <div class="input-group-mic">
-                <input id="tipoCirugia" class="form-control" list="tiposCirugiaList" placeholder="Escriba, seleccione o use el botón..." />
-                <button type="button" class="btn-mic" onclick="iniciarReconocimientoVoz('tipoCirugia')" title="Ingresar Tipo de Cirugía por voz">🎤</button>
-            </div>
+            <input id="tipoCirugia" class="form-control" list="tiposCirugiaList" placeholder="Escriba, seleccione o use el botón..." />
             <datalist id="tiposCirugiaList"></datalist>
             <small class="ayuda-texto">Descripción del procedimiento quirúrgico.</small>
         </div>
@@ -111,30 +93,21 @@
         <div class="form-group">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <label for="material" style="margin-bottom: 0;">Material Requerido</label>
-                <div>
-                    <button type="button" class="btn-mic" onclick="iniciarReconocimientoVoz('material')" title="Añadir Material por voz" style="margin-right: 5px;">🎤+</button>
-                    <button type="button" onclick="abrirModalMateriales()" class="btn-seleccionar-material">🔍 Seleccionar</button>
-                </div>
+                <button type="button" onclick="abrirModalMateriales()" class="btn-seleccionar-material">🔍 Seleccionar</button>
             </div>
-            <textarea id="material" class="form-control" rows="5" placeholder="Ingrese un ítem por línea, use el botón 'Seleccionar' o el micrófono para añadir..."></textarea>
-            <small class="ayuda-texto">Lista de materiales necesarios. Use el 🎤+ para añadir ítems por voz (uno a la vez).</small>
+            <textarea id="material" class="form-control" rows="5" placeholder="Ingrese un ítem por línea o use el botón 'Seleccionar'..."></textarea>
+            <small class="ayuda-texto">Lista de materiales necesarios.</small>
         </div>
 
         <div class="form-group">
             <label for="observaciones">Observaciones</label>
-            <div class="input-group-mic">
-                <textarea id="observaciones" class="form-control" rows="3" placeholder="Alergias, condiciones especiales, etc."></textarea>
-                <button type="button" class="btn-mic" onclick="iniciarReconocimientoVoz('observaciones')" title="Ingresar Observaciones por voz">🎤</button>
-            </div>
+            <textarea id="observaciones" class="form-control" rows="3" placeholder="Alergias, condiciones especiales, etc."></textarea>
             <small class="ayuda-texto">Consideraciones especiales para el procedimiento.</small>
         </div>
 
         <div class="form-group">
             <label for="infoAdicional">Información Adicional</label>
-            <div class="input-group-mic">
-                <textarea id="infoAdicional" class="form-control" rows="3" placeholder="Contacto alternativo, prepaga, etc."></textarea>
-                <button type="button" class="btn-mic" onclick="iniciarReconocimientoVoz('infoAdicional')" title="Ingresar Info Adicional por voz">🎤</button>
-            </div>
+            <textarea id="infoAdicional" class="form-control" rows="3" placeholder="Contacto alternativo, prepaga, etc."></textarea>
             <small class="ayuda-texto">Otros datos relevantes para el equipo.</small>
         </div>
     </form>
