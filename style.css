@@ -87,8 +87,8 @@ button:disabled { /* Estilo para botones deshabilitados */
     background-color: #5a6268;
 }
 
-/* --- Estilos para el Botón de Selección (Material y Tipo Cx, Cliente) --- */
-.btn-seleccionar-item { /* Clase genérica */
+/* --- Estilos para el Botón de Selección (Material y Tipo Cx) --- */
+.btn-seleccionar-material { /* Reutilizado para Cliente, Material y Tipo Cx */
     padding: 5px 12px;
     font-size: 13px;
     background-color: #6c757d; /* Gris */
@@ -97,49 +97,50 @@ button:disabled { /* Estilo para botones deshabilitados */
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    font-weight: normal; 
-    font-family: 'Lato', sans-serif; 
+    font-weight: normal; /* No tan fuerte como otros botones */
+    font-family: 'Lato', sans-serif; /* Usar fuente base */
 }
 
-.btn-seleccionar-item:hover {
+.btn-seleccionar-material:hover {
     background-color: #5a6268;
 }
 
 
 /* --- Formularios --- */
 .form-group {
-  margin-bottom: 25px; 
+  margin-bottom: 25px; /* Más espacio entre grupos */
 }
 
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  font-weight: 600; 
+  font-weight: 600; /* Labels más visibles */
   color: #495057;
   font-size: 15px;
 }
+/* Añadir asterisco visual para campos requeridos */
+.form-group label[for="cliente"]:after, /* AÑADIDO */
 .form-group label[for="paciente"]:after,
 .form-group label[for="medico"]:after,
-.form-group label[for="fechaCirugia"]:after,
-.form-group label[for="cliente"]:after { 
+.form-group label[for="fechaCirugia"]:after {
     content: " (*)";
-    color: #dc3545; 
-    font-weight: normal; 
-    font-size: 0.9em; 
-    vertical-align: super; 
+    color: #dc3545; /* Rojo */
+    font-weight: normal; /* No tan fuerte como el label */
+    font-size: 0.9em; /* Ligeramente más pequeño */
+    vertical-align: super; /* Alinear arriba */
     padding-left: 2px;
 }
 
 
 .form-control {
   width: 100%;
-  padding: 12px 15px; 
-  border: 1px solid #ced4da; 
+  padding: 12px 15px; /* Padding más cómodo */
+  border: 1px solid #ced4da; /* Borde estándar */
   border-radius: 6px;
   font-size: 16px;
   line-height: 1.5;
   background-color: #fff;
-  box-sizing: border-box; 
+  box-sizing: border-box; /* Incluir padding y borde en el width */
   transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
@@ -150,34 +151,29 @@ button:disabled { /* Estilo para botones deshabilitados */
 }
 
 textarea.form-control {
-    min-height: 80px; 
+    min-height: 80px; /* Altura mínima para textareas */
 }
-input[type="file"].form-control {
-    padding: 8px 12px; /* Ajuste para input file */
-    line-height: 1.5; /* Asegurar altura consistente */
-}
-
 
 /* --- Validación --- */
 .campo-invalido {
-  border-color: #dc3545 !important; 
+  border-color: #dc3545 !important; /* Rojo para inválido */
 }
 .campo-invalido:focus {
-   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); 
+   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); /* Sombra roja en focus */
 }
 
 .mensaje-error {
   color: #dc3545;
-  font-size: 13px; 
+  font-size: 13px; /* Un poco más grande */
   margin-top: 6px;
-  display: none; 
+  display: none; /* Oculto por defecto, JS lo muestra */
 }
 
 .ayuda-texto {
   font-size: 13px;
   color: #6c757d;
   margin-top: 6px;
-  display: block; 
+  display: block; /* Asegurar que esté en su propia línea */
   font-style: italic;
 }
 
@@ -187,8 +183,8 @@ input[type="file"].form-control {
 }
 
 .reporte-box {
-  background-color: #f8f9fa; 
-  border-left: 5px solid #007bff; 
+  background-color: #f8f9fa; /* Fondo ligeramente gris */
+  border-left: 5px solid #007bff; /* Borde izquierdo azul */
   padding: 25px;
   border-radius: 8px;
   margin-top: 30px;
@@ -198,15 +194,15 @@ input[type="file"].form-control {
 .reporte-contenido {
   text-align: left;
   margin: 0 auto;
-  max-width: 100%; 
+  max-width: 100%; /* Ocupar el ancho del reporte-box */
   font-size: 16px;
-  line-height: 1.7; 
-  color: #212529; 
+  line-height: 1.7; /* Un poco más de espacio entre líneas */
+  color: #212529; /* Texto más oscuro */
 }
 
 .reporte-contenido img {
   display: block;
-  margin: 0 auto 20px auto; 
+  margin: 0 auto 20px auto; /* Más margen inferior */
   max-height: 70px;
 }
 
@@ -227,7 +223,7 @@ input[type="file"].form-control {
 }
 
 .reporte-contenido ul {
-    list-style: none; 
+    list-style: none; /* Quitar bullets */
     padding-left: 0;
     margin-bottom: 20px;
 }
@@ -236,7 +232,7 @@ input[type="file"].form-control {
     padding-left: 15px;
     position: relative;
 }
-.reporte-contenido li::before { 
+.reporte-contenido li::before { /* Añadir un pequeño marcador */
     content: '•';
     color: #007bff;
     position: absolute;
@@ -245,7 +241,7 @@ input[type="file"].form-control {
     line-height: 1;
 }
 .reporte-contenido li strong {
-    color: #495057; 
+    color: #495057; /* Color para el texto en negrita */
 }
 
 .reporte-contenido p {
@@ -257,17 +253,17 @@ input[type="file"].form-control {
   width: 100%;
   border-collapse: collapse;
   margin: 15px 0 20px 0;
-  background: #ffffff; 
-  border: 1px solid #dee2e6; 
-  font-size: 15px; 
+  background: #ffffff; /* Fondo blanco para la tabla */
+  border: 1px solid #dee2e6; /* Borde alrededor de la tabla */
+  font-size: 15px; /* Tamaño de fuente para el material */
 }
 
 .material-table td {
-  padding: 10px 15px; 
-  border-bottom: 1px solid #dee2e6; 
+  padding: 10px 15px; /* Padding en celdas */
+  border-bottom: 1px solid #dee2e6; /* Línea separadora horizontal */
 }
 .material-table tr:last-child td {
-    border-bottom: none; 
+    border-bottom: none; /* Quitar borde inferior de la última fila */
 }
 
 /* --- Notificación Toast --- */
@@ -281,44 +277,43 @@ input[type="file"].form-control {
   font-size: 15px;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 1050; 
+  z-index: 1050; /* Asegurar que esté por encima de otros elementos */
   display: none; /* Oculto por defecto */
   opacity: 0;
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-  transform: translateY(20px); 
+  transform: translateY(20px); /* Empezar ligeramente abajo */
 }
-.toast-notification.visible { /* Usar clase para controlar visibilidad */
-    display: block; /* Asegurar que esté visible para la transición */
+/* Estilos para cuando se muestra */
+.toast-notification[style*="display: block"] {
     opacity: 1;
-    transform: translateY(0); 
+    transform: translateY(0); /* Mover a su posición final */
 }
 
-.toast-notification.info { background-color: #17a2b8; } 
-.toast-notification.success { background-color: #28a745; } 
-.toast-notification.warning { background-color: #ffc107; color: #333; } 
-.toast-notification.error { background-color: #dc3545; } 
-.btn-warning { background-color: #ffc107; color: #333; } 
+.toast-notification.info { background-color: #17a2b8; } /* Azul info */
+.toast-notification.success { background-color: #28a745; } /* Verde éxito */
+.toast-notification.warning { background-color: #ffc107; color: #333; } /* Amarillo advertencia */
+.toast-notification.error { background-color: #dc3545; } /* Rojo error */
+.btn-warning { background-color: #ffc107; color: #333; } /* Botón Amarillo */
 .btn-warning:hover { background-color: #e0a800; }
 
 /* --- Estilos Comunes para Modales --- */
 .modal-overlay {
-    position: fixed; 
+    position: fixed; /* Cubrir toda la pantalla */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); 
-    display: none; /* Cambiado a none por defecto */
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
+    display: flex; /* Usar flex para centrar */
     justify-content: center;
     align-items: center;
-    z-index: 1000; 
+    z-index: 1000; /* Asegurar que esté por encima de todo */
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0s linear 0.3s;
 }
 
 .modal-overlay.visible {
-    display: flex; /* Mostrar con flex al ser visible */
     opacity: 1;
     visibility: visible;
     transition: opacity 0.3s ease;
@@ -330,8 +325,8 @@ input[type="file"].form-control {
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     width: 90%;
-    max-width: 700px; 
-    max-height: 85vh; 
+    max-width: 700px; /* Ancho máximo del modal */
+    max-height: 85vh; /* Altura máxima, dejar espacio arriba/abajo */
     display: flex;
     flex-direction: column;
     transform: scale(0.95);
@@ -371,58 +366,41 @@ input[type="file"].form-control {
 }
 
 .modal-body {
-    flex-grow: 1; 
-    overflow-y: auto; 
+    flex-grow: 1; /* Permitir que el cuerpo crezca */
+    overflow-y: auto; /* Scroll si el contenido es muy largo */
     margin-bottom: 20px;
-    padding-right: 10px; /* Espacio para scrollbar */
-    /* Añadir scrollbar estilizado (opcional, requiere prefijos) */
-     scrollbar-width: thin;
-     scrollbar-color: #adb5bd #f8f9fa;
+    padding-right: 10px; /* Espacio scrollbar */
 }
-.modal-body::-webkit-scrollbar {
-     width: 8px;
-}
-.modal-body::-webkit-scrollbar-track {
-     background: #f8f9fa;
-     border-radius: 4px;
-}
-.modal-body::-webkit-scrollbar-thumb {
-     background-color: #adb5bd;
-     border-radius: 4px;
-     border: 2px solid #f8f9fa;
-}
-
 
 .modal-body input[type="text"].form-control {
-    margin-bottom: 15px; 
+    margin-bottom: 15px; /* Input de búsqueda */
 }
 
 .modal-lista-container {
     /* Contenedor de la lista */
 }
 
-.modal-item { 
-    display: block; 
+.modal-item {
+    display: block; /* Hacer que ocupe toda la línea */
     margin-bottom: 8px;
-    padding: 8px 10px; 
+    padding: 5px;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.15s ease;
-    font-size: 16px; 
 }
 
 .modal-item:hover {
-    background-color: #f0f8ff; 
+    background-color: #f0f8ff; /* Azul muy claro en hover */
 }
 
 .modal-footer {
     border-top: 1px solid #dee2e6;
     padding-top: 15px;
-    text-align: right; 
+    text-align: right; /* Alinear botones a la derecha */
 }
 
 .modal-footer button {
-    margin-left: 10px; 
+    margin-left: 10px; /* Espacio entre botones del footer */
 }
 
 
@@ -438,31 +416,31 @@ input[type="file"].form-control {
     font-size: 1.05em;
     border-bottom: 1px solid #eee;
     padding-bottom: 5px;
-    position: sticky; 
-    top: -1px; 
-    background-color: #fff; 
-    z-index: 1; 
+    position: sticky; /* Hacer título de categoría pegajoso */
+    top: -1px; /* Ajuste para que no se solape */
+    background-color: #fff; /* Fondo para que no se vea el texto debajo */
+    z-index: 1; /* Encima de los items */
 }
 
-#modalMateriales .modal-item input[type="checkbox"] { 
+#modalMateriales .modal-item input[type="checkbox"] {
     margin-right: 10px;
-    vertical-align: middle; 
+    vertical-align: middle; /* Alinear checkbox con texto */
     cursor: pointer;
-    transform: scale(1.1); 
+    transform: scale(1.1); /* Checkbox un poco más grande */
 }
 
-#modalMateriales .modal-item label { 
+#modalMateriales .modal-item label {
     font-size: 15px;
     color: #333;
     vertical-align: middle;
     cursor: pointer;
-    display: inline-block; 
-    width: calc(100% - 30px); 
+    display: inline-block; /* Para que el hover funcione bien */
+    width: calc(100% - 30px); /* Ajustar ancho para el checkbox */
 }
 #modalMateriales .modal-item .item-code {
     font-weight: 600;
     color: #555;
-    display: inline-block; 
+    display: inline-block; /* Evitar wrap indeseado */
     margin-right: 5px;
 }
 #modalMateriales .modal-item .item-desc {
@@ -470,20 +448,30 @@ input[type="file"].form-control {
     font-size: 0.95em;
 }
 
+
+/* --- Estilos Específicos Modal Tipo Cirugía y Clientes --- */
+#modalTipoCx .modal-item,
+#modalClientes .modal-item { /* Hereda estilos de .modal-item */
+    padding: 8px 10px; /* Más padding vertical */
+    font-size: 16px;
+}
+
+
 /* --- Créditos --- */
 .credit {
   display: block;
   text-align: center;
-  margin-top: 40px; 
+  margin-top: 40px; /* Más espacio arriba */
   font-size: 12px;
   color: #6c757d;
 }
 
 /* --- Estilos para admin.html --- */
 .table-responsive {
-    overflow-x: auto; 
+    overflow-x: auto; /* Permitir scroll horizontal en tablas grandes */
     margin-bottom: 20px;
 }
+/* Prefijo para evitar colisiones si admin.html usa más estilos */
 body.admin-page table {
     border-collapse: collapse;
     width: 100%;
@@ -492,47 +480,35 @@ body.admin-page table {
 }
 body.admin-page th,
 body.admin-page td {
-    padding: 10px 12px; 
+    padding: 12px 15px; /* Buen padding */
     text-align: left;
-    border-bottom: 1px solid #dee2e6; 
-    vertical-align: top; 
-    white-space: nowrap; 
-    font-size: 0.9em; 
+    border-bottom: 1px solid #dee2e6; /* Separador de filas */
+    vertical-align: top; /* Alinear arriba si el contenido es largo */
+    white-space: nowrap; /* Evitar que el texto largo rompa la celda (combinado con overflow) */
 }
-body.admin-page td:nth-child(2), /* Paciente */
-body.admin-page td:nth-child(3), /* Medico */
-body.admin-page td:nth-child(4), /* Cliente */
+/* Permitir que algunas columnas específicas puedan romper línea si es necesario */
+body.admin-page td:nth-child(2), /* Cliente */
+body.admin-page td:nth-child(3), /* Paciente */
+body.admin-page td:nth-child(4), /* Medico */
 body.admin-page td:nth-child(5), /* Tipo Cirugia */
 body.admin-page td:nth-child(6) { /* Material */
     white-space: normal;
 }
-body.admin-page td:last-child, body.admin-page th:last-child { /* Columna de acciones */
-    width: 65px; 
-    text-align: center;
-    white-space: nowrap;
-}
-body.admin-page td:nth-child(7), body.admin-page th:nth-child(7) { /* Columna Archivos */
-    width: auto; /* Permitir que se ajuste al contenido (iconos) */
-    min-width: 70px; /* Ancho mínimo */
-    text-align: center;
-    white-space: nowrap;
-}
-
 
 body.admin-page thead th {
     background-color: #007bff;
     color: #ffffff;
     font-weight: 600;
     font-family: 'Poppins', sans-serif;
-    position: sticky; 
+    position: sticky; /* Encabezado fijo al hacer scroll vertical (si la tabla es muy larga) */
     top: 0;
     z-index: 10;
 }
 body.admin-page tbody tr:nth-child(even) {
-    background-color: #f8f9fa; 
+    background-color: #f8f9fa; /* Filas alternas */
 }
 body.admin-page tbody tr:hover {
-    background-color: #e9ecef; 
+    background-color: #e9ecef; /* Hover suave */
 }
 
 /* --- Responsividad --- */
@@ -541,23 +517,20 @@ body.admin-page tbody tr:hover {
   button, .btn-volver, .btn-link { padding: 8px 15px; font-size: 14px; }
   .text-center { gap: 5px; }
   h4 { font-size: 1.2em; }
-  body.admin-page th, body.admin-page td { font-size: 13px; white-space: normal; padding: 8px 10px;}
-  .modal-content { width: 95%; padding: 20px; } 
-  .charts-container { flex-direction: column; } 
-  .chart-wrapper { flex: 1 1 100%; height: 300px; } 
+  body.admin-page th, body.admin-page td { font-size: 14px; white-space: normal; }
+  .modal-content { width: 95%; padding: 20px; } /* Modal más ancho en tablets */
 }
 
 @media (max-width: 480px) {
    body { padding: 10px; }
    .container { padding: 15px; margin: 15px auto; }
-   body.admin-page th, body.admin-page td { padding: 6px 8px; font-size: 12px; }
-   button, .btn-volver, .btn-link { width: 100%; margin: 5px 0; } 
-   .text-center { flex-direction: column; } 
+   body.admin-page th, body.admin-page td { padding: 8px 10px; font-size: 13px; }
+   button, .btn-volver, .btn-link { width: 100%; margin: 5px 0; } /* Botones full width */
+   .text-center { flex-direction: column; } /* Apilar botones */
    .toast-notification { width: calc(100% - 40px); right: 20px; bottom: 20px; }
    .modal-content { padding: 15px; }
    .modal-header h3 { font-size: 1.1em; }
-   .modal-item, #modalMateriales .modal-item label { font-size: 14px; }
-   .chart-wrapper { height: 250px; } 
+   .modal-item label, #modalTipoCx .modal-item, #modalClientes .modal-item { font-size: 14px; }
 }
 
 /* --- END OF FILE style.css --- */
