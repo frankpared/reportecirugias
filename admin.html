@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,134 +9,13 @@
   <!-- Firebase SDK (compat version para firestore() v8) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <!-- Chart.js para estadísticas -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    .stats-section {
-      margin-top: 30px;
-      padding: 20px;
-      background-color: #f9f9f9;
-      border-radius: 8px;
-      border: 1px solid #e0e0e0;
-    }
-    .stats-section h3 {
-      text-align: center;
-      color: #0056b3;
-      margin-bottom: 20px;
-    }
-    .charts-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      justify-content: space-around;
-    }
-    .chart-wrapper {
-      flex: 1 1 45%; 
-      min-width: 300px; 
-      max-width: 600px; 
-      height: 350px; 
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      display: flex; 
-      justify-content: center;
-      align-items: center;
-    }
-    .chart-wrapper canvas {
-        max-width: 100%;
-        max-height: 100%;
-    }
-    #auditLogModal .modal-content {
-        max-width: 800px; 
-    }
-    #auditLogModal .log-entry {
-        padding: 8px;
-        border-bottom: 1px solid #eee;
-        font-size: 0.9em;
-    }
-    #auditLogModal .log-entry:last-child {
-        border-bottom: none;
-    }
-    #auditLogModal .log-timestamp {
-        font-weight: bold;
-        color: #555;
-        margin-right: 10px;
-        display: inline-block; 
-        min-width: 130px; 
-    }
-    #auditLogModal .log-user {
-        color: #007bff;
-        margin-right: 10px;
-        font-weight: bold;
-    }
-     #auditLogModal .log-action {
-         color: #6c757d;
-         font-style: italic;
-     }
-     #auditLogModal .log-details-title {
-        font-weight: bold;
-        margin-top: 5px;
-        display: block;
-        color: #333;
-    }
-    #auditLogModal .log-field-change {
-        margin-left: 15px;
-        font-size: 0.95em;
-        padding: 2px 0;
-    }
-    #auditLogModal .log-field-change .field-name {
-        font-style: italic;
-        color: #5a6268;
-        display: inline-block;
-        min-width: 120px; 
-    }
-    #auditLogModal .log-field-change .old-value {
-        color: #dc3545; 
-        text-decoration: line-through;
-        margin-left: 5px;
-        margin-right: 5px;
-    }
-    #auditLogModal .log-field-change .new-value {
-        color: #28a745; 
-        font-weight: bold;
-    }
-    .btn-audit {
-        padding: 2px 6px;
-        font-size: 11px;
-        background-color: #6c757d;
-        color: white;
-        border: none;
-        border-radius: 3px;
-        cursor: pointer;
-        margin: 0; 
-    }
-    .btn-audit:hover {
-        background-color: #5a6268;
-    }
-    body.admin-page td:last-child, body.admin-page th:last-child { 
-        width: 65px; 
-        text-align: center;
-    }
-    body.admin-page td:nth-child(7), body.admin-page th:nth-child(7) { 
-        width: 70px; 
-        text-align: center;
-    }
-    .loading-placeholder { /* Estilo para mensajes de carga/vacío en gráficos */
-         text-align:center; 
-         color: #777; 
-         padding: 15px;
-         font-style: italic;
-         width: 100%; /* Ocupar espacio del gráfico */
-     }
-  </style>
 </head>
 
 <body class="fondo-dinamico admin-page">
   <div class="container">
     <header style="margin-bottom: 30px;">
       <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 80px; display: block; margin: 0 auto 15px auto;" />
-      <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">📋 Reportes Guardados y Estadísticas</h2>
+      <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">📋 Reportes Guardados</h2>
     </header>
 
     <div class="table-responsive">
@@ -145,67 +23,29 @@
         <thead>
           <tr>
             <th>Fecha Cirugía</th>
+            <th>Cliente</th> {/* NUEVA COLUMNA */}
             <th>Paciente</th>
             <th>Médico</th>
-            <th>Cliente</th>
             <th>Tipo Cirugía</th>
             <th>Material (Inicio)</th>
-            <th>Archivos</th>
             <th>Usuario ID</th>
-            <th>Creado En</th>
-            <th>Últ. Modif.</th>
-            <th>Acciones</th>
+            <th>Guardado En</th>
           </tr>
         </thead>
         <tbody id="reporte-rows">
-           <tr><td colspan="11" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>
+           <tr><td colspan="8" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr> {/* Colspan actualizado a 8 */}
         </tbody>
       </table>
     </div>
 
-    <div class="stats-section">
-        <h3>📊 Estadísticas de Reportes</h3>
-        <div id="loading-stats" style="text-align:center; color: #777; padding: 15px;">Cargando estadísticas...</div>
-        <div class="charts-container" style="display: none;">
-             <!-- Wrappers para los gráficos -->
-            <div class="chart-wrapper" id="cirugiasPorMesChartWrapper">
-                <canvas id="cirugiasPorMesChart"></canvas>
-            </div>
-            <div class="chart-wrapper" id="topMedicosChartWrapper">
-                <canvas id="topMedicosChart"></canvas>
-            </div>
-            <div class="chart-wrapper" id="topTiposCirugiaChartWrapper">
-                <canvas id="topTiposCirugiaChart"></canvas>
-            </div>
-            <div class="chart-wrapper" id="topClientesChartWrapper">
-                <canvas id="topClientesChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <div id="auditLogModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="auditLogModalTitle">Historial de Cambios</h3>
-                <button class="modal-close-btn" onclick="cerrarModalAuditLog()">×</button>
-            </div>
-            <div class="modal-body" id="auditLogModalBody">
-                <p style="text-align:center;">Cargando historial...</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-link" onclick="cerrarModalAuditLog()">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
     <div style="text-align: center; margin-top: 30px;">
-      <a href="index.html" class="btn-volver">← Volver al Formulario Principal</a>
+      <a href="index.html" class="btn-volver">← Volver al formulario</a>
     </div>
   </div>
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", 
+      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E",
       authDomain: "cirugia-reporte.firebaseapp.com",
       projectId: "cirugia-reporte",
       storageBucket: "cirugia-reporte.appspot.com",
@@ -217,12 +57,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    db.enablePersistence()
-      .catch((err) => {
-         if (err.code == 'failed-precondition') console.warn("Persistencia admin falló: Múltiples pestañas?");
-         else if (err.code == 'unimplemented') console.warn("Persistencia admin no soportada.");
-         else console.error("Error habilitando persistencia admin:", err);
-      });
+    db.enablePersistence().catch((err) => {
+        if (err.code == 'failed-precondition') console.warn("Persistencia admin falló: Múltiples pestañas?");
+        else if (err.code == 'unimplemented') console.warn("Persistencia admin no soportada.");
+        else console.error("Error habilitando persistencia admin:", err);
+    });
 
     function formatearFechaLocal(fechaISO) {
         if (!fechaISO) return '-';
@@ -243,358 +82,61 @@
             });
         } catch (e) { return '-'; }
     }
-    
-    let reportesDataGlobal = [];
-    let charts = {}; 
 
     function cargarReportes() {
       const tbody = document.getElementById("reporte-rows");
-      const loadingStatsEl = document.getElementById("loading-stats");
-      const chartsContainerEl = document.querySelector(".charts-container");
-
-      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>`;
-      loadingStatsEl.style.display = 'block';
-      chartsContainerEl.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>'; // Colspan 8
 
       db.collection("reportes")
-        .orderBy("modificadoEn", "desc") 
-        .limit(200) 
+        .orderBy("timestamp", "desc")
+        .limit(100)
         .get()
         .then(snapshot => {
-          tbody.innerHTML = ''; 
-          reportesDataGlobal = []; 
-
+          tbody.innerHTML = '';
           if (snapshot.empty) {
-            tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados todavía.</td></tr>`;
-            loadingStatsEl.textContent = 'No hay datos para generar estadísticas.';
-             Object.values(charts).forEach(chart => chart.destroy());
-             charts = {};
-             chartsContainerEl.style.display = 'none'; 
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados todavía.</td></tr>'; // Colspan 8
             return;
           }
 
           snapshot.forEach(doc => {
             const data = doc.data();
-            data.id = doc.id; 
-            reportesDataGlobal.push(data); 
-
             const fechaCirugiaFormateada = formatearFechaLocal(data.fechaCirugia);
-            const fechaCreadoFormateada = formatearTimestamp(data.creadoEn || data.timestamp);
-            const fechaModificacionFormateada = data.modificadoEn ? formatearTimestamp(data.modificadoEn) : (data.timestamp ? formatearTimestamp(data.timestamp) : '-');
-            
-            const materialCortado = data.material
-                ? (data.material.substring(0, 30) + (data.material.length > 30 ? '...' : ''))
-                : '-';
-            const usuarioIdCorto = data.modificadoPor ? `Mod:${data.modificadoPor.substring(0,6)}` 
-                                 : (data.creadoPor ? `Cr:${data.creadoPor.substring(0,6)}` 
-                                 : (data.usuario ? `Usr:${data.usuario.substring(0,6)}` : 'Anón.'));
-            
-            const tieneArchivos = data.archivosAdjuntos && data.archivosAdjuntos.length > 0;
+            const fechaGuardadoFormateada = formatearTimestamp(data.timestamp);
+            const materialCortado = data.material ? (data.material.substring(0, 40) + (data.material.length > 40 ? '...' : '')) : '-';
+            const usuarioIdCorto = data.usuario ? data.usuario.substring(0, 6) : 'Anón.';
 
             const tr = document.createElement("tr");
-            tr.dataset.reportId = doc.id; 
-
-            const createCell = (text, isHtml = false) => {
+            const createCell = (text) => {
                 const td = document.createElement('td');
-                if (isHtml) {
-                    td.innerHTML = text || '-';
-                } else {
-                    td.textContent = text || '-';
-                }
+                td.textContent = text || '-';
                 return td;
             };
-            
-            let archivosHtml = '-';
-            if (tieneArchivos) {
-                archivosHtml = data.archivosAdjuntos.map(archivo => 
-                    `<a href="${archivo.url}" target="_blank" title="${escapeHtml(archivo.nombre)}" style="font-size: 1.3em; text-decoration: none; margin: 0 2px;">📎</a>`
-                ).join('');
-            }
 
             tr.appendChild(createCell(fechaCirugiaFormateada));
+            tr.appendChild(createCell(data.cliente)); // CELDA CLIENTE AÑADIDA
             tr.appendChild(createCell(data.paciente));
             tr.appendChild(createCell(data.medico));
-            tr.appendChild(createCell(data.cliente));
             tr.appendChild(createCell(data.tipoCirugia));
             tr.appendChild(createCell(materialCortado));
-            tr.appendChild(createCell(archivosHtml, true)); 
-            tr.appendChild(createCell(usuarioIdCorto)); 
-            tr.appendChild(createCell(fechaCreadoFormateada)); 
-            tr.appendChild(createCell(fechaModificacionFormateada)); 
-            
-            const tdActions = document.createElement('td');
-            const auditButton = document.createElement('button');
-            auditButton.textContent = 'Log'; 
-            auditButton.classList.add('btn-audit');
-            auditButton.onclick = (e) => { 
-                e.stopPropagation(); 
-                abrirModalAuditLog(doc.id, data.paciente); 
-            };
-            tdActions.appendChild(auditButton);
-            tr.appendChild(tdActions);
+            tr.appendChild(createCell(usuarioIdCorto));
+            tr.appendChild(createCell(fechaGuardadoFormateada));
 
             tbody.appendChild(tr);
           });
-          
-          loadingStatsEl.style.display = 'none';
-          chartsContainerEl.style.display = 'flex';
-          generarEstadisticas();
-
         })
         .catch(error => {
           console.error('Error cargando reportes:', error);
-          tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 20px; color:red;">Error al cargar los reportes (${error.code || error.message}). Revise la consola y las reglas de seguridad.</td></tr>`;
-          loadingStatsEl.textContent = 'Error al cargar datos para estadísticas.';
-           Object.values(charts).forEach(chart => chart.destroy());
-           charts = {};
-           chartsContainerEl.style.display = 'none';
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color:red;">Error al cargar los reportes. Revise la consola.</td></tr>'; // Colspan 8
         });
     }
-    
-    function abrirModalAuditLog(reporteId, pacienteNombre) {
-        const modal = document.getElementById('auditLogModal');
-        const modalTitle = document.getElementById('auditLogModalTitle');
-        const modalBody = document.getElementById('auditLogModalBody');
 
-        if (!modal || !modalTitle || !modalBody) return;
-
-        modalTitle.textContent = `Historial: ${pacienteNombre || 'Reporte ' + reporteId.substring(0,6)}`;
-        modalBody.innerHTML = '<p style="text-align:center;">Cargando historial...</p>';
-        modal.classList.add('visible'); 
-        modal.style.display = 'flex'; 
-
-        db.collection('reportes').doc(reporteId).collection('auditLog')
-            .orderBy('timestamp', 'desc')
-            .get()
-            .then(snapshot => {
-                if (snapshot.empty) {
-                    modalBody.innerHTML = '<p style="text-align:center;">No hay historial de cambios para este reporte.</p>';
-                    return;
-                }
-                modalBody.innerHTML = ''; 
-                snapshot.forEach(logDoc => {
-                    const logData = logDoc.data();
-                    const entryDiv = document.createElement('div');
-                    entryDiv.classList.add('log-entry');
-
-                    const user = logData.usuarioId ? logData.usuarioId.substring(0,6) : 'Sistema';
-                    let html = `<span class="log-timestamp">${formatearTimestamp(logData.timestamp)}</span>`;
-                    html += `<span class="log-user">Usr: ${user}</span>`;
-                    html += `<span class="log-action">${logData.accion || 'Modif.'}</span>`; 
-
-                    if (logData.cambios && logData.cambios.length > 0) {
-                        html += '<div class="log-details-title">Detalles:</div>';
-                        logData.cambios.forEach(cambio => {
-                             let anteriorStr = escapeHtml(String(cambio.anterior !== undefined ? cambio.anterior : '-'));
-                             let nuevoStr = escapeHtml(String(cambio.nuevo !== undefined ? cambio.nuevo : '-'));
-                            
-                            anteriorStr = anteriorStr.length > 70 ? anteriorStr.substring(0,67) + '...' : anteriorStr;
-                            nuevoStr = nuevoStr.length > 70 ? nuevoStr.substring(0,67) + '...' : nuevoStr;
-                            
-                            if (cambio.campo === 'material' && (String(cambio.anterior).trim() !== '(vacío)' || String(cambio.nuevo).trim() !== '(vacío)')) {
-                                anteriorStr = String(cambio.anterior).trim() !== '(vacío)' ? '[Material Anterior]' : '(vacío)';
-                                nuevoStr = String(cambio.nuevo).trim() !== '(vacío)' ? '[Material Nuevo]' : '(vacío)';
-                            }
-                             if (cambio.campo === 'archivoAdjunto') {
-                                 anteriorStr = escapeHtml(cambio.anterior); 
-                                 nuevoStr = escapeHtml(cambio.nuevo); 
-                             }
-
-                            html += `<div class="log-field-change">
-                                        <span class="field-name">${escapeHtml(cambio.campo)}:</span> 
-                                        <span class="old-value">${anteriorStr}</span> → 
-                                        <span class="new-value">${nuevoStr}</span>
-                                     </div>`;
-                        });
-                    }
-                    entryDiv.innerHTML = html;
-                    modalBody.appendChild(entryDiv);
-                });
-            })
-            .catch(error => {
-                console.error("Error cargando log de auditoría:", error);
-                modalBody.innerHTML = '<p style="text-align:center; color:red;">Error al cargar el historial.</p>';
-            });
-    }
-
-    function cerrarModalAuditLog() {
-        const modal = document.getElementById('auditLogModal');
-        if (modal) {
-            modal.classList.remove('visible');
-            setTimeout(() => { 
-                 modal.style.display = 'none';
-            }, 300);
-        }
-    }
-    
-    function escapeHtml(unsafe) {
-        if (unsafe === null || unsafe === undefined) return ''; // Devolver cadena vacía para null/undefined
-        return String(unsafe) // Asegurar que sea string
-             .replace(/&/g, "&")
-             .replace(/</g, "<")
-             .replace(/>/g, ">")
-             .replace(/"/g, """)
-             .replace(/'/g, "'");
-     }
-
-
-    function generarEstadisticas() {
-        const loadingStatsEl = document.getElementById("loading-stats");
-        const chartsContainerEl = document.querySelector(".charts-container");
-
-        if (reportesDataGlobal.length === 0) {
-            loadingStatsEl.textContent = 'No hay suficientes datos para estadísticas.';
-            loadingStatsEl.style.display = 'block'; // Mostrar mensaje
-            chartsContainerEl.style.display = 'none'; // Ocultar contenedor
-             // Asegurar que los contenedores de gráficos estén vacíos
-             ['cirugiasPorMesChart', 'topMedicosChart', 'topTiposCirugiaChart', 'topClientesChart'].forEach(id => {
-                const wrapper = document.getElementById(id + 'Wrapper'); // Usar ID del wrapper
-                if (wrapper) wrapper.innerHTML = `<p class="loading-placeholder">No hay datos suficientes.</p>`; 
-             });
-            return;
-        } else {
-             loadingStatsEl.style.display = 'none'; // Ocultar mensaje de carga/vacío
-             chartsContainerEl.style.display = 'flex'; // Mostrar contenedor
-              // Asegurar que los contenedores tengan el canvas antes de crear
-             ['cirugiasPorMesChart', 'topMedicosChart', 'topTiposCirugiaChart', 'topClientesChart'].forEach(id => {
-                 const wrapper = document.getElementById(id + 'Wrapper'); // Usar ID del wrapper
-                 if (wrapper && !wrapper.querySelector('canvas')) {
-                     wrapper.innerHTML = `<canvas id="${id}"></canvas>`; 
-                 }
-             });
-        }
-        
-        Object.values(charts).forEach(chart => chart.destroy());
-        charts = {};
-
-        // --- Cálculo de Estadísticas ---
-        const cirugiasPorMes = {};
-        reportesDataGlobal.forEach(r => {
-            if (r.fechaCirugia && r.fechaCirugia.length >= 7) { 
-                const mesAnio = r.fechaCirugia.substring(0, 7); 
-                cirugiasPorMes[mesAnio] = (cirugiasPorMes[mesAnio] || 0) + 1;
-            }
-        });
-        const labelsMeses = Object.keys(cirugiasPorMes).sort();
-        const dataMeses = labelsMeses.map(label => cirugiasPorMes[label]);
-        if (labelsMeses.length > 0) {
-            crearGrafico('cirugiasPorMesChart', 'bar', 'Cirugías por Mes', labelsMeses, dataMeses, 'Nº de Cirugías');
-        } else {
-             document.getElementById('cirugiasPorMesChartWrapper').innerHTML = '<p class="loading-placeholder">No hay datos para Cirugías por Mes.</p>';
-        }
-
-
-        const conteoMedicos = {};
-        reportesDataGlobal.forEach(r => {
-            if (r.medico && r.medico.trim() !== '') conteoMedicos[r.medico.trim()] = (conteoMedicos[r.medico.trim()] || 0) + 1;
-        });
-        const topMedicos = Object.entries(conteoMedicos).sort((a, b) => b[1] - a[1]).slice(0, 10); 
-        if (topMedicos.length > 0) {
-            crearGrafico('topMedicosChart', 'pie', 'Top Médicos (# Reportes)', topMedicos.map(m => m[0]), topMedicos.map(m => m[1]));
-        } else {
-             document.getElementById('topMedicosChartWrapper').innerHTML = '<p class="loading-placeholder">No hay datos para Top Médicos.</p>';
-        }
-
-        const conteoTiposCx = {};
-        reportesDataGlobal.forEach(r => {
-            if (r.tipoCirugia && r.tipoCirugia.trim() !== '') conteoTiposCx[r.tipoCirugia.trim()] = (conteoTiposCx[r.tipoCirugia.trim()] || 0) + 1;
-        });
-        const topTiposCx = Object.entries(conteoTiposCx).sort((a, b) => b[1] - a[1]).slice(0, 10);
-        if (topTiposCx.length > 0) {
-            crearGrafico('topTiposCirugiaChart', 'doughnut', 'Top Tipos de Cirugía', topTiposCx.map(t => t[0]), topTiposCx.map(t => t[1]));
-        } else {
-             document.getElementById('topTiposCirugiaChartWrapper').innerHTML = '<p class="loading-placeholder">No hay datos para Top Tipos Cirugía.</p>';
-        }
-        
-        const conteoClientes = {};
-        reportesDataGlobal.forEach(r => {
-            if (r.cliente && r.cliente.trim() !== '') conteoClientes[r.cliente.trim()] = (conteoClientes[r.cliente.trim()] || 0) + 1;
-        });
-        const topClientes = Object.entries(conteoClientes).sort((a,b) => b[1] - a[1]).slice(0,10);
-        if (topClientes.length > 0) {
-            crearGrafico('topClientesChart', 'bar', 'Top Clientes (# Reportes)', topClientes.map(c => c[0]), topClientes.map(c => c[1]), 'Nº de Reportes');
-        } else {
-            document.getElementById('topClientesChartWrapper').innerHTML = '<p class="loading-placeholder">No hay datos para Top Clientes.</p>';
-        }
-    }
-
-    function crearGrafico(canvasId, tipo, tituloLabel, labels, data, dataLabel = 'Cantidad') {
-        const canvas = document.getElementById(canvasId);
-         if (!canvas) {
-            console.warn(`Canvas con ID ${canvasId} no encontrado para gráfico.`);
-             const wrapper = document.getElementById(canvasId + 'Wrapper'); // Usar ID del wrapper
-             if(wrapper) wrapper.innerHTML = `<p class="loading-placeholder">Error al crear gráfico ${tituloLabel}.</p>`;
-            return;
-        }
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-             console.error(`No se pudo obtener contexto 2D para ${canvasId}`);
-             return;
-        }
-
-        // Validar datos antes de crear gráfico
-        const numericData = data.filter(d => typeof d === 'number');
-        if (numericData.length === 0 && data.length > 0) {
-             console.warn(`Datos para gráfico ${tituloLabel} no son numéricos.`);
-             const wrapper = document.getElementById(canvasId + 'Wrapper'); 
-             if(wrapper) wrapper.innerHTML = `<p class="loading-placeholder">Datos inválidos para ${tituloLabel}.</p>`;
-             return;
-        }
-
-
-        const chartColors = [ 
-            'rgba(255, 99, 132, 0.8)','rgba(54, 162, 235, 0.8)','rgba(255, 206, 86, 0.8)','rgba(75, 192, 192, 0.8)',
-            'rgba(153, 102, 255, 0.8)','rgba(255, 159, 64, 0.8)','rgba(201, 203, 207, 0.8)','rgba(60, 179, 113, 0.8)',
-            'rgba(255, 0, 255, 0.8)','rgba(210, 105, 30, 0.8)', 'rgba(0, 0, 128, 0.8)'
-        ];
-
-        charts[canvasId] = new Chart(ctx, {
-            type: tipo,
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: dataLabel,
-                    data: data,
-                    backgroundColor: tipo === 'bar' ? 'rgba(0, 123, 255, 0.7)' : chartColors.slice(0, data.length), // Usar colores necesarios
-                    borderColor: tipo === 'bar' ? 'rgba(0, 123, 255, 1)' : '#fff',
-                    borderWidth: tipo === 'bar' ? 1 : 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: { display: true, text: tituloLabel, font: { size: 14, weight: 'bold' }, padding: { bottom: 10 } },
-                    legend: { display: tipo !== 'bar', position: 'top', labels: { font: { size: 10 }, boxWidth: 15 } }, 
-                    tooltip: { titleFont: {size: 12}, bodyFont: {size: 11} }
-                },
-                scales: tipo === 'bar' ? { 
-                    y: { beginAtZero: true, ticks: { precision: 0, stepSize: Math.max(1, Math.ceil(Math.max(...numericData, 0) / 8)), font: {size:10} } }, 
-                    x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 30, font: {size:10} } } 
-                } : {},
-                 layout: tipo !== 'bar' ? { padding: { left: 10, right: 10, top: 0, bottom: 10 } } : {}
-            }
-        });
+    function aplicarFondoDinamico() {
+        document.body.style.backgroundColor = "#f0f2f5";
     }
 
     window.onload = function () {
-      document.body.style.backgroundColor = "#f0f2f5";
+      aplicarFondoDinamico();
       cargarReportes();
-      
-      const auditModal = document.getElementById('auditLogModal');
-      if (auditModal) {
-          auditModal.addEventListener('click', function(event) {
-              if (event.target === this) { 
-                  cerrarModalAuditLog();
-              }
-          });
-      }
-       document.addEventListener('keydown', function(event) {
-         if (event.key === "Escape") {
-            // Cerrar el modal activo (si hay varios modales, necesitaría lógica más compleja)
-            cerrarModalAuditLog(); 
-         }
-       });
     };
   </script>
 </body>
