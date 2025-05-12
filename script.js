@@ -43,7 +43,7 @@ const fondosPorDia = {
         msg: 'Lunes: ¡Arrancamos la semana con el cuchillo entre los dientes! '
     },
     2: { // Martes
-        img: 'https://images.unsplash.com/photo-1624716472114-a7c5f18ac832?q=80&w=2072&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', //Rodilla
+        img: 'https://cdn.pixabay.com/photo/2016/11/14/03/05/surgery-1822458_1280.jpg', //Rodilla
         msg: 'Martes: ¡Hoy se labura como perro con hueso! ¡A no soltar la tarea hasta terminarla! '
     },
     3: { // Miércoles
