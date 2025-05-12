@@ -55,7 +55,7 @@ button:active, .btn-volver:active, .btn-link:active, .btn-admin-action:active {
     transform: translateY(1px); /* Efecto presionado */
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
-button:disabled, .btn-admin-action:disabled { 
+button:disabled, .btn-admin-action:disabled {
     background-color: #adb5bd;
     cursor: not-allowed;
     box-shadow: none;
@@ -74,7 +74,7 @@ button:disabled, .btn-admin-action:disabled {
 }
 
 .btn-secundario { /* Nuevo estilo para botones como "Limpiar" o "Cargar Último" */
-  background-color: #6c757d !important; 
+  background-color: #6c757d !important;
 }
 .btn-secundario:hover {
   background-color: #5a6268 !important;
@@ -97,7 +97,7 @@ button:disabled, .btn-admin-action:disabled {
 
 /* Estilos para botones de acción en admin.html (Ver Detalle, Reenviar) */
 .btn-admin-action {
-  padding: 6px 10px;
+  padding: 6px 8px; /* Padding horizontal reducido para ahorrar espacio */
   font-size: 12px;
   margin: 2px;
 }
@@ -476,15 +476,14 @@ textarea.form-control {
 }
 
 
-/* --- Estilos Específicos Modal Tipo Cirugía y Clientes --- */
+/* --- Estilos Específicos Modal Tipo Cirugía, Clientes y Detalle Reporte --- */
 #modalTipoCx .modal-item,
-#modalClientes .modal-item,
-#modalReporteDetalle .reporte-contenido { /* Añadido #modalReporteDetalle */
-    padding: 8px 10px; 
+#modalClientes .modal-item {
+    padding: 8px 10px;
     font-size: 16px;
 }
 /* Para el modal de detalle del reporte */
-#modalReporteDetalle .reporte-contenido {
+#modalReporteDetalle .reporte-contenido { /* Hereda de .reporte-contenido pero con ajustes */
     font-size: 15px; /* Un poco más pequeño para que quepa más */
     line-height: 1.6;
 }
@@ -527,28 +526,45 @@ body.admin-page table {
     width: 100%;
     background-color: #fff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    table-layout: auto; /* Permitir que el navegador ajuste el ancho de las columnas */
 }
+
 body.admin-page th,
 body.admin-page td {
-    padding: 12px 15px; 
+    padding: 10px 8px; /* Un poco menos de padding para ganar espacio */
     text-align: left;
-    border-bottom: 1px solid #dee2e6; 
-    vertical-align: top; 
-    /* white-space: nowrap;  QUITADO TEMPORALMENTE para mejorar visualización de botones */
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle; /* Centrar verticalmente puede verse mejor con botones */
+    word-break: break-word; /* Forzar el corte de palabras largas si es necesario */
 }
-/* Permitir que algunas columnas específicas puedan romper línea si es necesario */
+
+/* Columnas de datos principales */
 body.admin-page td.col-cliente,
 body.admin-page td.col-paciente,
 body.admin-page td.col-medico,
-body.admin-page td.col-tipocx,
-body.admin-page td.col-material {
+body.admin-page td.col-tipocx {
     white-space: normal; /* Permitir wrap */
-    min-width: 120px; /* Ancho mínimo para estas columnas */
+    min-width: 100px; /* Reducimos un poco el mínimo */
 }
+
+/* Columna de Fecha de Cirugía y Guardado En (pueden ser más angostas) */
+body.admin-page th:nth-child(1), /* Fecha Cir. */
+body.admin-page td:nth-child(1),
+body.admin-page th:nth-child(6), /* Guardado En */
+body.admin-page td:nth-child(6) {
+    min-width: 80px; /* Más angostas */
+    white-space: nowrap; /* Que no se partan si es posible */
+}
+
+
 body.admin-page td.col-acciones { /* Columna de acciones */
     white-space: nowrap; /* Evitar que los botones se rompan en dos líneas */
-    text-align: right; /* Alinear botones a la derecha */
-    min-width: 150px; /* Espacio para botones */
+    text-align: center; /* Centrar los botones puede quedar mejor */
+    min-width: 130px; /* Aumentado para asegurar espacio para botones */
+}
+body.admin-page th.col-acciones-header { /* Para el encabezado de la columna Acciones */
+    text-align: center; /* Centrar el texto del encabezado también */
+    min-width: 130px;
 }
 
 
@@ -557,15 +573,15 @@ body.admin-page thead th {
     color: #ffffff;
     font-weight: 600;
     font-family: 'Poppins', sans-serif;
-    position: sticky; 
+    position: sticky;
     top: 0;
     z-index: 10;
 }
 body.admin-page tbody tr:nth-child(even) {
-    background-color: #f8f9fa; 
+    background-color: #f8f9fa;
 }
 body.admin-page tbody tr:hover {
-    background-color: #e9ecef; 
+    background-color: #e9ecef;
 }
 body.admin-page tbody tr.fila-oculta { /* Para el buscador */
     display: none;
@@ -580,22 +596,24 @@ body.admin-page tbody tr.fila-oculta { /* Para el buscador */
   h4 { font-size: 1.2em; }
   body.admin-page th, body.admin-page td { font-size: 14px; white-space: normal; padding: 10px 8px;}
   body.admin-page td.col-acciones { text-align: left; } /* En móvil, botones a la izquierda */
-  .modal-content { width: 95%; padding: 20px; } 
+  .modal-content { width: 95%; padding: 20px; }
   .admin-controls input.form-control { max-width: 100%; }
 }
 
 @media (max-width: 480px) {
    body { padding: 10px; }
    .container { padding: 15px; margin: 15px auto; }
-   body.admin-page th, body.admin-page td { padding: 8px 10px; font-size: 13px; }
-   button, .btn-volver, .btn-link, .btn-admin-action { width: 100%; margin: 5px 0; } 
-   .form-actions-inline button { width: auto; margin: 5px; } /* Para Limpiar y Cargar Último */
-   .text-center { flex-direction: column; } 
+   body.admin-page th, body.admin-page td { padding: 8px 6px; font-size: 12px; } /* Aún menos padding en celu */
+   button, .btn-volver, .btn-link { width: 100%; margin: 5px 0; }
+   .btn-admin-action { width: auto; margin: 3px; padding: 5px 7px; font-size: 11px;} /* Botones de admin más chicos */
+   .form-actions-inline button { width: calc(50% - 10px); margin: 5px; } /* Limpiar y Cargar Último al 50% */
+   .text-center { flex-direction: column; }
    .toast-notification { width: calc(100% - 40px); right: 20px; bottom: 20px; }
    .modal-content { padding: 15px; }
    .modal-header h3 { font-size: 1.1em; }
    .modal-item label, #modalTipoCx .modal-item, #modalClientes .modal-item { font-size: 14px; }
-   body.admin-page td.col-acciones .btn-admin-action { width: auto; display: inline-block; margin-right: 5px; } /* Botones de admin en línea */
+   body.admin-page td.col-acciones { min-width: auto; } /* Dejar que se ajuste en celu */
+   body.admin-page td.col-acciones .btn-admin-action { width: auto; display: inline-block; margin-right: 5px; }
 }
 
 /* --- END OF FILE style.css --- */
