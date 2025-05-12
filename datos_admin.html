@@ -1,384 +1,98 @@
-// --- START OF FILE datos_admin.js ---
-const firebaseConfig = {
-  apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // ¡TU API KEY REAL!
-  authDomain: "cirugia-reporte.firebaseapp.com",
-  projectId: "cirugia-reporte",
-  storageBucket: "cirugia-reporte.appspot.com",
-  messagingSenderId: "698831567840",
-  appId: "1:698831567840:web:fc6d6197f22beba4d88985",
-  measurementId: "G-HD7ZLL1GLZ"
-};
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrar Datos | Districorr</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Lato&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    .admin-data-section { margin-bottom: 40px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9; }
+    .admin-data-section h3 { margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px; color: #0056b3; }
+    .data-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #eee; margin-bottom: 15px; }
+    .data-list li, .data-table tr { padding: 8px 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .data-list li:last-child, .data-table tr:last-child td { border-bottom: none; }
+    .data-list li span, .data-table td { flex-grow: 1; margin-right: 10px; word-break: break-word; }
+    .data-actions button { padding: 3px 8px; font-size: 12px; margin-left: 5px; min-width: 60px; }
+    .btn-edit { background-color: #ffc107; color: #333; }
+    .btn-edit:hover { background-color: #e0a800; }
+    .btn-delete { background-color: #dc3545; }
+    .btn-delete:hover { background-color: #c82333; }
+    .add-form { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .add-form input { flex-grow: 1; }
+    .add-form button { flex-shrink: 0; }
+    #materialesTable th, #materialesTable td { white-space: normal; }
+    #loading-admin { text-align: center; padding: 15px; color: #555; }
+  </style>
+</head>
+<body class="fondo-dinamico admin-page">
+  <div class="container">
+    <header style="margin-bottom: 30px;">
+      <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 80px; display: block; margin: 0 auto 15px auto;" />
+      <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">⚙️ Administrar Datos Maestros</h2>
+    </header>
 
-// Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    <!-- Sección Clientes (NUEVA) -->
+    <div class="admin-data-section">
+      <h3>Clientes</h3>
+      <div class="add-form">
+        <input type="text" id="newClienteName" class="form-control" placeholder="Nuevo cliente...">
+        <button id="addClienteBtn" class="btn-primario">➕ Añadir</button>
+      </div>
+      <div id="clientesListContainer">
+         <p id="loading-clientes" style="text-align:center; color: #777;">Cargando clientes...</p>
+         <ul id="clienteList" class="data-list" style="display:none;">
+           <!-- Los clientes se cargarán aquí -->
+         </ul>
+      </div>
+    </div>
 
-// --- Constantes ---
-const COLECCION_CLIENTES = 'clientes'; 
-const COLECCION_TIPOS_CX = 'tiposCirugia';
-const COLECCION_MATERIALES = 'materiales';
+    <!-- Sección Tipos de Cirugía -->
+    <div class="admin-data-section">
+      <h3>Tipos de Cirugía</h3>
+      <div class="add-form">
+        <input type="text" id="newTipoCxName" class="form-control" placeholder="Nuevo tipo de cirugía...">
+        <button id="addTipoCxBtn" class="btn-primario">➕ Añadir</button>
+      </div>
+      <div id="tiposCxListContainer">
+         <p id="loading-tiposcx" style="text-align:center; color: #777;">Cargando tipos de cirugía...</p>
+         <ul id="tiposCxList" class="data-list" style="display:none;">
+         </ul>
+      </div>
+    </div>
 
-// --- Referencias a Elementos DOM ---
-const clienteList = document.getElementById('clientesList');
-const newClienteNameInput = document.getElementById('newClienteName');
-const addClienteBtn = document.getElementById('addClienteBtn');
-const loadingClientes = document.getElementById('loading-clientes');
+    <!-- Sección Materiales -->
+    <div class="admin-data-section">
+      <h3>Materiales</h3>
+      <div class="add-form">
+        <input type="text" id="newMaterialCode" class="form-control" placeholder="Código (*)" style="flex-basis: 150px; flex-grow: 0;">
+        <input type="text" id="newMaterialDesc" class="form-control" placeholder="Descripción (*)">
+        <input type="text" id="newMaterialCat" class="form-control" placeholder="Categoría (*)" style="flex-basis: 200px; flex-grow: 0;">
+        <button id="addMaterialBtn" class="btn-primario">➕ Añadir</button>
+      </div>
+       <div id="materialesListContainer">
+           <p id="loading-materiales" style="text-align:center; color: #777;">Cargando materiales...</p>
+           <div class="table-responsive">
+               <table id="materialesTable" style="width:100%; display:none;">
+                   <thead>
+                       <tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Acciones</th></tr>
+                   </thead>
+                   <tbody id="materialesListBody"></tbody>
+               </table>
+           </div>
+       </div>
+    </div>
 
-const tipoCxList = document.getElementById('tiposCxList');
-const newTipoCxNameInput = document.getElementById('newTipoCxName');
-const addTipoCxBtn = document.getElementById('addTipoCxBtn');
-const loadingTiposCx = document.getElementById('loading-tiposcx');
+     <div id="toast" class="toast-notification" style="display:none;"></div>
 
-const materialesTableBody = document.getElementById('materialesListBody');
-const newMaterialCodeInput = document.getElementById('newMaterialCode');
-const newMaterialDescInput = document.getElementById('newMaterialDesc');
-const newMaterialCatInput = document.getElementById('newMaterialCat');
-const addMaterialBtn = document.getElementById('addMaterialBtn');
-const loadingMateriales = document.getElementById('loading-materiales');
-const materialesTable = document.getElementById('materialesTable');
+    <div style="text-align: center; margin-top: 30px;">
+      <a href="index.html" class="btn-volver">← Volver al formulario</a>
+    </div>
+  </div>
 
-// --- Funciones Toast ---
-function mostrarToast(mensaje, tipo = 'info') {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    // Ocultar toast anterior si existe para evitar solapamientos
-    toast.classList.remove('visible');
-    // toast.style.display = 'none'; // Evitar cambiar display directamente si usamos clases para animación
-
-    toast.textContent = mensaje;
-    toast.className = 'toast-notification'; // Reset class list
-    toast.classList.add(tipo); 
-    
-    // Forzar reflow para reiniciar animación si es necesario (a veces útil)
-    void toast.offsetWidth; 
-
-    // Usar clase 'visible' para controlar la animación/transición
-    toast.style.display = 'block'; // Asegurar display block ANTES de añadir 'visible'
-    setTimeout(() => { // Pequeño delay para asegurar que display:block se aplique
-        toast.classList.add('visible');
-    }, 10); 
-    
-    // Ocultar después de un tiempo
-    setTimeout(() => {
-        toast.classList.remove('visible');
-        // Esperar que termine la transición para ocultar con display:none
-        // La duración debe coincidir con la transición CSS (0.3s = 300ms)
-        setTimeout(() => { 
-            // Solo ocultar si AÚN no es visible (evita ocultar un toast nuevo que apareció rápido)
-            if (!toast.classList.contains('visible')) {
-                toast.style.display = 'none'; 
-            }
-        }, 300); 
-    }, 4000); // Duración visible: 4 segundos
-}
-
-
-// --- Funciones Genéricas para CRUD de Listas Simples (Nombre) ---
-async function loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural) {
-    console.log(`Intentando cargar: ${itemNamePlural} desde ${collectionName}`); 
-    loadingElement.style.display = 'block';
-    loadingElement.textContent = `Cargando ${itemNamePlural}...`; 
-    loadingElement.style.color = '#777'; 
-    listElement.style.display = 'none';
-    listElement.innerHTML = '';
-
-    try {
-        // Asegúrate que el índice para 'nombreLower' exista en Firestore para estas colecciones
-        const snapshot = await db.collection(collectionName).orderBy('nombreLower').get();
-        console.log(`Snapshot recibido para ${itemNamePlural}. Vacío: ${snapshot.empty}, Tamaño: ${snapshot.size}`); 
-
-        if (snapshot.empty) {
-            loadingElement.textContent = `No hay ${itemNamePlural} definidos. Añada el primero.`;
-            loadingElement.style.display = 'block'; 
-            listElement.style.display = 'none'; 
-            return;
-        }
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            // VERIFICACIÓN CRUCIAL: Chequear si existe nombreLower antes de usarlo
-            if (!data.nombre || data.nombreLower === undefined) { 
-                 console.warn(`Documento ${doc.id} en ${collectionName} no tiene campo 'nombre' o 'nombreLower'. Omitiendo.`);
-                 // Considera añadir nombreLower aquí si falta, aunque sería mejor un script de migración
-                 // db.collection(collectionName).doc(doc.id).update({ nombreLower: data.nombre.toLowerCase() }); 
-                 return; 
-            }
-            const li = document.createElement('li');
-            li.dataset.id = doc.id;
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = data.nombre; 
-            li.appendChild(nameSpan);
-            const actionsDiv = document.createElement('div');
-            actionsDiv.classList.add('data-actions');
-            const editBtn = document.createElement('button');
-            editBtn.textContent = 'Editar'; editBtn.classList.add('btn-edit');
-            editBtn.onclick = () => editSimpleListItem(collectionName, doc.id, data.nombre, itemNameSingular, listElement, loadingElement, itemNamePlural);
-            actionsDiv.appendChild(editBtn);
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = 'Borrar'; deleteBtn.classList.add('btn-delete');
-            deleteBtn.onclick = () => deleteSimpleListItem(collectionName, doc.id, data.nombre, itemNameSingular, listElement, loadingElement, itemNamePlural);
-            actionsDiv.appendChild(deleteBtn);
-            li.appendChild(actionsDiv);
-            listElement.appendChild(li);
-        });
-        loadingElement.style.display = 'none'; 
-        listElement.style.display = 'block'; 
-
-    } catch (error) {
-        console.error(`Error cargando ${itemNamePlural} desde ${collectionName}:`, error); 
-        // Mostrar mensaje de error más específico si es posible
-        let errorMessage = `Error al cargar ${itemNamePlural}.`;
-        if (error.code === 'failed-precondition') {
-             errorMessage = `Error: Falta índice en Firestore para ordenar ${itemNamePlural}. Cree un índice para 'nombreLower' (ASC).`;
-             console.error(`SUGERENCIA: Ve a Firestore -> Índices y crea un índice para la colección '${collectionName}' en el campo 'nombreLower' Ascendente.`);
-        } else if (error.code === 'permission-denied') {
-            errorMessage = `Error: Permisos insuficientes para leer ${itemNamePlural}. Verifique las Reglas de Seguridad.`;
-        } else {
-             errorMessage = `Error cargando ${itemNamePlural}: ${error.message}`;
-        }
-        loadingElement.textContent = errorMessage; 
-        loadingElement.style.color = 'red'; 
-        loadingElement.style.display = 'block'; 
-        listElement.style.display = 'none'; 
-        mostrarToast(errorMessage, 'error'); 
-    }
-}
-
-async function addSimpleListItem(collectionName, inputElement, addButtonElement, itemNameSingular, listElement, loadingElement, itemNamePlural) {
-    const nombre = inputElement.value.trim();
-    if (!nombre) {
-        mostrarToast(`Ingrese un nombre para el ${itemNameSingular}.`, 'warning');
-        return;
-    }
-    addButtonElement.disabled = true; addButtonElement.textContent = 'Añadiendo...';
-    try {
-        const nombreLower = nombre.toLowerCase();
-        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', nombreLower).limit(1).get(); 
-        if (!querySnapshot.empty) {
-            mostrarToast(`El ${itemNameSingular} "${nombre}" ya existe.`, 'warning');
-            inputElement.focus();
-        } else {
-            await db.collection(collectionName).add({ nombre: nombre, nombreLower: nombreLower }); 
-            mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} añadido con éxito.`, 'success');
-            inputElement.value = '';
-            await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); 
-        }
-    } catch (error) {
-        console.error(`Error añadiendo ${itemNameSingular}:`, error);
-        mostrarToast(`Error al añadir ${itemNameSingular}.`, 'error');
-    } finally {
-        addButtonElement.disabled = false; addButtonElement.textContent = '➕ Añadir';
-    }
-}
-
-async function editSimpleListItem(collectionName, id, currentName, itemNameSingular, listElement, loadingElement, itemNamePlural) {
-    const newName = prompt(`Editar nombre del ${itemNameSingular}:\n(Actual: ${currentName})`, currentName);
-    if (newName === null || newName.trim() === '' || newName.trim() === currentName) return;
-    
-    const newNameTrimmed = newName.trim();
-    const newNameLower = newNameTrimmed.toLowerCase();
-    try {
-        const querySnapshot = await db.collection(collectionName).where('nombreLower', '==', newNameLower).limit(1).get();
-        let conflict = false;
-        if (!querySnapshot.empty && querySnapshot.docs[0].id !== id) {
-             conflict = true;
-        }
-       
-        if (conflict) {
-            mostrarToast(`El nombre "${newNameTrimmed}" ya existe para otro ${itemNameSingular}.`, 'warning');
-            return;
-        }
-
-        await db.collection(collectionName).doc(id).update({ nombre: newNameTrimmed, nombreLower: newNameLower });
-        mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} actualizado.`, 'success');
-        await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); 
-    } catch (error) {
-        console.error(`Error actualizando ${itemNameSingular}:`, error);
-        mostrarToast('Error al actualizar.', 'error');
-    }
-}
-
-async function deleteSimpleListItem(collectionName, id, name, itemNameSingular, listElement, loadingElement, itemNamePlural) {
-    if (!confirm(`¿Está seguro de que desea eliminar el ${itemNameSingular} "${name}" (ID: ${id})?\nEsta acción no se puede deshacer.`)) return;
-    try {
-        await db.collection(collectionName).doc(id).delete();
-        mostrarToast(`${itemNameSingular.charAt(0).toUpperCase() + itemNameSingular.slice(1)} eliminado.`, 'success');
-        await loadSimpleList(collectionName, listElement, loadingElement, itemNameSingular, itemNamePlural); 
-    } catch (error) {
-        console.error(`Error eliminando ${itemNameSingular}:`, error);
-        mostrarToast('Error al eliminar.', 'error');
-    }
-}
-
-// --- Funciones Específicas para Materiales ---
-async function loadMateriales() {
-    console.log("Intentando cargar: Materiales desde", COLECCION_MATERIALES); 
-    loadingMateriales.style.display = 'block'; 
-    loadingMateriales.textContent = 'Cargando materiales...';
-    loadingMateriales.style.color = '#777';
-    materialesTable.style.display = 'none'; 
-    materialesTableBody.innerHTML = '';
-    try {
-        const snapshot = await db.collection(COLECCION_MATERIALES).orderBy('categoria').orderBy('code').get();
-        console.log(`Snapshot recibido para Materiales. Vacío: ${snapshot.empty}, Tamaño: ${snapshot.size}`); 
-        if (snapshot.empty) { 
-            loadingMateriales.textContent = 'No hay materiales definidos. Añada el primero.'; 
-            loadingMateriales.style.display = 'block';
-            materialesTable.style.display = 'none';
-            return; 
-        }
-        snapshot.forEach(doc => {
-            const data = doc.data(); 
-             if (!data.code || !data.description || !data.categoria) { 
-                 console.warn(`Documento ${doc.id} en ${COLECCION_MATERIALES} le faltan campos (code, description, categoria). Omitiendo.`);
-                 return; 
-            }
-            const tr = document.createElement('tr'); tr.dataset.id = doc.id;
-            const createCell = (text) => { const td = document.createElement('td'); td.textContent = text || '-'; return td; };
-            tr.appendChild(createCell(data.code)); tr.appendChild(createCell(data.description)); tr.appendChild(createCell(data.categoria));
-            const tdActions = document.createElement('td'); tdActions.classList.add('data-actions');
-            const editBtn = document.createElement('button'); editBtn.textContent = 'Editar'; editBtn.classList.add('btn-edit');
-            editBtn.onclick = () => editMaterial(doc.id, data); tdActions.appendChild(editBtn);
-            const deleteBtn = document.createElement('button'); deleteBtn.textContent = 'Borrar'; deleteBtn.classList.add('btn-delete');
-            deleteBtn.onclick = () => deleteMaterial(doc.id, data.code); tdActions.appendChild(deleteBtn);
-            tr.appendChild(tdActions); materialesTableBody.appendChild(tr);
-        });
-        loadingMateriales.style.display = 'none'; 
-        materialesTable.style.display = 'table';
-    } catch (error) {
-        console.error(`Error cargando ${COLECCION_MATERIALES}:`, error); 
-        let errorMessage = `Error al cargar materiales.`;
-         if (error.code === 'failed-precondition') {
-             errorMessage = `Error: Falta índice en Firestore para ordenar materiales. Cree índices para 'categoria' (ASC) y 'code' (ASC).`;
-             console.error(`SUGERENCIA: Ve a Firestore -> Índices y crea índices compuestos si es necesario.`);
-        } else if (error.code === 'permission-denied') {
-            errorMessage = `Error: Permisos insuficientes para leer materiales. Verifique las Reglas de Seguridad.`;
-        } else {
-             errorMessage = `Error cargando materiales: ${error.message}`;
-        }
-        loadingMateriales.textContent = errorMessage; 
-        loadingMateriales.style.color = 'red'; 
-        loadingMateriales.style.display = 'block';
-        materialesTable.style.display = 'none';
-        mostrarToast(errorMessage, 'error');
-    }
-}
-
-async function addMaterial() {
-    const code = newMaterialCodeInput.value.trim();
-    const description = newMaterialDescInput.value.trim();
-    const categoria = newMaterialCatInput.value.trim();
-    if (!code || !description || !categoria) { mostrarToast('Complete Código, Descripción y Categoría.', 'warning'); return; }
-    addMaterialBtn.disabled = true; addMaterialBtn.textContent = 'Añadiendo...';
-    try {
-        // Asegúrate que existe un índice en 'code' para esta consulta
-        const q = db.collection(COLECCION_MATERIALES).where('code', '==', code).limit(1);
-        const existing = await q.get();
-        if (!existing.empty) {
-            mostrarToast(`El código de material "${code}" ya existe.`, 'warning');
-            newMaterialCodeInput.focus();
-        } else {
-            await db.collection(COLECCION_MATERIALES).add({ code: code, description: description, categoria: categoria });
-            mostrarToast('Material añadido con éxito.', 'success');
-            newMaterialCodeInput.value = ''; newMaterialDescInput.value = ''; newMaterialCatInput.value = '';
-            await loadMateriales(); 
-        }
-    } catch (error) {
-        console.error("Error añadiendo material:", error); 
-         let errorMessage = 'Error al añadir material.';
-         if (error.code === 'permission-denied') {
-             errorMessage = 'Error: Permisos insuficientes para añadir material.';
-         } else if (error.code === 'failed-precondition' && error.message.includes('index')) {
-              errorMessage = 'Error: Falta índice en Firestore para verificar código duplicado.';
-         }
-        mostrarToast(errorMessage, 'error');
-    } finally {
-        addMaterialBtn.disabled = false; addMaterialBtn.textContent = '➕ Añadir';
-    }
-}
-
-async function editMaterial(id, currentData) {
-    const newCode = prompt(`Editar Código (Actual: ${currentData.code}):`, currentData.code);
-    if (newCode === null) return; 
-    const newDesc = prompt(`Editar Descripción (Actual: ${currentData.description}):`, currentData.description);
-    if (newDesc === null) return; 
-    const newCat = prompt(`Editar Categoría (Actual: ${currentData.categoria}):`, currentData.categoria);
-    if (newCat === null) return; 
-
-    const newCodeTrimmed = newCode.trim();
-    const newDescTrimmed = newDesc.trim();
-    const newCatTrimmed = newCat.trim();
-
-    if (!newCodeTrimmed || !newDescTrimmed || !newCatTrimmed) {
-         mostrarToast('Código, Descripción y Categoría no pueden quedar vacíos.', 'warning');
-         return;
-    }
-
-    const updatedData = { code: newCodeTrimmed, description: newDescTrimmed, categoria: newCatTrimmed };
-    
-    if (updatedData.code === currentData.code && updatedData.description === currentData.description && updatedData.categoria === currentData.categoria) {
-         mostrarToast('No se realizaron cambios.', 'info');
-         return;
-    }
-
-    try {
-        if (newCodeTrimmed !== currentData.code) {
-             // Asegúrate que existe un índice en 'code' para esta consulta
-            const q = db.collection(COLECCION_MATERIALES).where('code', '==', newCodeTrimmed).limit(1);
-            const existing = await q.get();
-            if (!existing.empty && existing.docs[0].id !== id) {
-                 mostrarToast(`El código de material "${newCodeTrimmed}" ya existe.`, 'warning');
-                 return;
-            }
-        }
-        await db.collection(COLECCION_MATERIALES).doc(id).update(updatedData);
-        mostrarToast('Material actualizado.', 'success'); 
-        await loadMateriales(); 
-    } catch (error) {
-        console.error("Error actualizando material:", error); 
-        let errorMessage = 'Error al actualizar.';
-         if (error.code === 'permission-denied') {
-             errorMessage = 'Error: Permisos insuficientes para actualizar material.';
-         } else if (error.code === 'failed-precondition' && error.message.includes('index')) {
-              errorMessage = 'Error: Falta índice en Firestore para verificar código duplicado.';
-         }
-        mostrarToast(errorMessage, 'error');
-    }
-}
-
-async function deleteMaterial(id, code) {
-    if (!confirm(`¿Está seguro de que desea eliminar el material "${code}" (ID: ${id})?\nEsta acción no se puede deshacer.`)) return;
-    try {
-        await db.collection(COLECCION_MATERIALES).doc(id).delete();
-        mostrarToast('Material eliminado.', 'success'); 
-        await loadMateriales(); 
-    } catch (error) {
-        console.error("Error eliminando material:", error); 
-         let errorMessage = 'Error al eliminar.';
-         if (error.code === 'permission-denied') {
-             errorMessage = 'Error: Permisos insuficientes para eliminar material.';
-         }
-        mostrarToast(errorMessage, 'error');
-    }
-}
-
-// --- Inicialización ---
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM Cargado. Iniciando carga de datos maestros...");
-    
-    loadSimpleList(COLECCION_CLIENTES, clienteList, loadingClientes, 'cliente', 'clientes');
-    loadSimpleList(COLECCION_TIPOS_CX, tipoCxList, loadingTiposCx, 'tipo de cirugía', 'tipos de cirugía');
-    loadMateriales();
-
-    addClienteBtn.addEventListener('click', () => addSimpleListItem(COLECCION_CLIENTES, newClienteNameInput, addClienteBtn, 'cliente', clienteList, loadingClientes, 'clientes'));
-    addTipoCxBtn.addEventListener('click', () => addSimpleListItem(COLECCION_TIPOS_CX, newTipoCxNameInput, addTipoCxBtn, 'tipo de cirugía', tipoCxList, loadingTiposCx, 'tipos de cirugía'));
-    addMaterialBtn.addEventListener('click', addMaterial);
-
-    newClienteNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addClienteBtn.click(); });
-    newTipoCxNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTipoCxBtn.click(); });
-    [newMaterialCodeInput, newMaterialDescInput, newMaterialCatInput].forEach(input => {
-        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addMaterialBtn.click(); });
-    });
-    console.log("Listeners de Admin añadidos.");
-});
-
-// --- END OF FILE datos_admin.js ---
+  <script src="datos_admin.js"></script>
+</body>
+</html>
