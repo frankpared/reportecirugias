@@ -3,19 +3,139 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Reportes Guardados | Districorr</title>
+  <title>Panel de Control y Reportes | Districorr</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Lato&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Estilos adicionales para la sección de estadísticas y gráficos */
+    .admin-stats-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 30px;
+      padding: 15px; /* Un poco menos de padding */
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    }
+    .stat-card {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+      flex-grow: 1; /* Para que se distribuyan mejor */
+      flex-basis: 220px; /* Base para que no sean demasiado angostos */
+      min-width: 200px; 
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .stat-card h4 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-size: 0.95em; /* Un poco más pequeño */
+      color: #0056b3;
+      font-weight: 600;
+    }
+    .stat-card .stat-value {
+      font-size: 1.8em; /* Un poco más pequeño */
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 10px;
+      line-height: 1.1;
+    }
+    .stat-card .chart-container {
+        min-height: 180px; /* Altura ajustada */
+        max-height: 220px;
+        position: relative;
+        width: 100%; /* Asegurar que ocupe el ancho de la tarjeta */
+    }
+    #exportBtnContainer {
+        text-align: right;
+        margin-bottom: 15px;
+    }
+    #exportBtnContainer button { /* Estilo para el botón de exportar */
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+    #newReportNotification {
+        display: none;
+        background-color: #e0f2f7; /* Azul más suave */
+        color: #004085; /* Texto más oscuro para contraste */
+        padding: 12px 18px;
+        border: 1px solid #b8dcf0;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #newReportNotification a {
+        color: #005cbf;
+        font-weight: 600;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    #newReportNotification a:hover {
+        color: #003f7f;
+    }
+
+    /* Ajustes responsivos para las tarjetas de estadísticas */
+    @media (max-width: 768px) {
+      .admin-stats-container {
+        flex-direction: column; /* Apilar en móvil */
+      }
+      .stat-card {
+        flex-basis: auto; /* Permitir que ocupen todo el ancho */
+      }
+    }
+  </style>
 </head>
 
 <body class="fondo-dinamico admin-page">
   <div class="container">
     <header style="margin-bottom: 30px;">
       <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 80px; display: block; margin: 0 auto 15px auto;" />
-      <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">📋 Reportes Guardados</h2>
+      <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">📊 Panel de Control y Reportes</h2>
     </header>
+
+    <!-- Sección de Estadísticas y Gráficos -->
+    <div class="admin-stats-container">
+        <div class="stat-card">
+            <h4>Reportes Totales</h4>
+            <p class="stat-value" id="statTotalReportes">Cargando...</p>
+        </div>
+        <div class="stat-card">
+            <h4>Reportes Hoy</h4>
+            <p class="stat-value" id="statReportesHoy">Cargando...</p>
+        </div>
+        <div class="stat-card">
+            <h4>Reportes (Últimos 7 días)</h4>
+            <div class="chart-container">
+                <canvas id="reportesSemanaChart"></canvas>
+            </div>
+        </div>
+        <div class="stat-card">
+            <h4>Top 5 Tipos de Cirugía</h4>
+            <div class="chart-container">
+                <canvas id="topTiposCxChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="newReportNotification">
+        ¡Hay nuevos reportes! <a href="#" onclick="cargarReportesAdmin(true); this.parentNode.style.display='none'; return false;">Actualizar lista para verlos</a>
+    </div>
+
+    <div id="exportBtnContainer">
+        <button onclick="exportTableToCSV('reportesTableAdmin', 'reportes_districorr.csv')" class="btn-secundario">📄 Exportar a CSV</button>
+    </div>
 
     <div class="admin-controls">
       <input type="text" id="searchInputAdmin" class="form-control" placeholder="Buscar por Cliente, Paciente o Médico..." onkeyup="filtrarTablaAdmin()">
@@ -31,7 +151,7 @@
             <th>Médico</th>
             <th>Tipo Cirugía</th>
             <th>Guardado En</th>
-            <th>Acciones</th>
+            <th class="col-acciones-header">Acciones</th>
           </tr>
         </thead>
         <tbody id="reporte-rows-admin">
@@ -48,25 +168,19 @@
   <!-- Modal para Ver Detalle del Reporte -->
   <div id="modalReporteDetalle" class="modal-overlay" style="display: none;">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3>Detalle del Reporte</h3>
-        <button class="modal-close-btn" onclick="cerrarModalReporteDetalle()">×</button>
-      </div>
+      <div class="modal-header"><h3>Detalle del Reporte</h3><button class="modal-close-btn" onclick="cerrarModalReporteDetalle()">×</button></div>
       <div class="modal-body" id="modalReporteDetalleBody">
         <!-- El contenido del reporte se insertará aquí -->
       </div>
-      <div class="modal-footer">
-         <button type="button" class="btn-link" onclick="cerrarModalReporteDetalle()">Cerrar</button>
-      </div>
+      <div class="modal-footer"><button type="button" class="btn-link" onclick="cerrarModalReporteDetalle()">Cerrar</button></div>
     </div>
   </div>
 
   <div id="toast" class="toast-notification" style="display:none;"></div>
 
-
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E",
+const firebaseConfig = {
+      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // ASEGÚRATE QUE SEA TU API KEY REAL
       authDomain: "cirugia-reporte.firebaseapp.com",
       projectId: "cirugia-reporte",
       storageBucket: "cirugia-reporte.appspot.com",
@@ -77,11 +191,15 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    let todosLosReportes = []; // Para guardar los reportes y filtrar en cliente
+    let todosLosReportes = []; 
+    let reportesSemanaChartInstance = null;
+    let topTiposCxChartInstance = null;
+    let listenerNuevosReportesUnsubscribe = null; // Para detener el listener si es necesario
 
     db.enablePersistence().catch((err) => {
-        if (err.code == 'failed-precondition') console.warn("Persistencia admin falló");
+        if (err.code == 'failed-precondition') console.warn("Persistencia admin falló: Múltiples pestañas?");
         else if (err.code == 'unimplemented') console.warn("Persistencia admin no soportada.");
+        else console.error("Error habilitando persistencia admin:", err);
     });
 
     function mostrarToastAdmin(mensaje, tipo = 'info') {
@@ -102,33 +220,29 @@
             const partes = fechaISO.split('-');
             if (partes.length !== 3) return fechaISO;
             const fecha = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]), 12, 0, 0);
-            return fecha.toLocaleDateString('es-AR', { year: '2-digit', month: '2-digit', day: '2-digit' }); // Año corto
+            return fecha.toLocaleDateString('es-AR', { year: '2-digit', month: '2-digit', day: '2-digit' });
         } catch (e) { return fechaISO; }
     }
 
     function formatearTimestamp(timestamp) {
         if (!timestamp || !timestamp.toDate) return '-';
         try {
-            return timestamp.toDate().toLocaleString('es-AR', {
-                year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
-            });
+            return timestamp.toDate().toLocaleString('es-AR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         } catch (e) { return '-'; }
     }
-
-    // Funciones para generar HTML del reporte (copiadas/adaptadas de script.js)
+    
     function formatearMaterialParaHTMLAdmin(materialTexto) {
         if (!materialTexto) return '<p>No especificado.</p>';
         const lineas = materialTexto.split('\n').filter(linea => linea.trim() !== '');
         if (lineas.length === 0) return '<p>No especificado.</p>';
         let tablaHTML = '<table class="material-table">';
         lineas.forEach(linea => { tablaHTML += `<tr><td>${linea.trim()}</td></tr>`; });
-        tablaHTML += '</table>';
-        return tablaHTML;
+        return tablaHTML + '</table>';
     }
 
     function generarHTMLReporteAdmin(datos) {
         const fraseFinal = "\n\nSaludos, quedo al pendiente.";
-        const fechaCirugiaFormateada = formatearFechaLocal(datos.fechaCirugia); // Usar la local para el modal
+        const fechaCirugiaFormateada = formatearFechaLocal(datos.fechaCirugia);
         const contenidoMaterialHTML = formatearMaterialParaHTMLAdmin(datos.material);
         return `
         <div class="reporte-contenido reporte-box">
@@ -152,16 +266,12 @@
         </div>`;
     }
 
-
     function abrirModalReporteDetalle(reporteData) {
         const modal = document.getElementById('modalReporteDetalle');
         const body = document.getElementById('modalReporteDetalleBody');
         if (!modal || !body) return;
-
-        body.innerHTML = generarHTMLReporteAdmin(reporteData); // Usar la función para generar el HTML
-
-        modal.classList.add('visible');
-        modal.style.display = 'flex';
+        body.innerHTML = generarHTMLReporteAdmin(reporteData);
+        modal.classList.add('visible'); modal.style.display = 'flex';
     }
 
     function cerrarModalReporteDetalle() {
@@ -171,83 +281,229 @@
             setTimeout(() => { modal.style.display = 'none'; document.getElementById('modalReporteDetalleBody').innerHTML = ''; }, 300);
         }
     }
-    const modalDetalle = document.getElementById('modalReporteDetalle');
-    if (modalDetalle) {
-        modalDetalle.addEventListener('click', function(event) {
-            if (event.target === this) cerrarModalReporteDetalle();
-        });
-    }
 
     function reenviarWhatsAppAdmin(reporteData) {
         const reporteHTMLTemporal = generarHTMLReporteAdmin(reporteData);
-        const divTemporal = document.createElement('div');
-        divTemporal.innerHTML = reporteHTMLTemporal;
+        const divTemporal = document.createElement('div'); divTemporal.innerHTML = reporteHTMLTemporal;
         const textoPlano = `*Reporte de Cirugía Districorr (Reenvío Admin)*\n\n${divTemporal.querySelector('.reporte-contenido').innerText}`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoPlano)}`, '_blank');
         mostrarToastAdmin('Preparando reenvío por WhatsApp...', 'info');
     }
 
+    function exportTableToCSV(tableId, filename) {
+        let csv = [];
+        const table = document.getElementById(tableId);
+        const rows = table.querySelectorAll("tr");
+        
+        for (const row of rows) {
+            if (row.classList.contains('fila-oculta') && row.parentNode.tagName === 'TBODY') continue;
+            const cols = row.querySelectorAll("td, th");
+            let rowData = [];
+            for (const col of cols) {
+                if (col.classList.contains('col-acciones') || col.classList.contains('col-acciones-header')) continue;
+                let data = col.innerText.replace(/"/g, '""');
+                rowData.push(`"${data}"`);
+            }
+            if (rowData.length > 0) csv.push(rowData.join(",")); // Solo añadir si tiene datos (evitar fila de encabezado vacía si se omite)
+        }
 
-    function cargarReportesAdmin() {
-      const tbody = document.getElementById("reporte-rows-admin");
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>`;
-
-      db.collection("reportes").orderBy("timestamp", "desc").limit(150) // Un poco más para admin
-        .get()
-        .then(snapshot => {
-          tbody.innerHTML = '';
-          todosLosReportes = []; // Limpiar antes de llenar
-          if (snapshot.empty) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: #777;">No hay reportes.</td></tr>`;
+        if (csv.length === 0) {
+            mostrarToastAdmin('No hay datos para exportar (posiblemente todos filtrados).', 'warning');
             return;
+        }
+
+        const csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+        const downloadLink = document.createElement("a");
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        mostrarToastAdmin('Tabla exportada a CSV.', 'success');
+    }
+
+    async function cargarEstadisticasYGraficos() {
+        if (todosLosReportes.length === 0) { // Si no hay reportes, no mostrar nada o poner ceros.
+             document.getElementById('statTotalReportes').textContent = '0';
+             document.getElementById('statReportesHoy').textContent = '0';
+            // Podrías también limpiar los canvas de los gráficos o mostrar "No hay datos".
+            if (reportesSemanaChartInstance) reportesSemanaChartInstance.destroy();
+            if (topTiposCxChartInstance) topTiposCxChartInstance.destroy();
+            // Opcional: Mostrar mensaje en los contenedores de gráficos
+            document.getElementById('reportesSemanaChart').parentNode.innerHTML = '<p style="text-align:center; color:#777; margin-top:50px;">No hay datos para el gráfico.</p>';
+            document.getElementById('topTiposCxChart').parentNode.innerHTML = '<p style="text-align:center; color:#777; margin-top:50px;">No hay datos para el gráfico.</p>';
+            return;
+        }
+
+        document.getElementById('statTotalReportes').textContent = todosLosReportes.length;
+        const hoy = new Date();
+        const inicioHoyTS = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0).getTime();
+        const finHoyTS = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59).getTime();
+        const reportesHoy = todosLosReportes.filter(r => {
+            if (!r.timestamp || !r.timestamp.toDate) return false;
+            const fechaReporteTS = r.timestamp.toDate().getTime();
+            return fechaReporteTS >= inicioHoyTS && fechaReporteTS <= finHoyTS;
+        });
+        document.getElementById('statReportesHoy').textContent = reportesHoy.length;
+
+        const reportesPorDia = {};
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(); d.setDate(hoy.getDate() - i);
+            const key = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}`;
+            reportesPorDia[key] = 0;
+        }
+        todosLosReportes.forEach(r => {
+            if (!r.timestamp || !r.timestamp.toDate) return;
+            const fechaReporte = r.timestamp.toDate();
+            // Solo considerar reportes dentro de los últimos 7 días
+            const haceSieteDias = new Date();
+            haceSieteDias.setDate(hoy.getDate() - 6); // Incluye hoy y 6 días atrás
+            haceSieteDias.setHours(0,0,0,0);
+
+            if (fechaReporte >= haceSieteDias) {
+                const key = `${fechaReporte.getDate().toString().padStart(2,'0')}/${(fechaReporte.getMonth()+1).toString().padStart(2,'0')}`;
+                if (reportesPorDia[key] !== undefined) reportesPorDia[key]++;
+            }
+        });
+        
+        const ctxSemana = document.getElementById('reportesSemanaChart');
+        // Si el canvas fue reemplazado por un <p>, necesitamos recrearlo o manejarlo.
+        // Por ahora, asumimos que el canvas sigue ahí si hay datos.
+        if (ctxSemana.tagName === 'CANVAS') {
+            if (reportesSemanaChartInstance) reportesSemanaChartInstance.destroy();
+            reportesSemanaChartInstance = new Chart(ctxSemana, {
+                type: 'line', data: { labels: Object.keys(reportesPorDia), datasets: [{ label: 'Reportes', data: Object.values(reportesPorDia), borderColor: 'rgb(0, 123, 255)', tension: 0.1, fill: false }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } } }
+            });
+        }
+
+
+        const conteoTiposCx = {};
+        todosLosReportes.forEach(r => { if (r.tipoCirugia && r.tipoCirugia.trim() !== '') conteoTiposCx[r.tipoCirugia] = (conteoTiposCx[r.tipoCirugia] || 0) + 1; });
+        const sortedTiposCx = Object.entries(conteoTiposCx).sort(([,a],[,b]) => b-a).slice(0, 5);
+        
+        const ctxTipos = document.getElementById('topTiposCxChart');
+        if (ctxTipos.tagName === 'CANVAS') {
+            if (topTiposCxChartInstance) topTiposCxChartInstance.destroy();
+            topTiposCxChartInstance = new Chart(ctxTipos, {
+                type: 'doughnut', data: { labels: sortedTiposCx.map(item => item[0]), datasets: [{ data: sortedTiposCx.map(item => item[1]), backgroundColor: ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6c757d'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth:15, padding:15 } } } }
+            });
+        }
+    }
+
+    async function cargarReportesAdmin(forzarRecargaCompleta = false) {
+      const tbody = document.getElementById("reporte-rows-admin");
+      let actualizarVista = forzarRecargaCompleta || todosLosReportes.length === 0;
+
+      if (actualizarVista) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: #555;">Cargando y procesando reportes...</td></tr>`;
+          try {
+            const snapshot = await db.collection("reportes").orderBy("timestamp", "desc").limit(250).get(); // Límite mayor para estadísticas
+            todosLosReportes = [];
+            snapshot.forEach(doc => { const data = doc.data(); data.id = doc.id; todosLosReportes.push(data); });
+          } catch (error) {
+              console.error('Error cargando reportes admin:', error);
+              tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:red;">Error al cargar datos.</td></tr>`;
+              // Limpiar contadores si falla la carga
+              document.getElementById('statTotalReportes').textContent = 'Error';
+              document.getElementById('statReportesHoy').textContent = 'Error';
+              return;
           }
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            data.id = doc.id; // Guardar el ID del documento para futuras acciones
-            todosLosReportes.push(data); // Guardar para filtrar
+      }
 
-            const tr = document.createElement("tr");
-            tr.dataset.reporteId = doc.id; // Para identificar la fila
-
-            const createCell = (text, className = '') => {
-                const td = document.createElement('td');
-                td.textContent = text || '-';
-                if(className) td.classList.add(className);
-                return td;
-            };
-
-            tr.appendChild(createCell(formatearFechaLocal(data.fechaCirugia)));
-            tr.appendChild(createCell(data.cliente, 'col-cliente'));
-            tr.appendChild(createCell(data.paciente, 'col-paciente'));
-            tr.appendChild(createCell(data.medico, 'col-medico'));
-            tr.appendChild(createCell(data.tipoCirugia ? (data.tipoCirugia.length > 25 ? data.tipoCirugia.substring(0,25)+'...' : data.tipoCirugia) : '-', 'col-tipocx'));
-            tr.appendChild(createCell(formatearTimestamp(data.timestamp)));
-
-            // Celda de Acciones
-            const tdActions = document.createElement('td');
-            tdActions.classList.add('col-acciones');
-
-            const btnVer = document.createElement('button');
-            btnVer.textContent = 'Ver';
-            btnVer.classList.add('btn-admin-action', 'btn-admin-ver');
-            btnVer.onclick = function() { abrirModalReporteDetalle(data); }; // CORREGIDO
-            tdActions.appendChild(btnVer);
-
-            const btnWsp = document.createElement('button');
-            btnWsp.innerHTML = '📲'; // Icono WhatsApp
-            btnWsp.title = 'Reenviar por WhatsApp';
-            btnWsp.classList.add('btn-admin-action', 'btn-admin-wsp');
-            btnWsp.onclick = function() { reenviarWhatsAppAdmin(data); }; // CORREGIDO
-            tdActions.appendChild(btnWsp);
-
-            // Aquí podrías añadir más botones (Editar, Eliminar) en el futuro
-            tr.appendChild(tdActions);
-            tbody.appendChild(tr);
+      tbody.innerHTML = ''; 
+      if (todosLosReportes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados.</td></tr>`;
+      } else {
+          todosLosReportes.forEach(data => {
+            const tr = document.createElement("tr"); tr.dataset.reporteId = data.id;
+            const createCellInternal = (text, className = '') => { const td = document.createElement('td'); td.textContent = text || '-'; if(className) td.classList.add(className); return td; };
+            tr.appendChild(createCellInternal(formatearFechaLocal(data.fechaCirugia)));
+            tr.appendChild(createCellInternal(data.cliente, 'col-cliente'));
+            tr.appendChild(createCellInternal(data.paciente, 'col-paciente'));
+            tr.appendChild(createCellInternal(data.medico, 'col-medico'));
+            tr.appendChild(createCellInternal(data.tipoCirugia ? (data.tipoCirugia.length > 25 ? data.tipoCirugia.substring(0,22)+'...' : data.tipoCirugia) : '-', 'col-tipocx'));
+            tr.appendChild(createCellInternal(formatearTimestamp(data.timestamp)));
+            const tdActions = document.createElement('td'); tdActions.classList.add('col-acciones');
+            const btnVer = document.createElement('button'); btnVer.textContent = 'Ver'; btnVer.classList.add('btn-admin-action', 'btn-admin-ver'); btnVer.onclick = function() { abrirModalReporteDetalle(data); }; tdActions.appendChild(btnVer);
+            const btnWsp = document.createElement('button'); btnWsp.innerHTML = '📲'; btnWsp.title = 'Reenviar WhatsApp'; btnWsp.classList.add('btn-admin-action', 'btn-admin-wsp'); btnWsp.onclick = function() { reenviarWhatsAppAdmin(data); }; tdActions.appendChild(btnWsp);
+            tr.appendChild(tdActions); tbody.appendChild(tr);
           });
-        })
-        .catch(error => {
-          console.error('Error cargando reportes admin:', error);
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:red;">Error al cargar.</td></tr>`;
+      }
+      
+      if (actualizarVista || forzarRecargaCompleta) { // Solo recalcular gráficos si los datos se recargaron
+         // Si los contenedores de gráficos fueron reemplazados por <p>, necesitamos recrear los canvas
+         const chartSemanaContainer = document.getElementById('reportesSemanaChart').parentNode;
+         if (chartSemanaContainer.querySelector('p')) {
+            chartSemanaContainer.innerHTML = '<canvas id="reportesSemanaChart"></canvas>';
+         }
+         const chartTiposContainer = document.getElementById('topTiposCxChart').parentNode;
+         if (chartTiposContainer.querySelector('p')) {
+            chartTiposContainer.innerHTML = '<canvas id="topTiposCxChart"></canvas>';
+         }
+        await cargarEstadisticasYGraficos(); // Usar await para asegurar que los gráficos se generen
+      }
+      filtrarTablaAdmin(); 
+      if (forzarRecargaCompleta) {
+         document.getElementById('newReportNotification').style.display = 'none';
+         if (todosLosReportes.length > 0 && todosLosReportes[0].timestamp) {
+             localStorage.setItem('adminLastReportTimestamp', todosLosReportes[0].timestamp.toMillis());
+         }
+      }
+    }
+
+    function escucharNuevosReportes() {
+        if (listenerNuevosReportesUnsubscribe) listenerNuevosReportesUnsubscribe(); // Detener listener anterior si existe
+
+        let adminLastKnownTimestamp = localStorage.getItem('adminLastReportTimestamp') ? parseInt(localStorage.getItem('adminLastReportTimestamp')) : 0;
+        
+        // Si no hay reportes cargados, tomar el timestamp del más reciente en la DB como referencia inicial
+        // para no notificar sobre todos los existentes al principio.
+        if (todosLosReportes.length === 0 && adminLastKnownTimestamp === 0) {
+            db.collection("reportes").orderBy("timestamp", "desc").limit(1).get().then(snapshot => {
+                if (!snapshot.empty) {
+                    adminLastKnownTimestamp = snapshot.docs[0].data().timestamp.toMillis();
+                    localStorage.setItem('adminLastReportTimestamp', adminLastKnownTimestamp);
+                }
+                iniciarListenerReal(adminLastKnownTimestamp);
+            });
+        } else {
+            iniciarListenerReal(adminLastKnownTimestamp);
+        }
+    }
+
+    function iniciarListenerReal(timestampReferencia) {
+        let query = db.collection("reportes").orderBy("timestamp", "desc");
+        // Si tenemos una referencia, solo escuchar por los que son más nuevos
+        if (timestampReferencia > 0) {
+            query = query.where("timestamp", ">", firebase.firestore.Timestamp.fromMillis(timestampReferencia));
+        }
+
+        listenerNuevosReportesUnsubscribe = query.onSnapshot((snapshot) => {
+            let hayNuevos = false;
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                    // Verificamos que el timestamp del nuevo documento sea realmente posterior
+                    // al de referencia para evitar notificaciones por cargas iniciales del listener.
+                    const nuevoTimestampMillis = change.doc.data().timestamp.toMillis();
+                    if (nuevoTimestampMillis > timestampReferencia) {
+                        hayNuevos = true;
+                        // Actualizamos la referencia para la próxima vez
+                        if (nuevoTimestampMillis > localStorage.getItem('adminLastReportTimestamp')) {
+                             localStorage.setItem('adminLastReportTimestamp', nuevoTimestampMillis);
+                        }
+                    }
+                }
+            });
+
+            if (hayNuevos && document.getElementById('newReportNotification').style.display === 'none') {
+                document.getElementById('newReportNotification').style.display = 'block';
+                mostrarToastAdmin('¡Nuevos reportes disponibles!', 'info');
+            }
+        }, (error) => {
+            console.error("Error escuchando nuevos reportes: ", error);
         });
     }
 
@@ -256,36 +512,55 @@
         const filter = input.value.toUpperCase().trim();
         const tbody = document.getElementById("reporte-rows-admin");
         const rows = tbody.getElementsByTagName("tr");
+        let hayResultados = false;
 
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
-            if (!row.dataset.reporteId) { // Si es la fila de "cargando" o "no hay reportes"
-                 row.classList.remove('fila-oculta');
-                 continue;
-            }
-
+            if (!row.dataset.reporteId) { row.classList.remove('fila-oculta'); continue; }
             const reporteId = row.dataset.reporteId;
             const reporteData = todosLosReportes.find(r => r.id === reporteId);
-
             if (reporteData) {
                 const cliente = (reporteData.cliente || "").toUpperCase();
                 const paciente = (reporteData.paciente || "").toUpperCase();
                 const medico = (reporteData.medico || "").toUpperCase();
-
-                if (cliente.includes(filter) || paciente.includes(filter) || medico.includes(filter)) {
+                if (filter === "" || cliente.includes(filter) || paciente.includes(filter) || medico.includes(filter)) {
                     row.classList.remove('fila-oculta');
+                    hayResultados = true;
                 } else {
                     row.classList.add('fila-oculta');
                 }
-            } else {
-                 row.classList.add('fila-oculta'); // Ocultar si no se encuentran datos
+            } else { row.classList.add('fila-oculta'); }
+        }
+        // Opcional: Mostrar mensaje si no hay resultados de búsqueda
+        const noResultsRowId = 'no-results-row';
+        let noResultsRow = document.getElementById(noResultsRowId);
+        if (!hayResultados && filter !== "") {
+            if (!noResultsRow) {
+                noResultsRow = tbody.insertRow();
+                noResultsRow.id = noResultsRowId;
+                const cell = noResultsRow.insertCell();
+                cell.colSpan = 7; // Ajustar al número de columnas
+                cell.textContent = "No se encontraron reportes que coincidan con la búsqueda.";
+                cell.style.textAlign = "center";
+                cell.style.padding = "20px";
+                cell.style.color = "#777";
             }
+        } else if (noResultsRow) {
+            noResultsRow.remove();
         }
     }
-
-    window.onload = function () {
-      document.body.style.backgroundColor = "#f0f2f5"; // Fondo fijo para admin
-      cargarReportesAdmin();
+    
+    window.onload = async function () {
+      document.body.style.backgroundColor = "#f0f2f5";
+      await cargarReportesAdmin(true); 
+      escucharNuevosReportes(); 
+      
+      const modalDetalle = document.getElementById('modalReporteDetalle');
+      if (modalDetalle) {
+          modalDetalle.addEventListener('click', function(event) {
+              if (event.target === this) cerrarModalReporteDetalle();
+          });
+      }
     };
   </script>
 </body>
