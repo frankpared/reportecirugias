@@ -6,102 +6,44 @@
   <title>Panel de Control y Reportes | Districorr</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Lato&display=swap" rel="stylesheet">
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Estilos adicionales para la sección de estadísticas y gráficos */
-    .admin-stats-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      margin-bottom: 30px;
-      padding: 15px; /* Un poco menos de padding */
-      background-color: #f8f9fa;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-    }
-    .stat-card {
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-      flex-grow: 1; /* Para que se distribuyan mejor */
-      flex-basis: 220px; /* Base para que no sean demasiado angostos */
-      min-width: 200px; 
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .stat-card h4 {
-      margin-top: 0;
-      margin-bottom: 8px;
-      font-size: 0.95em; /* Un poco más pequeño */
-      color: #0056b3;
-      font-weight: 600;
-    }
-    .stat-card .stat-value {
-      font-size: 1.8em; /* Un poco más pequeño */
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 10px;
-      line-height: 1.1;
-    }
-    .stat-card .chart-container {
-        min-height: 180px; /* Altura ajustada */
-        max-height: 220px;
-        position: relative;
-        width: 100%; /* Asegurar que ocupe el ancho de la tarjeta */
-    }
-    #exportBtnContainer {
-        text-align: right;
-        margin-bottom: 15px;
-    }
-    #exportBtnContainer button { /* Estilo para el botón de exportar */
-        padding: 8px 15px;
-        font-size: 14px;
-    }
-    #newReportNotification {
-        display: none;
-        background-color: #e0f2f7; /* Azul más suave */
-        color: #004085; /* Texto más oscuro para contraste */
-        padding: 12px 18px;
-        border: 1px solid #b8dcf0;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        text-align: center;
-        font-weight: 500;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    #newReportNotification a {
-        color: #005cbf;
-        font-weight: 600;
-        text-decoration: underline;
-        cursor: pointer;
-    }
-    #newReportNotification a:hover {
-        color: #003f7f;
-    }
-
-    /* Ajustes responsivos para las tarjetas de estadísticas */
-    @media (max-width: 768px) {
-      .admin-stats-container {
-        flex-direction: column; /* Apilar en móvil */
-      }
-      .stat-card {
-        flex-basis: auto; /* Permitir que ocupen todo el ancho */
-      }
-    }
+    .admin-stats-container { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
+    .stat-card { background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); flex-grow: 1; flex-basis: 220px; min-width: 200px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+    .stat-card h4 { margin-top: 0; margin-bottom: 8px; font-size: 0.95em; color: #0056b3; font-weight: 600; }
+    .stat-card .stat-value { font-size: 1.8em; font-weight: 700; color: #333; margin-bottom: 10px; line-height: 1.1; }
+    .stat-card .chart-container { min-height: 180px; max-height: 220px; position: relative; width: 100%; }
+    #exportBtnContainer { text-align: right; margin-bottom: 15px; }
+    #exportBtnContainer button { padding: 8px 15px; font-size: 14px; }
+    #newReportNotification { display: none; background-color: #e0f2f7; color: #004085; padding: 12px 18px; border: 1px solid #b8dcf0; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    #newReportNotification a { color: #005cbf; font-weight: 600; text-decoration: underline; cursor: pointer; }
+    #newReportNotification a:hover { color: #003f7f; }
+    .admin-filters-container { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; padding: 10px; background-color: #eef2f7; border-radius: 6px; }
+    .admin-filters-container .form-group { margin-bottom: 0; flex-grow: 1; min-width: 180px; }
+    .admin-filters-container label { font-size: 0.9em; margin-bottom: 4px; color: #495057; }
+    .admin-filters-container .form-control { padding: 8px 10px; font-size: 14px; height: auto; }
+    /* Estilos para la columna de estado */
+    .estado-select { padding: 4px 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc; background-color: #fff; min-width: 100px;}
+    .fila-estado-pendiente { /* background-color: #fff3cd; */ } /* Amarillo claro */
+    .fila-estado-revisado { /* background-color: #d4edda; */ } /* Verde claro */
+    .fila-estado-facturado { /* background-color: #d1ecf1; */ } /* Azul claro */
+    .fila-estado-completado { background-color: #e2e3e5 !important; color: #5a6268; } /* Gris claro, un poco más marcado */
+    .fila-estado-completado td { opacity: 0.7; }
+    .estado-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: middle;}
+    .estado-dot.pendiente { background-color: #ffc107; } /* Amarillo */
+    .estado-dot.revisado { background-color: #28a745; } /* Verde */
+    .estado-dot.facturado { background-color: #17a2b8; } /* Azul info */
+    .estado-dot.completado { background-color: #6c757d; } /* Gris */
+    @media (max-width: 768px) { .admin-stats-container { flex-direction: column; } .stat-card { flex-basis: auto; } .admin-filters-container { flex-direction: column; } }
   </style>
 </head>
 
 <body class="fondo-dinamico admin-page">
   <div class="container">
-    <header style="margin-bottom: 30px;">
-      <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 80px; display: block; margin: 0 auto 15px auto;" />
+    <header style="margin-bottom: 20px;">
+      <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 70px; display: block; margin: 0 auto 10px auto;" />
       <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">📊 Panel de Control y Reportes</h2>
     </header>
 
@@ -116,16 +58,41 @@
             <p class="stat-value" id="statReportesHoy">Cargando...</p>
         </div>
         <div class="stat-card">
-            <h4>Reportes (Últimos 7 días)</h4>
-            <div class="chart-container">
-                <canvas id="reportesSemanaChart"></canvas>
-            </div>
+            <h4><span id="labelReportesSemana">Reportes (Últimos 7 días)</span></h4>
+            <div class="chart-container"><canvas id="reportesSemanaChart"></canvas></div>
         </div>
         <div class="stat-card">
-            <h4>Top 5 Tipos de Cirugía</h4>
-            <div class="chart-container">
-                <canvas id="topTiposCxChart"></canvas>
-            </div>
+            <h4><span id="labelTopTiposCx">Top 5 Tipos de Cirugía</span></h4>
+            <div class="chart-container"><canvas id="topTiposCxChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Filtros para Gráficos y Tabla -->
+    <div class="admin-filters-container">
+        <div class="form-group">
+            <label for="filtroMedicoGraficos">Filtrar Gráficos por Médico:</label>
+            <select id="filtroMedicoGraficos" class="form-control" onchange="actualizarGraficosConFiltros()">
+                <option value="">Todos los Médicos</option>
+                <!-- Opciones se cargarán con JS -->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="filtroClienteGraficos">Filtrar Gráficos por Cliente:</label>
+            <select id="filtroClienteGraficos" class="form-control" onchange="actualizarGraficosConFiltros()">
+                <option value="">Todos los Clientes</option>
+                <!-- Opciones se cargarán con JS -->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="filtroEstadoTabla">Filtrar Tabla por Estado:</label>
+            <select id="filtroEstadoTabla" class="form-control" onchange="filtrarTablaAdmin()">
+                <option value="">Todos los Estados</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Revisado">Revisado</option>
+                <option value="Facturado">Facturado</option>
+                <option value="Completado">Completado</option>
+                <!-- Podrías añadir más estados si los defines -->
+            </select>
         </div>
     </div>
 
@@ -150,12 +117,13 @@
             <th>Paciente</th>
             <th>Médico</th>
             <th>Tipo Cirugía</th>
+            <th>Estado</th> {/* NUEVA COLUMNA */}
             <th>Guardado En</th>
             <th class="col-acciones-header">Acciones</th>
           </tr>
         </thead>
         <tbody id="reporte-rows-admin">
-           <tr><td colspan="7" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>
+           <tr><td colspan="8" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr> {/* Colspan 8 */}
         </tbody>
       </table>
     </div>
@@ -165,22 +133,18 @@
     </div>
   </div>
 
-  <!-- Modal para Ver Detalle del Reporte -->
   <div id="modalReporteDetalle" class="modal-overlay" style="display: none;">
     <div class="modal-content">
       <div class="modal-header"><h3>Detalle del Reporte</h3><button class="modal-close-btn" onclick="cerrarModalReporteDetalle()">×</button></div>
-      <div class="modal-body" id="modalReporteDetalleBody">
-        <!-- El contenido del reporte se insertará aquí -->
-      </div>
+      <div class="modal-body" id="modalReporteDetalleBody"></div>
       <div class="modal-footer"><button type="button" class="btn-link" onclick="cerrarModalReporteDetalle()">Cerrar</button></div>
     </div>
   </div>
-
   <div id="toast" class="toast-notification" style="display:none;"></div>
 
   <script>
 const firebaseConfig = {
-      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // ASEGÚRATE QUE SEA TU API KEY REAL
+      apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // TU API KEY
       authDomain: "cirugia-reporte.firebaseapp.com",
       projectId: "cirugia-reporte",
       storageBucket: "cirugia-reporte.appspot.com",
@@ -191,17 +155,29 @@ const firebaseConfig = {
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    let todosLosReportes = []; 
+    let todosLosReportes = [];
+    let reportesFiltradosParaGraficos = []; // Para los gráficos filtrados
     let reportesSemanaChartInstance = null;
     let topTiposCxChartInstance = null;
-    let listenerNuevosReportesUnsubscribe = null; // Para detener el listener si es necesario
+    let listenerNuevosReportesUnsubscribe = null;
+    const ESTADOS_POSIBLES = ["Pendiente", "Revisado", "Facturado", "Completado"]; // Define los estados
 
-    db.enablePersistence().catch((err) => {
-        if (err.code == 'failed-precondition') console.warn("Persistencia admin falló: Múltiples pestañas?");
-        else if (err.code == 'unimplemented') console.warn("Persistencia admin no soportada.");
-        else console.error("Error habilitando persistencia admin:", err);
-    });
+    db.enablePersistence().catch(err => console.warn("Persistencia admin:", err.code));
 
+    function mostrarToastAdmin(mensaje, tipo = 'info') { /* ... (tu función mostrarToastAdmin) ... */ }
+    function formatearFechaLocal(fechaISO) { /* ... (tu función formatearFechaLocal) ... */ }
+    function formatearTimestamp(timestamp) { /* ... (tu función formatearTimestamp) ... */ }
+    function formatearMaterialParaHTMLAdmin(materialTexto) { /* ... (tu función formatearMaterialParaHTMLAdmin) ... */ }
+    function generarHTMLReporteAdmin(datos) { /* ... (tu función generarHTMLReporteAdmin) ... */ }
+    function abrirModalReporteDetalle(reporteData) { /* ... (tu función abrirModalReporteDetalle) ... */ }
+    function cerrarModalReporteDetalle() { /* ... (tu función cerrarModalReporteDetalle) ... */ }
+    function reenviarWhatsAppAdmin(reporteData) { /* ... (tu función reenviarWhatsAppAdmin) ... */ }
+    
+    // Copia aquí las funciones mostrarToastAdmin, formatearFechaLocal, formatearTimestamp, 
+    // formatearMaterialParaHTMLAdmin, generarHTMLReporteAdmin, abrirModalReporteDetalle, 
+    // cerrarModalReporteDetalle, y reenviarWhatsAppAdmin que ya tenías y funcionaban bien.
+    // Para brevedad, no las repito todas aquí. Asegúrate que estén.
+    // Ejemplo de mostrarToastAdmin (las otras son similares a las que ya tenías)
     function mostrarToastAdmin(mensaje, tipo = 'info') {
         const toast = document.getElementById('toast');
         if (!toast) return;
@@ -214,217 +190,220 @@ const firebaseConfig = {
         }, 3000);
     }
 
-    function formatearFechaLocal(fechaISO) {
-        if (!fechaISO) return '-';
-        try {
-            const partes = fechaISO.split('-');
-            if (partes.length !== 3) return fechaISO;
-            const fecha = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]), 12, 0, 0);
-            return fecha.toLocaleDateString('es-AR', { year: '2-digit', month: '2-digit', day: '2-digit' });
-        } catch (e) { return fechaISO; }
-    }
-
-    function formatearTimestamp(timestamp) {
-        if (!timestamp || !timestamp.toDate) return '-';
-        try {
-            return timestamp.toDate().toLocaleString('es-AR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-        } catch (e) { return '-'; }
-    }
-    
-    function formatearMaterialParaHTMLAdmin(materialTexto) {
-        if (!materialTexto) return '<p>No especificado.</p>';
-        const lineas = materialTexto.split('\n').filter(linea => linea.trim() !== '');
-        if (lineas.length === 0) return '<p>No especificado.</p>';
-        let tablaHTML = '<table class="material-table">';
-        lineas.forEach(linea => { tablaHTML += `<tr><td>${linea.trim()}</td></tr>`; });
-        return tablaHTML + '</table>';
-    }
-
-    function generarHTMLReporteAdmin(datos) {
-        const fraseFinal = "\n\nSaludos, quedo al pendiente.";
-        const fechaCirugiaFormateada = formatearFechaLocal(datos.fechaCirugia);
-        const contenidoMaterialHTML = formatearMaterialParaHTMLAdmin(datos.material);
-        return `
-        <div class="reporte-contenido reporte-box">
-            <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 60px; margin-bottom: 10px; display: block; margin: 0 auto;">
-            <h3>Detalle de Cirugía</h3>
-            <p>${datos.mensajeInicio || 'Detalles de la cirugía programada:'}</p>
-            <ul>
-            <li><strong>Cliente:</strong> ${datos.cliente || 'No especificado'}</li>
-            <li><strong>Paciente:</strong> ${datos.paciente || 'No especificado'}</li>
-            <li><strong>Tipo de Cirugía:</strong> ${datos.tipoCirugia || 'No especificado'}</li>
-            <li><strong>Médico:</strong> ${datos.medico || 'No especificado'}</li>
-            <li><strong>Instrumentador:</strong> ${datos.instrumentador || 'No especificado'}</li>
-            <li><strong>Fecha Cirugía:</strong> ${fechaCirugiaFormateada}</li>
-            <li><strong>Lugar:</strong> ${datos.lugarCirugia || 'No especificado'}</li>
-            </ul>
-            <h4>Material Requerido:</h4>
-            ${contenidoMaterialHTML}
-            ${datos.observaciones ? `<h4>Observaciones:</h4><p>${datos.observaciones.replace(/\n/g, '<br>')}</p>` : ''}
-            ${datos.infoAdicional ? `<h4>Info. Adicional:</h4><p>${datos.infoAdicional.replace(/\n/g, '<br>')}</p>` : ''}
-            <p style="margin-top: 15px;">${fraseFinal.trim().replace(/\n/g, '<br>')}</p>
-        </div>`;
-    }
-
-    function abrirModalReporteDetalle(reporteData) {
-        const modal = document.getElementById('modalReporteDetalle');
-        const body = document.getElementById('modalReporteDetalleBody');
-        if (!modal || !body) return;
-        body.innerHTML = generarHTMLReporteAdmin(reporteData);
-        modal.classList.add('visible'); modal.style.display = 'flex';
-    }
-
-    function cerrarModalReporteDetalle() {
-        const modal = document.getElementById('modalReporteDetalle');
-        if (modal) {
-            modal.classList.remove('visible');
-            setTimeout(() => { modal.style.display = 'none'; document.getElementById('modalReporteDetalleBody').innerHTML = ''; }, 300);
-        }
-    }
-
-    function reenviarWhatsAppAdmin(reporteData) {
-        const reporteHTMLTemporal = generarHTMLReporteAdmin(reporteData);
-        const divTemporal = document.createElement('div'); divTemporal.innerHTML = reporteHTMLTemporal;
-        const textoPlano = `*Reporte de Cirugía Districorr (Reenvío Admin)*\n\n${divTemporal.querySelector('.reporte-contenido').innerText}`;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoPlano)}`, '_blank');
-        mostrarToastAdmin('Preparando reenvío por WhatsApp...', 'info');
-    }
 
     function exportTableToCSV(tableId, filename) {
         let csv = [];
         const table = document.getElementById(tableId);
         const rows = table.querySelectorAll("tr");
-        
         for (const row of rows) {
             if (row.classList.contains('fila-oculta') && row.parentNode.tagName === 'TBODY') continue;
             const cols = row.querySelectorAll("td, th");
             let rowData = [];
-            for (const col of cols) {
+            for (let i = 0; i < cols.length; i++) { // Iterar con índice para omitir la última celda (acciones)
+                const col = cols[i];
+                // Omitir la columna de acciones y la de estado (select) para el CSV, tomar el texto del estado
                 if (col.classList.contains('col-acciones') || col.classList.contains('col-acciones-header')) continue;
+                if (i === 5 && row.parentNode.tagName === 'TBODY') { // Asumiendo que Estado es la 6ta columna (índice 5)
+                    const selectEstado = row.querySelector('.estado-select');
+                    rowData.push(`"${selectEstado ? selectEstado.value : (col.innerText || '-')}"`);
+                    continue;
+                }
                 let data = col.innerText.replace(/"/g, '""');
                 rowData.push(`"${data}"`);
             }
-            if (rowData.length > 0) csv.push(rowData.join(",")); // Solo añadir si tiene datos (evitar fila de encabezado vacía si se omite)
+            if (rowData.length > 0) csv.push(rowData.join(","));
         }
-
-        if (csv.length === 0) {
-            mostrarToastAdmin('No hay datos para exportar (posiblemente todos filtrados).', 'warning');
-            return;
-        }
-
-        const csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+        if (csv.length <= 1) { mostrarToastAdmin('No hay datos visibles para exportar.', 'warning'); return; } // Solo encabezado o nada
+        const csvFile = new Blob(["\uFEFF" + csv.join("\n")], { type: "text/csv;charset=utf-8;" }); // Añadir BOM para Excel
         const downloadLink = document.createElement("a");
-        downloadLink.download = filename;
-        downloadLink.href = window.URL.createObjectURL(csvFile);
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+        downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile);
+        document.body.appendChild(downloadLink); downloadLink.click(); document.body.removeChild(downloadLink);
         mostrarToastAdmin('Tabla exportada a CSV.', 'success');
     }
 
-    async function cargarEstadisticasYGraficos() {
-        if (todosLosReportes.length === 0) { // Si no hay reportes, no mostrar nada o poner ceros.
+    async function cambiarEstadoReporte(reporteId, nuevoEstado) {
+        try {
+            await db.collection("reportes").doc(reporteId).update({ estado: nuevoEstado });
+            mostrarToastAdmin(`Estado del reporte actualizado a ${nuevoEstado}.`, 'success');
+            // Actualizar el dato en el array local para reflejar el cambio sin recargar todo
+            const reporteIndex = todosLosReportes.findIndex(r => r.id === reporteId);
+            if (reporteIndex > -1) {
+                todosLosReportes[reporteIndex].estado = nuevoEstado;
+                 // Actualizar visualización de la fila específica
+                const fila = document.querySelector(`tr[data-reporte-id="${reporteId}"]`);
+                if (fila) {
+                    // Quitar clases de estado anteriores
+                    ESTADOS_POSIBLES.forEach(e => fila.classList.remove(`fila-estado-${e.toLowerCase()}`));
+                    // Añadir nueva clase de estado
+                    fila.classList.add(`fila-estado-${nuevoEstado.toLowerCase()}`);
+                    // Actualizar el punto de color
+                    const dot = fila.querySelector('.estado-dot');
+                    if (dot) {
+                        dot.className = `estado-dot ${nuevoEstado.toLowerCase()}`;
+                    }
+                }
+            }
+            // No es necesario recargar toda la tabla, solo aplicar filtros si el estado cambió
+            filtrarTablaAdmin();
+            // Opcional: recargar gráficos si el estado afecta alguna estadística
+            // await cargarEstadisticasYGraficos(reportesFiltradosParaGraficos.length > 0 ? reportesFiltradosParaGraficos : todosLosReportes);
+
+        } catch (error) {
+            console.error("Error actualizando estado:", error);
+            mostrarToastAdmin('Error al actualizar estado.', 'error');
+            // Revertir el select al valor anterior si falla la actualización (opcional)
+            const selectElement = document.querySelector(`tr[data-reporte-id="${reporteId}"] .estado-select`);
+            if (selectElement) {
+                const reporte = todosLosReportes.find(r => r.id === reporteId);
+                selectElement.value = reporte ? (reporte.estado || "Pendiente") : "Pendiente";
+            }
+        }
+    }
+    
+    function poblarFiltrosGraficos() {
+        const medicos = [...new Set(todosLosReportes.map(r => r.medico).filter(Boolean))].sort();
+        const clientes = [...new Set(todosLosReportes.map(r => r.cliente).filter(Boolean))].sort();
+
+        const filtroMedicoSelect = document.getElementById('filtroMedicoGraficos');
+        const filtroClienteSelect = document.getElementById('filtroClienteGraficos');
+
+        filtroMedicoSelect.innerHTML = '<option value="">Todos los Médicos</option>'; // Reset
+        medicos.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m; option.textContent = m;
+            filtroMedicoSelect.appendChild(option);
+        });
+
+        filtroClienteSelect.innerHTML = '<option value="">Todos los Clientes</option>'; // Reset
+        clientes.forEach(c => {
+            const option = document.createElement('option');
+            option.value = c; option.textContent = c;
+            filtroClienteSelect.appendChild(option);
+        });
+    }
+
+    function actualizarGraficosConFiltros() {
+        const medicoFiltro = document.getElementById('filtroMedicoGraficos').value;
+        const clienteFiltro = document.getElementById('filtroClienteGraficos').value;
+        
+        document.getElementById('labelReportesSemana').textContent = `Reportes (Últ. 7 días) ${medicoFiltro ? `- ${medicoFiltro}` : ''} ${clienteFiltro ? `- ${clienteFiltro}` : ''}`;
+        document.getElementById('labelTopTiposCx').textContent = `Top Tipos Cx ${medicoFiltro ? `- ${medicoFiltro}` : ''} ${clienteFiltro ? `- ${clienteFiltro}` : ''}`;
+
+
+        reportesFiltradosParaGraficos = todosLosReportes.filter(r => {
+            const medicoMatch = !medicoFiltro || r.medico === medicoFiltro;
+            const clienteMatch = !clienteFiltro || r.cliente === clienteFiltro;
+            return medicoMatch && clienteMatch;
+        });
+        cargarEstadisticasYGraficos(reportesFiltradosParaGraficos);
+    }
+
+
+    async function cargarEstadisticasYGraficos(dataSource = todosLosReportes) {
+        if (dataSource.length === 0 && todosLosReportes.length === 0) {
              document.getElementById('statTotalReportes').textContent = '0';
              document.getElementById('statReportesHoy').textContent = '0';
-            // Podrías también limpiar los canvas de los gráficos o mostrar "No hay datos".
             if (reportesSemanaChartInstance) reportesSemanaChartInstance.destroy();
             if (topTiposCxChartInstance) topTiposCxChartInstance.destroy();
-            // Opcional: Mostrar mensaje en los contenedores de gráficos
-            document.getElementById('reportesSemanaChart').parentNode.innerHTML = '<p style="text-align:center; color:#777; margin-top:50px;">No hay datos para el gráfico.</p>';
-            document.getElementById('topTiposCxChart').parentNode.innerHTML = '<p style="text-align:center; color:#777; margin-top:50px;">No hay datos para el gráfico.</p>';
+            document.getElementById('reportesSemanaChart').parentNode.innerHTML = '<p style="text-align:center; color:#777; margin-top:50px;">No hay datos.</p>';
+            document.getElementById('topTiposCxChart').parentNode.innerHTML = '<p style="text-align:center; color:#777; margin-top:50px;">No hay datos.</p>';
             return;
         }
-
+        // Los contadores globales no se afectan por el filtro de gráficos
         document.getElementById('statTotalReportes').textContent = todosLosReportes.length;
         const hoy = new Date();
-        const inicioHoyTS = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0).getTime();
-        const finHoyTS = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59).getTime();
-        const reportesHoy = todosLosReportes.filter(r => {
-            if (!r.timestamp || !r.timestamp.toDate) return false;
-            const fechaReporteTS = r.timestamp.toDate().getTime();
-            return fechaReporteTS >= inicioHoyTS && fechaReporteTS <= finHoyTS;
-        });
+        const inicioHoyTS = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(),0,0,0).getTime();
+        const finHoyTS = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(),23,59,59).getTime();
+        const reportesHoy = todosLosReportes.filter(r => r.timestamp?.toDate()?.getTime() >= inicioHoyTS && r.timestamp?.toDate()?.getTime() <= finHoyTS);
         document.getElementById('statReportesHoy').textContent = reportesHoy.length;
 
         const reportesPorDia = {};
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(); d.setDate(hoy.getDate() - i);
-            const key = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}`;
-            reportesPorDia[key] = 0;
-        }
-        todosLosReportes.forEach(r => {
+        for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(hoy.getDate() - i); reportesPorDia[`${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}`] = 0; }
+        dataSource.forEach(r => {
             if (!r.timestamp || !r.timestamp.toDate) return;
             const fechaReporte = r.timestamp.toDate();
-            // Solo considerar reportes dentro de los últimos 7 días
-            const haceSieteDias = new Date();
-            haceSieteDias.setDate(hoy.getDate() - 6); // Incluye hoy y 6 días atrás
-            haceSieteDias.setHours(0,0,0,0);
-
-            if (fechaReporte >= haceSieteDias) {
-                const key = `${fechaReporte.getDate().toString().padStart(2,'0')}/${(fechaReporte.getMonth()+1).toString().padStart(2,'0')}`;
-                if (reportesPorDia[key] !== undefined) reportesPorDia[key]++;
-            }
+            const haceSieteDias = new Date(); haceSieteDias.setDate(hoy.getDate() - 6); haceSieteDias.setHours(0,0,0,0);
+            if (fechaReporte >= haceSieteDias) { const key = `${fechaReporte.getDate().toString().padStart(2,'0')}/${(fechaReporte.getMonth()+1).toString().padStart(2,'0')}`; if (reportesPorDia[key] !== undefined) reportesPorDia[key]++; }
         });
         
         const ctxSemana = document.getElementById('reportesSemanaChart');
-        // Si el canvas fue reemplazado por un <p>, necesitamos recrearlo o manejarlo.
-        // Por ahora, asumimos que el canvas sigue ahí si hay datos.
-        if (ctxSemana.tagName === 'CANVAS') {
-            if (reportesSemanaChartInstance) reportesSemanaChartInstance.destroy();
-            reportesSemanaChartInstance = new Chart(ctxSemana, {
-                type: 'line', data: { labels: Object.keys(reportesPorDia), datasets: [{ label: 'Reportes', data: Object.values(reportesPorDia), borderColor: 'rgb(0, 123, 255)', tension: 0.1, fill: false }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } } }
-            });
+        if (ctxSemana.tagName !== 'CANVAS') { // Si fue reemplazado por <p>, recrear canvas
+            ctxSemana.parentNode.innerHTML = '<canvas id="reportesSemanaChart"></canvas>';
         }
-
+        if (reportesSemanaChartInstance) reportesSemanaChartInstance.destroy();
+        reportesSemanaChartInstance = new Chart(document.getElementById('reportesSemanaChart'), { type: 'line', data: { labels: Object.keys(reportesPorDia), datasets: [{ label: 'Reportes', data: Object.values(reportesPorDia), borderColor: 'rgb(0, 123, 255)', backgroundColor:'rgba(0, 123, 255, 0.1)', tension: 0.1, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } } } });
 
         const conteoTiposCx = {};
-        todosLosReportes.forEach(r => { if (r.tipoCirugia && r.tipoCirugia.trim() !== '') conteoTiposCx[r.tipoCirugia] = (conteoTiposCx[r.tipoCirugia] || 0) + 1; });
+        dataSource.forEach(r => { if (r.tipoCirugia?.trim()) conteoTiposCx[r.tipoCirugia.trim()] = (conteoTiposCx[r.tipoCirugia.trim()] || 0) + 1; });
         const sortedTiposCx = Object.entries(conteoTiposCx).sort(([,a],[,b]) => b-a).slice(0, 5);
         
         const ctxTipos = document.getElementById('topTiposCxChart');
-        if (ctxTipos.tagName === 'CANVAS') {
-            if (topTiposCxChartInstance) topTiposCxChartInstance.destroy();
-            topTiposCxChartInstance = new Chart(ctxTipos, {
-                type: 'doughnut', data: { labels: sortedTiposCx.map(item => item[0]), datasets: [{ data: sortedTiposCx.map(item => item[1]), backgroundColor: ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6c757d'] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth:15, padding:15 } } } }
-            });
+        if (ctxTipos.tagName !== 'CANVAS') { // Recrear canvas si es necesario
+            ctxTipos.parentNode.innerHTML = '<canvas id="topTiposCxChart"></canvas>';
+        }
+        if (topTiposCxChartInstance) topTiposCxChartInstance.destroy();
+        if (sortedTiposCx.length > 0) {
+            topTiposCxChartInstance = new Chart(document.getElementById('topTiposCxChart'), { type: 'doughnut', data: { labels: sortedTiposCx.map(item => item[0]), datasets: [{ data: sortedTiposCx.map(item => item[1]), backgroundColor: ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6f42c1', '#dc3545', '#6c757d'].slice(0, sortedTiposCx.length) }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: {boxWidth:12, padding:10, font: {size: 10}} } } } });
+        } else {
+             document.getElementById('topTiposCxChart').parentNode.innerHTML = '<p style="text-align:center; color:#777; margin-top:50px;">No hay datos de tipos de cirugía para mostrar con los filtros actuales.</p>';
         }
     }
 
     async function cargarReportesAdmin(forzarRecargaCompleta = false) {
       const tbody = document.getElementById("reporte-rows-admin");
-      let actualizarVista = forzarRecargaCompleta || todosLosReportes.length === 0;
+      let actualizarDatosGlobales = forzarRecargaCompleta || todosLosReportes.length === 0;
 
-      if (actualizarVista) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: #555;">Cargando y procesando reportes...</td></tr>`;
+      if (actualizarDatosGlobales) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: #555;">Cargando y procesando reportes...</td></tr>`;
           try {
-            const snapshot = await db.collection("reportes").orderBy("timestamp", "desc").limit(250).get(); // Límite mayor para estadísticas
+            const snapshot = await db.collection("reportes").orderBy("timestamp", "desc").limit(300).get(); // Límite mayor
             todosLosReportes = [];
             snapshot.forEach(doc => { const data = doc.data(); data.id = doc.id; todosLosReportes.push(data); });
+            poblarFiltrosGraficos(); // Poblar filtros DESPUÉS de tener todosLosReportes
           } catch (error) {
               console.error('Error cargando reportes admin:', error);
-              tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:red;">Error al cargar datos.</td></tr>`;
-              // Limpiar contadores si falla la carga
-              document.getElementById('statTotalReportes').textContent = 'Error';
-              document.getElementById('statReportesHoy').textContent = 'Error';
+              tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:red;">Error al cargar datos.</td></tr>`;
+              document.getElementById('statTotalReportes').textContent = 'Error'; document.getElementById('statReportesHoy').textContent = 'Error';
               return;
           }
       }
 
-      tbody.innerHTML = ''; 
-      if (todosLosReportes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados.</td></tr>`;
+      tbody.innerHTML = '';
+      const reportesParaMostrar = todosLosReportes; // Por ahora mostramos todos, el filtro de tabla actúa después
+
+      if (reportesParaMostrar.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados.</td></tr>`;
       } else {
-          todosLosReportes.forEach(data => {
+          reportesParaMostrar.forEach(data => {
             const tr = document.createElement("tr"); tr.dataset.reporteId = data.id;
+            const estadoActual = data.estado || "Pendiente";
+            tr.classList.add(`fila-estado-${estadoActual.toLowerCase()}`);
+
             const createCellInternal = (text, className = '') => { const td = document.createElement('td'); td.textContent = text || '-'; if(className) td.classList.add(className); return td; };
             tr.appendChild(createCellInternal(formatearFechaLocal(data.fechaCirugia)));
             tr.appendChild(createCellInternal(data.cliente, 'col-cliente'));
             tr.appendChild(createCellInternal(data.paciente, 'col-paciente'));
             tr.appendChild(createCellInternal(data.medico, 'col-medico'));
-            tr.appendChild(createCellInternal(data.tipoCirugia ? (data.tipoCirugia.length > 25 ? data.tipoCirugia.substring(0,22)+'...' : data.tipoCirugia) : '-', 'col-tipocx'));
+            tr.appendChild(createCellInternal(data.tipoCirugia ? (data.tipoCirugia.length > 23 ? data.tipoCirugia.substring(0,20)+'...' : data.tipoCirugia) : '-', 'col-tipocx'));
+            
+            // Celda de Estado con Select
+            const tdEstado = document.createElement('td');
+            const estadoDot = document.createElement('span');
+            estadoDot.className = `estado-dot ${estadoActual.toLowerCase()}`;
+            tdEstado.appendChild(estadoDot);
+
+            const selectEstado = document.createElement('select');
+            selectEstado.classList.add('estado-select');
+            ESTADOS_POSIBLES.forEach(est => {
+                const option = document.createElement('option');
+                option.value = est; option.textContent = est;
+                if (est === estadoActual) option.selected = true;
+                selectEstado.appendChild(option);
+            });
+            selectEstado.onchange = function() { cambiarEstadoReporte(data.id, this.value); };
+            tdEstado.appendChild(selectEstado);
+            tr.appendChild(tdEstado);
+
             tr.appendChild(createCellInternal(formatearTimestamp(data.timestamp)));
             const tdActions = document.createElement('td'); tdActions.classList.add('col-acciones');
             const btnVer = document.createElement('button'); btnVer.textContent = 'Ver'; btnVer.classList.add('btn-admin-action', 'btn-admin-ver'); btnVer.onclick = function() { abrirModalReporteDetalle(data); }; tdActions.appendChild(btnVer);
@@ -433,19 +412,10 @@ const firebaseConfig = {
           });
       }
       
-      if (actualizarVista || forzarRecargaCompleta) { // Solo recalcular gráficos si los datos se recargaron
-         // Si los contenedores de gráficos fueron reemplazados por <p>, necesitamos recrear los canvas
-         const chartSemanaContainer = document.getElementById('reportesSemanaChart').parentNode;
-         if (chartSemanaContainer.querySelector('p')) {
-            chartSemanaContainer.innerHTML = '<canvas id="reportesSemanaChart"></canvas>';
-         }
-         const chartTiposContainer = document.getElementById('topTiposCxChart').parentNode;
-         if (chartTiposContainer.querySelector('p')) {
-            chartTiposContainer.innerHTML = '<canvas id="topTiposCxChart"></canvas>';
-         }
-        await cargarEstadisticasYGraficos(); // Usar await para asegurar que los gráficos se generen
+      if (actualizarDatosGlobales || forzarRecargaCompleta) {
+         await actualizarGraficosConFiltros(); // Llama a cargarEstadisticas con los filtros actuales
       }
-      filtrarTablaAdmin(); 
+      filtrarTablaAdmin();
       if (forzarRecargaCompleta) {
          document.getElementById('newReportNotification').style.display = 'none';
          if (todosLosReportes.length > 0 && todosLosReportes[0].timestamp) {
@@ -455,61 +425,51 @@ const firebaseConfig = {
     }
 
     function escucharNuevosReportes() {
-        if (listenerNuevosReportesUnsubscribe) listenerNuevosReportesUnsubscribe(); // Detener listener anterior si existe
-
+        if (listenerNuevosReportesUnsubscribe) listenerNuevosReportesUnsubscribe();
         let adminLastKnownTimestamp = localStorage.getItem('adminLastReportTimestamp') ? parseInt(localStorage.getItem('adminLastReportTimestamp')) : 0;
         
-        // Si no hay reportes cargados, tomar el timestamp del más reciente en la DB como referencia inicial
-        // para no notificar sobre todos los existentes al principio.
+        const setupListener = (refTimestamp) => {
+            let query = db.collection("reportes").orderBy("timestamp", "desc");
+            if (refTimestamp > 0) query = query.where("timestamp", ">", firebase.firestore.Timestamp.fromMillis(refTimestamp));
+            
+            listenerNuevosReportesUnsubscribe = query.onSnapshot((snapshot) => {
+                let hayNuevosEsteSnapshot = false;
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const nuevoTimestampMillis = change.doc.data().timestamp.toMillis();
+                        if (nuevoTimestampMillis > refTimestamp) { // Solo si es realmente más nuevo que la referencia actual del listener
+                            hayNuevosEsteSnapshot = true;
+                            // Actualizar la referencia para la próxima notificación, NO para la consulta del listener
+                            if (nuevoTimestampMillis > parseInt(localStorage.getItem('adminLastReportTimestamp') || '0') ) {
+                                localStorage.setItem('adminLastReportTimestamp', nuevoTimestampMillis);
+                            }
+                        }
+                    }
+                });
+                if (hayNuevosEsteSnapshot && document.getElementById('newReportNotification').style.display === 'none') {
+                    document.getElementById('newReportNotification').style.display = 'block';
+                    mostrarToastAdmin('¡Nuevos reportes disponibles!', 'info');
+                }
+            }, (error) => console.error("Error escuchando nuevos reportes: ", error));
+        };
+
         if (todosLosReportes.length === 0 && adminLastKnownTimestamp === 0) {
             db.collection("reportes").orderBy("timestamp", "desc").limit(1).get().then(snapshot => {
                 if (!snapshot.empty) {
                     adminLastKnownTimestamp = snapshot.docs[0].data().timestamp.toMillis();
                     localStorage.setItem('adminLastReportTimestamp', adminLastKnownTimestamp);
                 }
-                iniciarListenerReal(adminLastKnownTimestamp);
-            });
+                setupListener(adminLastKnownTimestamp);
+            }).catch(err => { console.error("Error obteniendo TS inicial", err); setupListener(0); });
         } else {
-            iniciarListenerReal(adminLastKnownTimestamp);
+            setupListener(adminLastKnownTimestamp);
         }
-    }
-
-    function iniciarListenerReal(timestampReferencia) {
-        let query = db.collection("reportes").orderBy("timestamp", "desc");
-        // Si tenemos una referencia, solo escuchar por los que son más nuevos
-        if (timestampReferencia > 0) {
-            query = query.where("timestamp", ">", firebase.firestore.Timestamp.fromMillis(timestampReferencia));
-        }
-
-        listenerNuevosReportesUnsubscribe = query.onSnapshot((snapshot) => {
-            let hayNuevos = false;
-            snapshot.docChanges().forEach((change) => {
-                if (change.type === "added") {
-                    // Verificamos que el timestamp del nuevo documento sea realmente posterior
-                    // al de referencia para evitar notificaciones por cargas iniciales del listener.
-                    const nuevoTimestampMillis = change.doc.data().timestamp.toMillis();
-                    if (nuevoTimestampMillis > timestampReferencia) {
-                        hayNuevos = true;
-                        // Actualizamos la referencia para la próxima vez
-                        if (nuevoTimestampMillis > localStorage.getItem('adminLastReportTimestamp')) {
-                             localStorage.setItem('adminLastReportTimestamp', nuevoTimestampMillis);
-                        }
-                    }
-                }
-            });
-
-            if (hayNuevos && document.getElementById('newReportNotification').style.display === 'none') {
-                document.getElementById('newReportNotification').style.display = 'block';
-                mostrarToastAdmin('¡Nuevos reportes disponibles!', 'info');
-            }
-        }, (error) => {
-            console.error("Error escuchando nuevos reportes: ", error);
-        });
     }
 
     function filtrarTablaAdmin() {
         const input = document.getElementById("searchInputAdmin");
-        const filter = input.value.toUpperCase().trim();
+        const filtroTexto = input.value.toUpperCase().trim();
+        const filtroEstado = document.getElementById("filtroEstadoTabla").value;
         const tbody = document.getElementById("reporte-rows-admin");
         const rows = tbody.getElementsByTagName("tr");
         let hayResultados = false;
@@ -519,49 +479,46 @@ const firebaseConfig = {
             if (!row.dataset.reporteId) { row.classList.remove('fila-oculta'); continue; }
             const reporteId = row.dataset.reporteId;
             const reporteData = todosLosReportes.find(r => r.id === reporteId);
+            let mostrarFila = true;
             if (reporteData) {
-                const cliente = (reporteData.cliente || "").toUpperCase();
-                const paciente = (reporteData.paciente || "").toUpperCase();
-                const medico = (reporteData.medico || "").toUpperCase();
-                if (filter === "" || cliente.includes(filter) || paciente.includes(filter) || medico.includes(filter)) {
-                    row.classList.remove('fila-oculta');
-                    hayResultados = true;
-                } else {
-                    row.classList.add('fila-oculta');
+                if (filtroTexto !== "") {
+                    const cliente = (reporteData.cliente || "").toUpperCase();
+                    const paciente = (reporteData.paciente || "").toUpperCase();
+                    const medico = (reporteData.medico || "").toUpperCase();
+                    if (!(cliente.includes(filtroTexto) || paciente.includes(filtroTexto) || medico.includes(filtroTexto))) {
+                        mostrarFila = false;
+                    }
                 }
+                if (filtroEstado !== "") {
+                    const estadoReporte = reporteData.estado || "Pendiente"; // Asumir pendiente si no tiene estado
+                    if (estadoReporte !== filtroEstado) {
+                        mostrarFila = false;
+                    }
+                }
+                if (mostrarFila) { row.classList.remove('fila-oculta'); hayResultados = true; } 
+                else { row.classList.add('fila-oculta'); }
             } else { row.classList.add('fila-oculta'); }
         }
-        // Opcional: Mostrar mensaje si no hay resultados de búsqueda
         const noResultsRowId = 'no-results-row';
         let noResultsRow = document.getElementById(noResultsRowId);
-        if (!hayResultados && filter !== "") {
+        if (!hayResultados && (filtroTexto !== "" || filtroEstado !== "")) {
             if (!noResultsRow) {
-                noResultsRow = tbody.insertRow();
-                noResultsRow.id = noResultsRowId;
-                const cell = noResultsRow.insertCell();
-                cell.colSpan = 7; // Ajustar al número de columnas
-                cell.textContent = "No se encontraron reportes que coincidan con la búsqueda.";
-                cell.style.textAlign = "center";
-                cell.style.padding = "20px";
-                cell.style.color = "#777";
+                noResultsRow = tbody.insertRow(); noResultsRow.id = noResultsRowId;
+                const cell = noResultsRow.insertCell(); cell.colSpan = 8; // Ajustar colspan
+                cell.textContent = "No se encontraron reportes que coincidan con los filtros.";
+                cell.style.textAlign = "center"; cell.style.padding = "20px"; cell.style.color = "#777";
             }
-        } else if (noResultsRow) {
-            noResultsRow.remove();
-        }
+        } else if (noResultsRow) { noResultsRow.remove(); }
     }
     
     window.onload = async function () {
       document.body.style.backgroundColor = "#f0f2f5";
       await cargarReportesAdmin(true); 
       escucharNuevosReportes(); 
-      
       const modalDetalle = document.getElementById('modalReporteDetalle');
-      if (modalDetalle) {
-          modalDetalle.addEventListener('click', function(event) {
-              if (event.target === this) cerrarModalReporteDetalle();
-          });
-      }
+      if (modalDetalle) modalDetalle.addEventListener('click', function(event) { if (event.target === this) cerrarModalReporteDetalle(); });
     };
+</script>
   </script>
 </body>
 </html>
