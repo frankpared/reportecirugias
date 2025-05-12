@@ -31,7 +31,7 @@
             <th>Médico</th>
             <th>Tipo Cirugía</th>
             <th>Guardado En</th>
-            <th>Acciones</th> 
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="reporte-rows-admin">
@@ -60,7 +60,7 @@
       </div>
     </div>
   </div>
-  
+
   <div id="toast" class="toast-notification" style="display:none;"></div>
 
 
@@ -114,7 +114,7 @@
             });
         } catch (e) { return '-'; }
     }
-    
+
     // Funciones para generar HTML del reporte (copiadas/adaptadas de script.js)
     function formatearMaterialParaHTMLAdmin(materialTexto) {
         if (!materialTexto) return '<p>No especificado.</p>';
@@ -157,7 +157,7 @@
         const modal = document.getElementById('modalReporteDetalle');
         const body = document.getElementById('modalReporteDetalleBody');
         if (!modal || !body) return;
-        
+
         body.innerHTML = generarHTMLReporteAdmin(reporteData); // Usar la función para generar el HTML
 
         modal.classList.add('visible');
@@ -215,14 +215,14 @@
                 if(className) td.classList.add(className);
                 return td;
             };
-            
+
             tr.appendChild(createCell(formatearFechaLocal(data.fechaCirugia)));
             tr.appendChild(createCell(data.cliente, 'col-cliente'));
             tr.appendChild(createCell(data.paciente, 'col-paciente'));
             tr.appendChild(createCell(data.medico, 'col-medico'));
-            tr.appendChild(createCell(data.tipoCirugia ? data.tipoCirugia.substring(0,25)+'...' : '-', 'col-tipocx'));
+            tr.appendChild(createCell(data.tipoCirugia ? (data.tipoCirugia.length > 25 ? data.tipoCirugia.substring(0,25)+'...' : data.tipoCirugia) : '-', 'col-tipocx'));
             tr.appendChild(createCell(formatearTimestamp(data.timestamp)));
-            
+
             // Celda de Acciones
             const tdActions = document.createElement('td');
             tdActions.classList.add('col-acciones');
@@ -230,14 +230,14 @@
             const btnVer = document.createElement('button');
             btnVer.textContent = 'Ver';
             btnVer.classList.add('btn-admin-action', 'btn-admin-ver');
-            btnVer.onclick = ()_ModalReporteDetalle(data);
+            btnVer.onclick = function() { abrirModalReporteDetalle(data); }; // CORREGIDO
             tdActions.appendChild(btnVer);
-            
+
             const btnWsp = document.createElement('button');
             btnWsp.innerHTML = '📲'; // Icono WhatsApp
             btnWsp.title = 'Reenviar por WhatsApp';
             btnWsp.classList.add('btn-admin-action', 'btn-admin-wsp');
-            btnWsp.onclick = ()_enviarWhatsAppAdmin(data);
+            btnWsp.onclick = function() { reenviarWhatsAppAdmin(data); }; // CORREGIDO
             tdActions.appendChild(btnWsp);
 
             // Aquí podrías añadir más botones (Editar, Eliminar) en el futuro
@@ -263,7 +263,7 @@
                  row.classList.remove('fila-oculta');
                  continue;
             }
-            
+
             const reporteId = row.dataset.reporteId;
             const reporteData = todosLosReportes.find(r => r.id === reporteId);
 
@@ -271,7 +271,7 @@
                 const cliente = (reporteData.cliente || "").toUpperCase();
                 const paciente = (reporteData.paciente || "").toUpperCase();
                 const medico = (reporteData.medico || "").toUpperCase();
-                
+
                 if (cliente.includes(filter) || paciente.includes(filter) || medico.includes(filter)) {
                     row.classList.remove('fila-oculta');
                 } else {
@@ -282,7 +282,7 @@
             }
         }
     }
-    
+
     window.onload = function () {
       document.body.style.backgroundColor = "#f0f2f5"; // Fondo fijo para admin
       cargarReportesAdmin();
