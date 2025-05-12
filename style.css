@@ -508,16 +508,36 @@ textarea.form-control {
 }
 
 /* --- Estilos para admin.html --- */
-.admin-controls { /* Contenedor para el buscador */
+.admin-controls { /* Contenedor para el buscador y filtros de tabla */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
     margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f0f2f5; /* Fondo ligeramente diferente para destacar */
+    border-radius: 6px;
 }
-.admin-controls input.form-control {
-    max-width: 400px; /* Limitar ancho del buscador */
-    margin: 0 auto; /* Centrar si es más angosto */
+.admin-controls .form-group { /* Hereda de .form-group general */
+    margin-bottom: 0;
+    flex-grow: 1; /* Para que se distribuyan */
+}
+.admin-controls input.form-control,
+.admin-controls select.form-control { /* Estilos para inputs y selects en los controles */
+    max-width: 100%; /* Permitir que se ajusten al flex-grow */
+    min-width: 200px; /* Ancho mínimo para que no se achiquen demasiado */
+    padding: 8px 12px;
+    font-size: 14px;
+}
+.admin-controls label {
+    font-size: 0.9em;
+    margin-bottom: 4px;
+    color: #495057;
+    display: block; /* Asegurar que esté arriba del input/select */
 }
 
+
 .table-responsive {
-    overflow-x: auto; /* Permitir scroll horizontal en tablas grandes */
+    overflow-x: auto;
     margin-bottom: 20px;
 }
 
@@ -526,45 +546,58 @@ body.admin-page table {
     width: 100%;
     background-color: #fff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    table-layout: auto; /* Permitir que el navegador ajuste el ancho de las columnas */
+    table-layout: auto;
 }
 
 body.admin-page th,
 body.admin-page td {
-    padding: 10px 8px; /* Un poco menos de padding para ganar espacio */
+    padding: 10px 12px; /* Aumentamos un poco el padding horizontal */
     text-align: left;
     border-bottom: 1px solid #dee2e6;
-    vertical-align: middle; /* Centrar verticalmente puede verse mejor con botones */
-    word-break: break-word; /* Forzar el corte de palabras largas si es necesario */
+    vertical-align: middle;
+    word-break: break-word;
 }
 
-/* Columnas de datos principales */
-body.admin-page td.col-cliente,
-body.admin-page td.col-paciente,
-body.admin-page td.col-medico,
-body.admin-page td.col-tipocx {
-    white-space: normal; /* Permitir wrap */
-    min-width: 100px; /* Reducimos un poco el mínimo */
-}
-
-/* Columna de Fecha de Cirugía y Guardado En (pueden ser más angostas) */
+/* Definiendo anchos mínimos para columnas específicas */
 body.admin-page th:nth-child(1), /* Fecha Cir. */
-body.admin-page td:nth-child(1),
-body.admin-page th:nth-child(6), /* Guardado En */
-body.admin-page td:nth-child(6) {
-    min-width: 80px; /* Más angostas */
-    white-space: nowrap; /* Que no se partan si es posible */
+body.admin-page td:nth-child(1) {
+    min-width: 90px; /* Ancho para DD/MM/AA */
+    white-space: nowrap;
 }
-
-
-body.admin-page td.col-acciones { /* Columna de acciones */
-    white-space: nowrap; /* Evitar que los botones se rompan en dos líneas */
-    text-align: center; /* Centrar los botones puede quedar mejor */
-    min-width: 130px; /* Aumentado para asegurar espacio para botones */
-}
-body.admin-page th.col-acciones-header { /* Para el encabezado de la columna Acciones */
-    text-align: center; /* Centrar el texto del encabezado también */
+body.admin-page th:nth-child(2), /* Cliente */
+body.admin-page td.col-cliente {
     min-width: 130px;
+    white-space: normal;
+}
+body.admin-page th:nth-child(3), /* Paciente */
+body.admin-page td.col-paciente {
+    min-width: 130px;
+    white-space: normal;
+}
+body.admin-page th:nth-child(4), /* Médico */
+body.admin-page td.col-medico {
+    min-width: 130px;
+    white-space: normal;
+}
+body.admin-page th:nth-child(5), /* Tipo Cirugía */
+body.admin-page td.col-tipocx {
+    min-width: 150px; /* Un poco más para tipos de cirugía largos */
+    white-space: normal;
+}
+body.admin-page th:nth-child(6), /* Estado */
+body.admin-page td:nth-child(6) { /* Contenedor del select de estado */
+    min-width: 130px; 
+}
+body.admin-page th:nth-child(7), /* Guardado En */
+body.admin-page td:nth-child(7) {
+    min-width: 120px; /* Para fecha y hora DD/MM/AA HH:MM */
+    white-space: nowrap;
+}
+body.admin-page th.col-acciones-header, /* Acciones */
+body.admin-page td.col-acciones {
+    min-width: 110px; /* Ajustar según los botones que tengas */
+    text-align: center;
+    white-space: nowrap;
 }
 
 
@@ -583,8 +616,32 @@ body.admin-page tbody tr:nth-child(even) {
 body.admin-page tbody tr:hover {
     background-color: #e9ecef;
 }
-body.admin-page tbody tr.fila-oculta { /* Para el buscador */
+body.admin-page tbody tr.fila-oculta {
     display: none;
+}
+
+/* Estilos para el select de estado en la tabla */
+.estado-select { 
+    padding: 5px 8px; 
+    font-size: 13px; /* Un poco más grande */
+    border-radius: 4px; 
+    border: 1px solid #ced4da; /* Borde sutil */
+    background-color: #fff; 
+    min-width: 110px; /* Asegurar que el texto del estado quepa */
+    box-sizing: border-box;
+}
+.estado-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle;}
+.estado-dot.pendiente { background-color: #ffc107; }
+.estado-dot.revisado { background-color: #28a745; }
+.estado-dot.facturado { background-color: #17a2b8; }
+.estado-dot.completado { background-color: #6c757d; }
+
+.fila-estado-completado td { 
+    color: #6c757d; /* Texto más apagado */
+    /* text-decoration: line-through; /* Opcional: tachar */
+}
+.fila-estado-completado .estado-select {
+    opacity: 0.7;
 }
 
 
