@@ -7,10 +7,8 @@
   <link rel="icon" href="https://i.imgur.com/aA7RzTN.png" type="image/png" />
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Lato&display=swap" rel="stylesheet">
-  <!-- Librerías externas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <!-- Firebase SDK (compat version para firestore() v8) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
@@ -23,105 +21,111 @@
     </header>
 
     <!-- Formulario -->
-    <div class="form-group">
-      <label for="formato">Formato de Texto</label>
-      <select id="formato" class="form-control">
-        <option value="formal">Formal</option>
-        <option value="moderno">Moderno</option>
-        <option value="detallado">Detallado</option>
-      </select>
-      <small class="ayuda-texto">Seleccione el estilo de redacción del reporte.</small>
-    </div>
-
-    <div class="form-group">
-      <label for="mensajeInicio">Mensaje de Inicio</label>
-      <select id="mensajeInicio" class="form-control">
-        <option>Estimados, Adjunto detalles de la cirugía programada:</option>
-        <option>Estimados, Informo novedades de la cirugía programada:</option>
-        <option>Equipo, adjunto detalle de cirugía para logística y coordinación:</option>
-        <option>Buen día, comparto información de la siguiente cirugía:</option>
-      </select>
-      <small class="ayuda-texto">Elija cómo comenzará el mensaje.</small>
-    </div>
-
-    <!-- NUEVO CAMPO: Cliente -->
-    <div class="form-group">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-             <label for="cliente" style="margin-bottom: 0;">Cliente (*)</label>
-             <button type="button" onclick="abrirModalClientes()" class="btn-seleccionar-material">🔍 Seleccionar</button>
+    <form id="reporteForm">
+        <div class="form-group">
+        <label for="formato">Formato de Texto</label>
+        <select id="formato" class="form-control">
+            <option value="formal">Formal</option>
+            <option value="moderno">Moderno</option>
+            <option value="detallado">Detallado</option>
+        </select>
+        <small class="ayuda-texto">Seleccione el estilo de redacción del reporte.</small>
         </div>
-      <input id="cliente" class="form-control" list="clientesList" placeholder="Escriba, seleccione o use el botón..." required />
-      <datalist id="clientesList"></datalist>
-      <small class="ayuda-texto">Nombre de la institución o cliente principal.</small>
-      <div class="mensaje-error" id="error-cliente">Este campo es requerido.</div>
-    </div>
-    <!-- Fin del NUEVO CAMPO: Cliente -->
 
-    <div class="form-group">
-      <label for="paciente">Paciente (*)</label>
-      <input id="paciente" class="form-control" required />
-      <small class="ayuda-texto">Nombre completo del paciente.</small>
-      <div class="mensaje-error" id="error-paciente">Este campo es requerido.</div>
-    </div>
-
-    <div class="form-group">
-      <label for="medico">Médico (*)</label>
-      <input id="medico" class="form-control" list="medicosList" placeholder="Escriba o seleccione..." required />
-      <datalist id="medicosList"></datalist>
-      <small class="ayuda-texto">Seleccione o escriba el nombre del médico responsable.</small>
-      <div class="mensaje-error" id="error-medico">Este campo es requerido.</div>
-    </div>
-
-    <div class="form-group">
-      <label for="instrumentador">Instrumentador</label>
-      <input id="instrumentador" class="form-control" list="instrumentadoresList" placeholder="Escriba o seleccione..." />
-      <datalist id="instrumentadoresList"></datalist>
-      <small class="ayuda-texto">Nombre del instrumentador quirúrgico.</small>
-    </div>
-
-    <div class="form-group">
-      <label for="lugarCirugia">Lugar de Cirugía</label>
-      <input id="lugarCirugia" class="form-control" list="lugaresList" placeholder="Escriba o seleccione..." />
-      <datalist id="lugaresList"></datalist>
-      <small class="ayuda-texto">Hospital o clínica donde se realizará la cirugía.</small>
-    </div>
-
-    <div class="form-group">
-      <label for="fechaCirugia">Fecha de Cirugía (*)</label>
-      <input type="date" id="fechaCirugia" class="form-control" required />
-      <small class="ayuda-texto">Fecha programada para la intervención.</small>
-      <div class="mensaje-error" id="error-fecha">Este campo es requerido.</div>
-    </div>
-
-    <div class="form-group">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-             <label for="tipoCirugia" style="margin-bottom: 0;">Tipo de Cirugía</label>
-             <button type="button" onclick="abrirModalTipoCx()" class="btn-seleccionar-material">🔍 Seleccionar</button>
+        <div class="form-group">
+        <label for="mensajeInicio">Mensaje de Inicio</label>
+        <select id="mensajeInicio" class="form-control">
+            <option>Estimados, Adjunto detalles de la cirugía programada:</option>
+            <option>Estimados, Informo novedades de la cirugía programada:</option>
+            <option>Equipo, adjunto detalle de cirugía para logística y coordinación:</option>
+            <option>Buen día, comparto información de la siguiente cirugía:</option>
+        </select>
+        <small class="ayuda-texto">Elija cómo comenzará el mensaje.</small>
         </div>
-      <input id="tipoCirugia" class="form-control" list="tiposCirugiaList" placeholder="Escriba, seleccione o use el botón..." />
-      <datalist id="tiposCirugiaList"></datalist>
-      <small class="ayuda-texto">Descripción del procedimiento quirúrgico.</small>
-    </div>
 
-    <div class="form-group">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label for="material" style="margin-bottom: 0;">Material Requerido</label>
-            <button type="button" onclick="abrirModalMateriales()" class="btn-seleccionar-material">🔍 Seleccionar</button>
+        <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label for="cliente" style="margin-bottom: 0;">Cliente (*)</label>
+                <button type="button" onclick="abrirModalClientes()" class="btn-seleccionar-material">🔍 Seleccionar</button>
+            </div>
+        <input id="cliente" class="form-control" list="clientesList" placeholder="Escriba, seleccione o use el botón..." required />
+        <datalist id="clientesList"></datalist>
+        <small class="ayuda-texto">Nombre de la institución o cliente principal.</small>
+        <div class="mensaje-error" id="error-cliente">Este campo es requerido.</div>
         </div>
-      <textarea id="material" class="form-control" rows="5" placeholder="Ingrese un ítem por línea o use el botón 'Seleccionar'..."></textarea>
-      <small class="ayuda-texto">Lista de materiales necesarios.</small>
-    </div>
 
-    <div class="form-group">
-      <label for="observaciones">Observaciones</label>
-      <textarea id="observaciones" class="form-control" rows="3" placeholder="Alergias, condiciones especiales, etc."></textarea>
-      <small class="ayuda-texto">Consideraciones especiales para el procedimiento.</small>
-    </div>
+        <div class="form-group">
+        <label for="paciente">Paciente (*)</label>
+        <input id="paciente" class="form-control" required />
+        <small class="ayuda-texto">Nombre completo del paciente.</small>
+        <div class="mensaje-error" id="error-paciente">Este campo es requerido.</div>
+        </div>
 
-    <div class="form-group">
-      <label for="infoAdicional">Información Adicional</label>
-      <textarea id="infoAdicional" class="form-control" rows="3" placeholder="Contacto alternativo, prepaga, etc."></textarea>
-      <small class="ayuda-texto">Otros datos relevantes para el equipo.</small>
+        <div class="form-group">
+        <label for="medico">Médico (*)</label>
+        <input id="medico" class="form-control" list="medicosList" placeholder="Escriba o seleccione..." required />
+        <datalist id="medicosList"></datalist>
+        <small class="ayuda-texto">Seleccione o escriba el nombre del médico responsable.</small>
+        <div class="mensaje-error" id="error-medico">Este campo es requerido.</div>
+        </div>
+
+        <div class="form-group">
+        <label for="instrumentador">Instrumentador</label>
+        <input id="instrumentador" class="form-control" list="instrumentadoresList" placeholder="Escriba o seleccione..." />
+        <datalist id="instrumentadoresList"></datalist>
+        <small class="ayuda-texto">Nombre del instrumentador quirúrgico.</small>
+        </div>
+
+        <div class="form-group">
+        <label for="lugarCirugia">Lugar de Cirugía</label>
+        <input id="lugarCirugia" class="form-control" list="lugaresList" placeholder="Escriba o seleccione..." />
+        <datalist id="lugaresList"></datalist>
+        <small class="ayuda-texto">Hospital o clínica donde se realizará la cirugía.</small>
+        </div>
+
+        <div class="form-group">
+        <label for="fechaCirugia">Fecha de Cirugía (*)</label>
+        <input type="date" id="fechaCirugia" class="form-control" required />
+        <small class="ayuda-texto">Fecha programada para la intervención.</small>
+        <div class="mensaje-error" id="error-fecha">Este campo es requerido.</div>
+        </div>
+
+        <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label for="tipoCirugia" style="margin-bottom: 0;">Tipo de Cirugía</label>
+                <button type="button" onclick="abrirModalTipoCx()" class="btn-seleccionar-material">🔍 Seleccionar</button>
+            </div>
+        <input id="tipoCirugia" class="form-control" list="tiposCirugiaList" placeholder="Escriba, seleccione o use el botón..." />
+        <datalist id="tiposCirugiaList"></datalist>
+        <small class="ayuda-texto">Descripción del procedimiento quirúrgico.</small>
+        </div>
+
+        <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label for="material" style="margin-bottom: 0;">Material Requerido</label>
+                <button type="button" onclick="abrirModalMateriales()" class="btn-seleccionar-material">🔍 Seleccionar</button>
+            </div>
+        <textarea id="material" class="form-control" rows="5" placeholder="Ingrese un ítem por línea o use el botón 'Seleccionar'..."></textarea>
+        <small class="ayuda-texto">Lista de materiales necesarios.</small>
+        </div>
+
+        <div class="form-group">
+        <label for="observaciones">Observaciones</label>
+        <textarea id="observaciones" class="form-control" rows="3" placeholder="Alergias, condiciones especiales, etc."></textarea>
+        <small class="ayuda-texto">Consideraciones especiales para el procedimiento.</small>
+        </div>
+
+        <div class="form-group">
+        <label for="infoAdicional">Información Adicional</label>
+        <textarea id="infoAdicional" class="form-control" rows="3" placeholder="Contacto alternativo, prepaga, etc."></textarea>
+        <small class="ayuda-texto">Otros datos relevantes para el equipo.</small>
+        </div>
+    </form>
+
+    <!-- NUEVOS BOTONES: Limpiar y Cargar Último -->
+    <div class="text-center form-actions-inline" style="margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+        <button type="button" onclick="limpiarFormulario()" class="btn-secundario">🧹 Limpiar Formulario</button>
+        <button type="button" onclick="cargarUltimoReporteStorage()" class="btn-secundario" id="btnCargarUltimo">🔄 Cargar Último Reporte</button>
     </div>
 
     <div id="loading-indicator" style="display: none; text-align: center; margin: 15px 0; color: #007bff; font-weight: bold;">
@@ -131,7 +135,7 @@
         <button id="retry-save-btn" class="btn-warning" style="display: none;" title="Hubo un problema al guardar, intente nuevamente">⚠️ Reintentar Guardar</button>
     </div>
 
-    <div class="text-center" style="margin-top: 30px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+    <div class="text-center" style="margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
       <button onclick="generarTexto()" class="btn-primario">📝 Generar Texto</button>
       <button onclick="copiarTexto()" title="Copia el texto plano y guarda el reporte en la base de datos">📋 Copiar y Guardar</button>
       <button onclick="compartirWhatsApp()" title="Enviar el reporte vía WhatsApp">📲 Enviar WhatsApp</button>
@@ -143,7 +147,6 @@
     </div>
 
     <div id="resultado-container" style="display: none; margin-top: 30px;">
-      <!-- El reporte generado se insertará aquí -->
     </div>
 
     <small class="credit">Desarrollado por Responsable de Sistemas Franco Pared – Districorr ®</small>
@@ -151,62 +154,27 @@
 
   <div id="toast" class="toast-notification" style="display:none;"></div>
 
-  <!-- Modal para Clientes -->
   <div id="modalClientes" class="modal-overlay" style="display: none;">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3>Seleccionar Cliente</h3>
-        <button class="modal-close-btn" onclick="cerrarModalClientes()">×</button>
-      </div>
-      <div class="modal-body">
-        <input type="text" id="modalClientesSearchInput" class="form-control" placeholder="Buscar cliente..." onkeyup="debouncedFilterClientes()">
-        <div id="modalClientesLista" class="modal-lista-container">
-          Cargando clientes...
-        </div>
-      </div>
-      <div class="modal-footer">
-         <button type="button" class="btn-link" onclick="cerrarModalClientes()">Cancelar</button>
-         <!-- No hay botón "Añadir", la selección es directa -->
-      </div>
+      <div class="modal-header"><h3>Seleccionar Cliente</h3><button class="modal-close-btn" onclick="cerrarModalClientes()">×</button></div>
+      <div class="modal-body"><input type="text" id="modalClientesSearchInput" class="form-control" placeholder="Buscar cliente..." onkeyup="debouncedFilterClientes()"><div id="modalClientesLista" class="modal-lista-container">Cargando clientes...</div></div>
+      <div class="modal-footer"><button type="button" class="btn-link" onclick="cerrarModalClientes()">Cancelar</button></div>
     </div>
   </div>
 
-  <!-- Modal para Materiales -->
   <div id="modalMateriales" class="modal-overlay" style="display: none;">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3>Seleccionar Materiales</h3>
-        <button class="modal-close-btn" onclick="cerrarModalMateriales()">×</button>
-      </div>
-      <div class="modal-body">
-        <input type="text" id="modalMaterialesSearchInput" class="form-control" placeholder="Buscar material por código o descripción..." onkeyup="debouncedFilterMateriales()">
-        <div id="modalMaterialesLista" class="modal-lista-container">
-          Cargando materiales...
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn-link" onclick="cerrarModalMateriales()">Cancelar</button>
-        <button type="button" class="btn-primario" onclick="anadirMaterialesSeleccionados()">Añadir Seleccionados</button>
-      </div>
+      <div class="modal-header"><h3>Seleccionar Materiales</h3><button class="modal-close-btn" onclick="cerrarModalMateriales()">×</button></div>
+      <div class="modal-body"><input type="text" id="modalMaterialesSearchInput" class="form-control" placeholder="Buscar material..." onkeyup="debouncedFilterMateriales()"><div id="modalMaterialesLista" class="modal-lista-container">Cargando materiales...</div></div>
+      <div class="modal-footer"><button type="button" class="btn-link" onclick="cerrarModalMateriales()">Cancelar</button><button type="button" class="btn-primario" onclick="anadirMaterialesSeleccionados()">Añadir Seleccionados</button></div>
     </div>
   </div>
 
-  <!-- Modal para Tipo de Cirugía -->
   <div id="modalTipoCx" class="modal-overlay" style="display: none;">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3>Seleccionar Tipo de Cirugía</h3>
-        <button class="modal-close-btn" onclick="cerrarModalTipoCx()">×</button>
-      </div>
-      <div class="modal-body">
-        <input type="text" id="modalTipoCxSearchInput" class="form-control" placeholder="Buscar tipo de cirugía..." onkeyup="debouncedFilterTipoCx()">
-        <div id="modalTipoCxLista" class="modal-lista-container">
-          Cargando tipos de cirugía...
-        </div>
-      </div>
-      <div class="modal-footer">
-         <button type="button" class="btn-link" onclick="cerrarModalTipoCx()">Cancelar</button>
-      </div>
+      <div class="modal-header"><h3>Seleccionar Tipo de Cirugía</h3><button class="modal-close-btn" onclick="cerrarModalTipoCx()">×</button></div>
+      <div class="modal-body"><input type="text" id="modalTipoCxSearchInput" class="form-control" placeholder="Buscar tipo de cirugía..." onkeyup="debouncedFilterTipoCx()"><div id="modalTipoCxLista" class="modal-lista-container">Cargando tipos de cirugía...</div></div>
+      <div class="modal-footer"><button type="button" class="btn-link" onclick="cerrarModalTipoCx()">Cancelar</button></div>
     </div>
   </div>
 
