@@ -39,7 +39,7 @@ const fondosPorDia = {
         msg: 'Domingo: ¡Preparando el terreno para la semana que viene! ¡A laburar como leñador con hacha nueva! '
     },
     1: { // Lunes
-        img: 'https://images.unsplash.com/photo-1580281780460-82d277b0e3f8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Quirofano instrumental
+        img: 'https://unsplash.com/es/fotos/una-habitacion-de-hospital-llena-de-muchos-equipos-medicos-tELCeRE6X9U', // Quirofano instrumental
         msg: 'Lunes: ¡Arrancamos la semana con el cuchillo entre los dientes! '
     },
     2: { // Martes
