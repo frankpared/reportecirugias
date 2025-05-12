@@ -95,6 +95,27 @@ button:disabled, .btn-admin-action:disabled {
     background-color: #5a6268;
 }
 
+.btn-mic {
+  padding: 8px 10px;
+  font-size: 1.2em; /* Tamaño del ícono */
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 50%; /* Para hacerlo redondo */
+  cursor: pointer;
+  line-height: 1; /* Para que el ícono quede centrado */
+  min-width: auto; /* Permitir que sea pequeño */
+  width: 40px; /* Ancho fijo */
+  height: 40px; /* Alto fijo */
+}
+.btn-mic:hover {
+  background-color: #e0e0e0;
+}
+.btn-mic.recording { /* Estilo cuando está grabando */
+    background-color: #ffcdd2; /* Rojo suave */
+    border-color: #ef5350;
+    color: #d32f2f;
+}
 /* Estilos para botones de acción en admin.html (Ver Detalle, Reenviar) */
 .btn-admin-action {
   padding: 6px 8px; /* Padding horizontal reducido para ahorrar espacio */
