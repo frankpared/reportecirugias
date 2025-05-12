@@ -35,32 +35,32 @@ const DEBOUNCE_DELAY = 250;
 // --- Fondos y Saludos Dinámicos (Temáticos Quirófano/Medicina) ---
 const fondosPorDia = {
     0: { // Domingo
-        img: 'https://images.pexels.com/photos/263171/pexels-photo-263171.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Quirófano bien iluminado, tranquilo
-        msg: 'Domingo: Preparando una semana productiva.'
+        img: 'https://images.pexels.com/photos/7583373/pexels-photo-7583373.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Quirófano bien iluminado, tranquilo
+        msg: 'Domingo: ¡Preparando el terreno para la semana que viene! ¡A laburar como leñador con hacha nueva! '
     },
     1: { // Lunes
-        img: 'https://images.pexels.com/photos/3957987/pexels-photo-3957987.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Manos con guantes, instrumental médico
-        msg: '¡Buen Lunes! Iniciando la semana con precisión.'
+        img: 'https://images.pexels.com/photos/7583370/pexels-photo-7583370.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Manos con guantes, instrumental médico
+        msg: 'Lunes: ¡Arrancamos la semana con el cuchillo entre los dientes! '
     },
     2: { // Martes
-        img: 'https://images.pexels.com/photos/4021775/pexels-photo-4021775.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Médico concentrado, ambiente clínico
-        msg: 'Martes: Enfoque y dedicación en cada tarea.'
+        img: 'https://images.pexels.com/photos/40568/medical-appointment-doctor-healthcare-40568.jpeg', // Médico concentrado, ambiente clínico
+        msg: 'Martes: ¡Hoy se labura como perro con hueso! ¡A no soltar la tarea hasta terminarla! '
     },
     3: { // Miércoles
         img: 'https://images.pexels.com/photos/5452291/pexels-photo-5452291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Instrumental quirúrgico ordenado
-        msg: 'Miércoles: Avanzando con determinación.'
+        msg: 'Miércoles:¡Hoy se labura con la precisión de un cirujano! ¡Cada detalle cuenta para el éxito!.'
     },
     4: { // Jueves
         img: 'https://images.pexels.com/photos/7089016/pexels-photo-7089016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Vista interior de un hospital moderno
-        msg: 'Jueves: La excelencia es nuestro estándar.'
+        msg: '¡Ya casi estamos en la meta semanal, ¡pero se sigue laburando como bombero en incendio! ¡Con urgencia y dedicación!'
     },
     5: { // Viernes
         img: 'https://images.pexels.com/photos/247786/pexels-photo-247786.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Estetoscopio sobre escritorio, planificación
-        msg: 'Viernes: Culminando la semana con éxito.'
+        msg: 'Viernes: ¡Semana terminada como partido ganado en el último minuto! ¡Con la alegría del deber cumplido! '
     },
     6: { // Sábado
         img: 'https://images.pexels.com/photos/2280547/pexels-photo-2280547.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Radiografía o imagen médica abstracta
-        msg: 'Sábado: Tiempo de análisis y preparación.'
+        msg: 'Sábado:¡Tiempo para desenchufar un poco, pero la ambición sigue latente como volcán dormido para la semana que viene!'
     }
 };
 
