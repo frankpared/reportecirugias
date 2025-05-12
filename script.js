@@ -35,31 +35,31 @@ const DEBOUNCE_DELAY = 250;
 // --- Fondos y Saludos Dinámicos (Temáticos Quirófano/Medicina) ---
 const fondosPorDia = {
     0: { // Domingo
-        img: 'https://images.pexels.com/photos/7583373/pexels-photo-7583373.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Quirófano bien iluminado, tranquilo
+        img: 'https://images.pexels.com/photos/7583373/pexels-photo-7583373.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
         msg: 'Domingo: ¡Preparando el terreno para la semana que viene! ¡A laburar como leñador con hacha nueva! '
     },
     1: { // Lunes
-        img: 'https://images.pexels.com/photos/4270960/pexels-photo-4270960.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Quirofano instrumental
+        img: 'https://images.pexels.com/photos/4270960/pexels-photo-4270960.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
         msg: 'Lunes: ¡Arrancamos la semana con el cuchillo entre los dientes! '
     },
     2: { // Martes
-        img: 'https://images.pexels.com/photos/7585026/pexels-photo-7585026.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', //Rodilla
+        img: 'https://images.pexels.com/photos/7585026/pexels-photo-7585026.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
         msg: 'Martes: ¡Hoy se labura como perro con hueso! ¡A no soltar la tarea hasta terminarla! '
     },
     3: { // Miércoles
-        img: 'https://images.pexels.com/photos/31975759/pexels-photo-31975759/free-photo-of-cirujanos-realizando-cirugia-ocular-en-quirofano.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1' // Instrumental quirúrgico ordenado
+        img: 'https://images.pexels.com/photos/31975759/pexels-photo-31975759/free-photo-of-cirujanos-realizando-cirugia-ocular-en-quirofano.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
         msg: 'Miércoles:¡Hoy se labura con la precisión de un cirujano! ¡Cada detalle cuenta para el éxito!.'
     },
     4: { // Jueves
-        img: 'https://images.pexels.com/photos/26212701/pexels-photo-26212701/free-photo-of-hospital-cuidado-de-la-salud-sanidad-paciente.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Vista interior de un hospital moderno
+        img: 'https://images.pexels.com/photos/26212701/pexels-photo-26212701/free-photo-of-hospital-cuidado-de-la-salud-sanidad-paciente.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
         msg: '¡Ya casi estamos en la meta semanal, ¡pero se sigue laburando como bombero en incendio! ¡Con urgencia y dedicación!'
     },
     5: { // Viernes
-        img: 'https://images.pexels.com/photos/24022933/pexels-photo-24022933/free-photo-of-bloque-operativo-04.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Estetoscopio sobre escritorio, planificación
+        img: 'https://images.pexels.com/photos/24022933/pexels-photo-24022933/free-photo-of-bloque-operativo-04.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
         msg: 'Viernes: ¡Semana terminada como partido ganado en el último minuto! ¡Con la alegría del deber cumplido! '
     },
     6: { // Sábado
-        img: 'https://images.pexels.com/photos/4421493/pexels-photo-4421493.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Radiografía o imagen médica abstracta
+        img: 'https://images.pexels.com/photos/4421493/pexels-photo-4421493.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
         msg: 'Sábado:¡Tiempo para desenchufar un poco, pero la ambición sigue latente como volcán dormido para la semana que viene!'
     }
 };
