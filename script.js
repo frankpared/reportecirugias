@@ -312,8 +312,8 @@ function actualizarListaDatalist(datalistEl, valores) {
 // --- Obtención y Formateo de Datos ---
 function obtenerDatos(paraReporte = false) {
     const datos = {
-        formato: document.getElementById('formato')?.value || 'formal',
-        mensajeInicio: document.getElementById('mensajeInicio')?.value || '',
+        // La línea de 'formato' se elimina, ya no se usa.
+        mensajeInicio: document.getElementById('mensajeInicio')?.value || 'Estimados, Adjunto detalles de la cirugía programada:', // Un default si no hay nada
         cliente: document.getElementById('cliente')?.value.trim() || '',
         paciente: document.getElementById('paciente')?.value.trim() || '',
         medico: document.getElementById('medico')?.value.trim() || '',
@@ -331,6 +331,7 @@ function obtenerDatos(paraReporte = false) {
     }
     return datos;
 }
+
 function formatearMaterialParaHTML(materialTexto) {
     if (!materialTexto) return '<p>No especificado.</p>';
     const lineas = materialTexto.split('\n').filter(l => l.trim() !== '');
