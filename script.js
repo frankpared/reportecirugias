@@ -39,27 +39,27 @@ const fondosPorDia = {
         msg: 'Domingo: ¡Preparando el terreno para la semana que viene! ¡A laburar como leñador con hacha nueva! '
     },
     1: { // Lunes
-        img: 'https://images.pexels.com/photos/7583370/pexels-photo-7583370.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Manos con guantes, instrumental médico
+        img: 'https://images.unsplash.com/photo-1580281780460-82d277b0e3f8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Quirofano instrumental
         msg: 'Lunes: ¡Arrancamos la semana con el cuchillo entre los dientes! '
     },
     2: { // Martes
-        img: 'https://images.pexels.com/photos/40568/medical-appointment-doctor-healthcare-40568.jpeg', // Médico concentrado, ambiente clínico
+        img: 'https://images.unsplash.com/photo-1624716472114-a7c5f18ac832?q=80&w=2072&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', //Rodilla
         msg: 'Martes: ¡Hoy se labura como perro con hueso! ¡A no soltar la tarea hasta terminarla! '
     },
     3: { // Miércoles
-        img: 'https://images.pexels.com/photos/5452291/pexels-photo-5452291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Instrumental quirúrgico ordenado
+        img: 'https://images.unsplash.com/photo-1504813184591-01572f98c85f?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D, // Instrumental quirúrgico ordenado
         msg: 'Miércoles:¡Hoy se labura con la precisión de un cirujano! ¡Cada detalle cuenta para el éxito!.'
     },
     4: { // Jueves
-        img: 'https://images.pexels.com/photos/7089016/pexels-photo-7089016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Vista interior de un hospital moderno
+        img: 'https://plus.unsplash.com/premium_photo-1664304383260-71d002c722ee?q=80&w=2079&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Vista interior de un hospital moderno
         msg: '¡Ya casi estamos en la meta semanal, ¡pero se sigue laburando como bombero en incendio! ¡Con urgencia y dedicación!'
     },
     5: { // Viernes
-        img: 'https://images.pexels.com/photos/247786/pexels-photo-247786.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Estetoscopio sobre escritorio, planificación
+        img: 'https://plus.unsplash.com/premium_photo-1661889752049-44bb9f857e67?q=80&w=1973&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Estetoscopio sobre escritorio, planificación
         msg: 'Viernes: ¡Semana terminada como partido ganado en el último minuto! ¡Con la alegría del deber cumplido! '
     },
     6: { // Sábado
-        img: 'https://images.pexels.com/photos/2280547/pexels-photo-2280547.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Radiografía o imagen médica abstracta
+        img: 'https://plus.unsplash.com/premium_photo-1661855359165-99c68161d7dd?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Radiografía o imagen médica abstracta
         msg: 'Sábado:¡Tiempo para desenchufar un poco, pero la ambición sigue latente como volcán dormido para la semana que viene!'
     }
 };
