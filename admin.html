@@ -4,18 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Control y Reportes | Districorr</title>
-  <link rel="stylesheet" href="style.css" /> <!-- Asegúrate que style.css tenga los últimos cambios -->
+  <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Lato&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Estilos que estaban antes en admin.html ahora se movieron a style.css bajo .admin-stats-container, .stat-card, etc. -->
 </head>
 
 <body class="fondo-dinamico admin-page">
   <div class="container">
     <header style="margin-bottom: 20px;">
-      <img src="https://i.imgur.com/aA7RzTN.png" alt="Logo Districorr" style="max-height: 70px; display: block; margin: 0 auto 10px auto;" />
+      <img src="aA7RzTN.png" alt="Logo Districorr" style="max-height: 70px; display: block; margin: 0 auto 10px auto;" />
       <h2 style="text-align: center; color: #333; font-family: 'Poppins', sans-serif;">📊 Panel de Control y Reportes</h2>
     </header>
 
@@ -44,6 +43,14 @@
             <input type="text" id="searchInputAdmin" class="form-control" placeholder="Cliente, Paciente o Médico..." onkeyup="filtrarTablaAdmin()">
         </div>
         <div class="form-group">
+            <label for="filtroFechaDesde">Fecha Cirugía Desde:</label>
+            <input type="date" id="filtroFechaDesde" class="form-control" onchange="filtrarTablaAdmin()">
+        </div>
+        <div class="form-group">
+            <label for="filtroFechaHasta">Fecha Cirugía Hasta:</label>
+            <input type="date" id="filtroFechaHasta" class="form-control" onchange="filtrarTablaAdmin()">
+        </div>
+        <div class="form-group">
             <label for="filtroMedicoGraficos">Filtrar Gráficos por Médico:</label>
             <select id="filtroMedicoGraficos" class="form-control" onchange="actualizarGraficosConFiltros()">
                 <option value="">Todos los Médicos</option>
@@ -55,15 +62,8 @@
                 <option value="">Todos los Clientes</option>
             </select>
         </div>
-        <div class="form-group">
-            <label for="filtroEstadoTabla">Filtrar Tabla por Estado:</label>
-            <select id="filtroEstadoTabla" class="form-control" onchange="filtrarTablaAdmin()">
-                <option value="">Todos los Estados</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Revisado">Revisado</option>
-                <option value="Facturado">Facturado</option>
-                <option value="Completado">Completado</option>
-            </select>
+        <div class="form-group" style="display: flex; align-items: flex-end;">
+             <button onclick="limpiarFiltrosFecha()" class="btn-secundario" style="width: 100%;">Limpiar Fechas</button>
         </div>
     </div>
 
@@ -84,13 +84,11 @@
             <th>Paciente</th>
             <th>Médico</th>
             <th>Tipo Cirugía</th>
-            <th>Estado</th>
-            <th>Guardado En</th>
             <th class="col-acciones-header">Acciones</th>
           </tr>
         </thead>
         <tbody id="reporte-rows-admin">
-           <tr><td colspan="8" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>
+           <tr><td colspan="6" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>
         </tbody>
       </table>
     </div>
@@ -109,8 +107,8 @@
   </div>
   <div id="toast" class="toast-notification" style="display:none;"></div>
 
-  <script>
-const firebaseConfig = {
+<script>
+    const firebaseConfig = {
       apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // TU API KEY
       authDomain: "cirugia-reporte.firebaseapp.com",
       projectId: "cirugia-reporte",
@@ -123,41 +121,130 @@ const firebaseConfig = {
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     let todosLosReportes = [];
-    let reportesFiltradosParaGraficos = []; // Para los gráficos filtrados
+    let reportesFiltradosParaGraficos = [];
     let reportesSemanaChartInstance = null;
     let topTiposCxChartInstance = null;
     let listenerNuevosReportesUnsubscribe = null;
-    const ESTADOS_POSIBLES = ["Pendiente", "Revisado", "Facturado", "Completado"]; // Define los estados
 
     db.enablePersistence().catch(err => console.warn("Persistencia admin:", err.code));
 
-    function mostrarToastAdmin(mensaje, tipo = 'info') { /* ... (tu función mostrarToastAdmin) ... */ }
-    function formatearFechaLocal(fechaISO) { /* ... (tu función formatearFechaLocal) ... */ }
-    function formatearTimestamp(timestamp) { /* ... (tu función formatearTimestamp) ... */ }
-    function formatearMaterialParaHTMLAdmin(materialTexto) { /* ... (tu función formatearMaterialParaHTMLAdmin) ... */ }
-    function generarHTMLReporteAdmin(datos) { /* ... (tu función generarHTMLReporteAdmin) ... */ }
-    function abrirModalReporteDetalle(reporteData) { /* ... (tu función abrirModalReporteDetalle) ... */ }
-    function cerrarModalReporteDetalle() { /* ... (tu función cerrarModalReporteDetalle) ... */ }
-    function reenviarWhatsAppAdmin(reporteData) { /* ... (tu función reenviarWhatsAppAdmin) ... */ }
-    
-    // Copia aquí las funciones mostrarToastAdmin, formatearFechaLocal, formatearTimestamp, 
-    // formatearMaterialParaHTMLAdmin, generarHTMLReporteAdmin, abrirModalReporteDetalle, 
-    // cerrarModalReporteDetalle, y reenviarWhatsAppAdmin que ya tenías y funcionaban bien.
-    // Para brevedad, no las repito todas aquí. Asegúrate que estén.
-    // Ejemplo de mostrarToastAdmin (las otras son similares a las que ya tenías)
+    // --- Funciones de Utilidad y Formato ---
     function mostrarToastAdmin(mensaje, tipo = 'info') {
         const toast = document.getElementById('toast');
         if (!toast) return;
-        toast.textContent = mensaje; toast.className = 'toast-notification'; toast.classList.add(tipo);
-        toast.style.display = 'block'; void toast.offsetWidth;
-        toast.style.opacity = '1'; toast.style.transform = 'translateY(0)';
+        toast.textContent = mensaje;
+        toast.className = 'toast-notification';
+        toast.classList.add(tipo);
+        toast.style.display = 'block';
+        void toast.offsetWidth;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
         setTimeout(() => {
-            toast.style.opacity = '0'; toast.style.transform = 'translateY(20px)';
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
             setTimeout(() => { toast.style.display = 'none'; }, 300);
         }, 3000);
     }
 
+    function formatearFechaLocal(fechaISO) {
+        if (!fechaISO) return '-';
+        try {
+            const [year, month, day] = fechaISO.split('-');
+            return `${day}/${month}/${year}`;
+        } catch (e) {
+            return fechaISO;
+        }
+    }
+    
+    function formatearFechaUsuario(fechaISO) {
+        if (!fechaISO) return 'No especificada';
+        try {
+            const p = fechaISO.split('-');
+            if (p.length !== 3) return fechaISO;
+            const f = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]), 12);
+            return f.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        } catch (e) { return fechaISO; }
+    }
 
+    function formatearMaterialParaHTMLAdmin(materialTexto) {
+        if (!materialTexto) return '<p>No especificado.</p>';
+        const lineas = materialTexto.split('\n').filter(l => l.trim() !== '');
+        if (lineas.length === 0) return '<p>No especificado.</p>';
+        let html = '<ul style="padding-left: 20px; margin: 0;">';
+        lineas.forEach(l => { html += `<li>${l.trim()}</li>`; });
+        return html + '</ul>';
+    }
+
+    function generarHTMLReporteAdmin(datos) {
+        return `
+          <div class="reporte-contenido reporte-box">
+            <p>${datos.mensajeInicio || 'Detalles de la cirugía programada:'}</p>
+            <ul>
+              <li><strong>Cliente:</strong> ${datos.cliente || 'No especificado'}</li>
+              <li><strong>Paciente:</strong> ${datos.paciente || 'No especificado'}</li>
+              <li><strong>Tipo de Cirugía:</strong> ${datos.tipoCirugia || 'No especificado'}</li>
+              <li><strong>Médico Responsable:</strong> ${datos.medico || 'No especificado'}</li>
+              <li><strong>Instrumentador:</strong> ${datos.instrumentador || 'No especificado'}</li>
+              <li><strong>Fecha de Cirugía:</strong> ${formatearFechaUsuario(datos.fechaCirugia)}</li>
+              <li><strong>Lugar:</strong> ${datos.lugarCirugia || 'No especificado'}</li>
+            </ul>
+            <h4>Material Requerido:</h4>
+            ${formatearMaterialParaHTMLAdmin(datos.material)}
+            ${datos.observaciones ? `<h4>Observaciones:</h4><p>${datos.observaciones.replace(/\n/g, '<br>')}</p>` : ''}
+            ${datos.infoAdicional ? `<h4>Información Adicional:</h4><p>${datos.infoAdicional.replace(/\n/g, '<br>')}</p>` : ''}
+          </div>`;
+    }
+    
+    function generarTextoPlanoReporte(datos) {
+        const materialPlano = (datos.material || 'No especificado').split('\n').map(l => `- ${l.trim()}`).join('\n');
+        const observacionesPlano = datos.observaciones ? `\nObservaciones:\n${datos.observaciones}` : '';
+        const infoAdicionalPlano = datos.infoAdicional ? `\nInformación Adicional:\n${datos.infoAdicional}` : '';
+
+        return `${datos.mensajeInicio || 'Detalles de la cirugía programada:'}
+Cliente: ${datos.cliente || 'No especificado'}
+Paciente: ${datos.paciente || 'No especificado'}
+Tipo de Cirugía: ${datos.tipoCirugia || 'No especificado'}
+Médico Responsable: ${datos.medico || 'No especificado'}
+Instrumentador: ${datos.instrumentador || 'No especificado'}
+Fecha de Cirugía: ${formatearFechaUsuario(datos.fechaCirugia)}
+Lugar: ${datos.lugarCirugia || 'No especificado'}
+
+Material Requerido:
+${materialPlano}
+${observacionesPlano}
+${infoAdicionalPlano}
+
+Saludos, quedo al pendiente.`;
+    }
+
+    // --- Funciones del Modal y Acciones ---
+    function abrirModalReporteDetalle(reporteData) {
+        const modalBody = document.getElementById('modalReporteDetalleBody');
+        modalBody.innerHTML = generarHTMLReporteAdmin(reporteData);
+        document.getElementById('modalReporteDetalle').style.display = 'flex';
+    }
+
+    function cerrarModalReporteDetalle() {
+        document.getElementById('modalReporteDetalle').style.display = 'none';
+    }
+
+    function reenviarWhatsAppAdmin(reporteData) {
+        const texto = `*Reporte Cirugía Districorr*\n\n${generarTextoPlanoReporte(reporteData)}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+    }
+    
+    async function copiarReporteAdmin(reporteData) {
+        const texto = generarTextoPlanoReporte(reporteData);
+        try {
+            await navigator.clipboard.writeText(texto);
+            mostrarToastAdmin('Reporte copiado al portapapeles.', 'success');
+        } catch (err) {
+            console.error('Error al copiar reporte:', err);
+            mostrarToastAdmin('Error al copiar el reporte.', 'error');
+        }
+    }
+
+    // --- Exportación y Filtros ---
     function exportTableToCSV(tableId, filename) {
         let csv = [];
         const table = document.getElementById(tableId);
@@ -166,67 +253,32 @@ const firebaseConfig = {
             if (row.classList.contains('fila-oculta') && row.parentNode.tagName === 'TBODY') continue;
             const cols = row.querySelectorAll("td, th");
             let rowData = [];
-            for (let i = 0; i < cols.length; i++) { // Iterar con índice para omitir la última celda (acciones)
+            for (let i = 0; i < cols.length; i++) {
                 const col = cols[i];
-                // Omitir la columna de acciones y la de estado (select) para el CSV, tomar el texto del estado
                 if (col.classList.contains('col-acciones') || col.classList.contains('col-acciones-header')) continue;
-                if (i === 5 && row.parentNode.tagName === 'TBODY') { // Asumiendo que Estado es la 6ta columna (índice 5)
-                    const selectEstado = row.querySelector('.estado-select');
-                    rowData.push(`"${selectEstado ? selectEstado.value : (col.innerText || '-')}"`);
-                    continue;
-                }
                 let data = col.innerText.replace(/"/g, '""');
                 rowData.push(`"${data}"`);
             }
             if (rowData.length > 0) csv.push(rowData.join(","));
         }
-        if (csv.length <= 1) { mostrarToastAdmin('No hay datos visibles para exportar.', 'warning'); return; } // Solo encabezado o nada
-        const csvFile = new Blob(["\uFEFF" + csv.join("\n")], { type: "text/csv;charset=utf-8;" }); // Añadir BOM para Excel
+        if (csv.length <= 1) { mostrarToastAdmin('No hay datos visibles para exportar.', 'warning'); return; }
+        const csvFile = new Blob(["\uFEFF" + csv.join("\n")], { type: "text/csv;charset=utf-8;" });
         const downloadLink = document.createElement("a");
-        downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile);
-        document.body.appendChild(downloadLink); downloadLink.click(); document.body.removeChild(downloadLink);
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
         mostrarToastAdmin('Tabla exportada a CSV.', 'success');
     }
-
-    async function cambiarEstadoReporte(reporteId, nuevoEstado) {
-        try {
-            await db.collection("reportes").doc(reporteId).update({ estado: nuevoEstado });
-            mostrarToastAdmin(`Estado del reporte actualizado a ${nuevoEstado}.`, 'success');
-            // Actualizar el dato en el array local para reflejar el cambio sin recargar todo
-            const reporteIndex = todosLosReportes.findIndex(r => r.id === reporteId);
-            if (reporteIndex > -1) {
-                todosLosReportes[reporteIndex].estado = nuevoEstado;
-                 // Actualizar visualización de la fila específica
-                const fila = document.querySelector(`tr[data-reporte-id="${reporteId}"]`);
-                if (fila) {
-                    // Quitar clases de estado anteriores
-                    ESTADOS_POSIBLES.forEach(e => fila.classList.remove(`fila-estado-${e.toLowerCase()}`));
-                    // Añadir nueva clase de estado
-                    fila.classList.add(`fila-estado-${nuevoEstado.toLowerCase()}`);
-                    // Actualizar el punto de color
-                    const dot = fila.querySelector('.estado-dot');
-                    if (dot) {
-                        dot.className = `estado-dot ${nuevoEstado.toLowerCase()}`;
-                    }
-                }
-            }
-            // No es necesario recargar toda la tabla, solo aplicar filtros si el estado cambió
-            filtrarTablaAdmin();
-            // Opcional: recargar gráficos si el estado afecta alguna estadística
-            // await cargarEstadisticasYGraficos(reportesFiltradosParaGraficos.length > 0 ? reportesFiltradosParaGraficos : todosLosReportes);
-
-        } catch (error) {
-            console.error("Error actualizando estado:", error);
-            mostrarToastAdmin('Error al actualizar estado.', 'error');
-            // Revertir el select al valor anterior si falla la actualización (opcional)
-            const selectElement = document.querySelector(`tr[data-reporte-id="${reporteId}"] .estado-select`);
-            if (selectElement) {
-                const reporte = todosLosReportes.find(r => r.id === reporteId);
-                selectElement.value = reporte ? (reporte.estado || "Pendiente") : "Pendiente";
-            }
-        }
-    }
     
+    function limpiarFiltrosFecha() {
+        document.getElementById('filtroFechaDesde').value = '';
+        document.getElementById('filtroFechaHasta').value = '';
+        filtrarTablaAdmin();
+    }
+
+    // --- Gráficos y Estadísticas ---
     function poblarFiltrosGraficos() {
         const medicos = [...new Set(todosLosReportes.map(r => r.medico).filter(Boolean))].sort();
         const clientes = [...new Set(todosLosReportes.map(r => r.cliente).filter(Boolean))].sort();
@@ -234,14 +286,14 @@ const firebaseConfig = {
         const filtroMedicoSelect = document.getElementById('filtroMedicoGraficos');
         const filtroClienteSelect = document.getElementById('filtroClienteGraficos');
 
-        filtroMedicoSelect.innerHTML = '<option value="">Todos los Médicos</option>'; // Reset
+        filtroMedicoSelect.innerHTML = '<option value="">Todos los Médicos</option>';
         medicos.forEach(m => {
             const option = document.createElement('option');
             option.value = m; option.textContent = m;
             filtroMedicoSelect.appendChild(option);
         });
 
-        filtroClienteSelect.innerHTML = '<option value="">Todos los Clientes</option>'; // Reset
+        filtroClienteSelect.innerHTML = '<option value="">Todos los Clientes</option>';
         clientes.forEach(c => {
             const option = document.createElement('option');
             option.value = c; option.textContent = c;
@@ -256,7 +308,6 @@ const firebaseConfig = {
         document.getElementById('labelReportesSemana').textContent = `Reportes (Últ. 7 días) ${medicoFiltro ? `- ${medicoFiltro}` : ''} ${clienteFiltro ? `- ${clienteFiltro}` : ''}`;
         document.getElementById('labelTopTiposCx').textContent = `Top Tipos Cx ${medicoFiltro ? `- ${medicoFiltro}` : ''} ${clienteFiltro ? `- ${clienteFiltro}` : ''}`;
 
-
         reportesFiltradosParaGraficos = todosLosReportes.filter(r => {
             const medicoMatch = !medicoFiltro || r.medico === medicoFiltro;
             const clienteMatch = !clienteFiltro || r.cliente === clienteFiltro;
@@ -264,7 +315,6 @@ const firebaseConfig = {
         });
         cargarEstadisticasYGraficos(reportesFiltradosParaGraficos);
     }
-
 
     async function cargarEstadisticasYGraficos(dataSource = todosLosReportes) {
         if (dataSource.length === 0 && todosLosReportes.length === 0) {
@@ -276,7 +326,7 @@ const firebaseConfig = {
             document.getElementById('topTiposCxChart').parentNode.innerHTML = '<p style="text-align:center; color:#777; margin-top:50px;">No hay datos.</p>';
             return;
         }
-        // Los contadores globales no se afectan por el filtro de gráficos
+        
         document.getElementById('statTotalReportes').textContent = todosLosReportes.length;
         const hoy = new Date();
         const inicioHoyTS = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(),0,0,0).getTime();
@@ -294,7 +344,7 @@ const firebaseConfig = {
         });
         
         const ctxSemana = document.getElementById('reportesSemanaChart');
-        if (ctxSemana.tagName !== 'CANVAS') { // Si fue reemplazado por <p>, recrear canvas
+        if (ctxSemana.tagName !== 'CANVAS') {
             ctxSemana.parentNode.innerHTML = '<canvas id="reportesSemanaChart"></canvas>';
         }
         if (reportesSemanaChartInstance) reportesSemanaChartInstance.destroy();
@@ -305,7 +355,7 @@ const firebaseConfig = {
         const sortedTiposCx = Object.entries(conteoTiposCx).sort(([,a],[,b]) => b-a).slice(0, 5);
         
         const ctxTipos = document.getElementById('topTiposCxChart');
-        if (ctxTipos.tagName !== 'CANVAS') { // Recrear canvas si es necesario
+        if (ctxTipos.tagName !== 'CANVAS') {
             ctxTipos.parentNode.innerHTML = '<canvas id="topTiposCxChart"></canvas>';
         }
         if (topTiposCxChartInstance) topTiposCxChartInstance.destroy();
@@ -316,35 +366,35 @@ const firebaseConfig = {
         }
     }
 
+    // --- Carga Principal de Datos y Renderizado de Tabla ---
     async function cargarReportesAdmin(forzarRecargaCompleta = false) {
       const tbody = document.getElementById("reporte-rows-admin");
       let actualizarDatosGlobales = forzarRecargaCompleta || todosLosReportes.length === 0;
 
       if (actualizarDatosGlobales) {
-          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: #555;">Cargando y procesando reportes...</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #555;">Cargando y procesando reportes...</td></tr>`;
           try {
-            const snapshot = await db.collection("reportes").orderBy("timestamp", "desc").limit(300).get(); // Límite mayor
+            const snapshot = await db.collection("reportes").orderBy("fechaCirugia", "desc").limit(500).get(); // Ordenar por fecha de cirugía y límite mayor
             todosLosReportes = [];
             snapshot.forEach(doc => { const data = doc.data(); data.id = doc.id; todosLosReportes.push(data); });
-            poblarFiltrosGraficos(); // Poblar filtros DESPUÉS de tener todosLosReportes
+            poblarFiltrosGraficos();
           } catch (error) {
               console.error('Error cargando reportes admin:', error);
-              tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:red;">Error al cargar datos.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:red;">Error al cargar datos.</td></tr>`;
               document.getElementById('statTotalReportes').textContent = 'Error'; document.getElementById('statReportesHoy').textContent = 'Error';
               return;
           }
       }
 
       tbody.innerHTML = '';
-      const reportesParaMostrar = todosLosReportes; // Por ahora mostramos todos, el filtro de tabla actúa después
+      const reportesParaMostrar = todosLosReportes;
 
       if (reportesParaMostrar.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados.</td></tr>`;
       } else {
           reportesParaMostrar.forEach(data => {
-            const tr = document.createElement("tr"); tr.dataset.reporteId = data.id;
-            const estadoActual = data.estado || "Pendiente";
-            tr.classList.add(`fila-estado-${estadoActual.toLowerCase()}`);
+            const tr = document.createElement("tr");
+            tr.dataset.reporteId = data.id;
 
             const createCellInternal = (text, className = '') => { const td = document.createElement('td'); td.textContent = text || '-'; if(className) td.classList.add(className); return td; };
             tr.appendChild(createCellInternal(formatearFechaLocal(data.fechaCirugia)));
@@ -353,34 +403,36 @@ const firebaseConfig = {
             tr.appendChild(createCellInternal(data.medico, 'col-medico'));
             tr.appendChild(createCellInternal(data.tipoCirugia ? (data.tipoCirugia.length > 23 ? data.tipoCirugia.substring(0,20)+'...' : data.tipoCirugia) : '-', 'col-tipocx'));
             
-            // Celda de Estado con Select
-            const tdEstado = document.createElement('td');
-            const estadoDot = document.createElement('span');
-            estadoDot.className = `estado-dot ${estadoActual.toLowerCase()}`;
-            tdEstado.appendChild(estadoDot);
+            const tdActions = document.createElement('td');
+            tdActions.classList.add('col-acciones');
+            
+            const btnVer = document.createElement('button');
+            btnVer.textContent = 'Ver';
+            btnVer.classList.add('btn-admin-action', 'btn-admin-ver');
+            btnVer.onclick = function() { abrirModalReporteDetalle(data); };
+            tdActions.appendChild(btnVer);
+            
+            const btnCopiar = document.createElement('button');
+            btnCopiar.innerHTML = '📋';
+            btnCopiar.title = 'Copiar Reporte';
+            btnCopiar.classList.add('btn-admin-action', 'btn-admin-copiar');
+            btnCopiar.onclick = function() { copiarReporteAdmin(data); };
+            tdActions.appendChild(btnCopiar);
 
-            const selectEstado = document.createElement('select');
-            selectEstado.classList.add('estado-select');
-            ESTADOS_POSIBLES.forEach(est => {
-                const option = document.createElement('option');
-                option.value = est; option.textContent = est;
-                if (est === estadoActual) option.selected = true;
-                selectEstado.appendChild(option);
-            });
-            selectEstado.onchange = function() { cambiarEstadoReporte(data.id, this.value); };
-            tdEstado.appendChild(selectEstado);
-            tr.appendChild(tdEstado);
-
-            tr.appendChild(createCellInternal(formatearTimestamp(data.timestamp)));
-            const tdActions = document.createElement('td'); tdActions.classList.add('col-acciones');
-            const btnVer = document.createElement('button'); btnVer.textContent = 'Ver'; btnVer.classList.add('btn-admin-action', 'btn-admin-ver'); btnVer.onclick = function() { abrirModalReporteDetalle(data); }; tdActions.appendChild(btnVer);
-            const btnWsp = document.createElement('button'); btnWsp.innerHTML = '📲'; btnWsp.title = 'Reenviar WhatsApp'; btnWsp.classList.add('btn-admin-action', 'btn-admin-wsp'); btnWsp.onclick = function() { reenviarWhatsAppAdmin(data); }; tdActions.appendChild(btnWsp);
-            tr.appendChild(tdActions); tbody.appendChild(tr);
+            const btnWsp = document.createElement('button');
+            btnWsp.innerHTML = '📲';
+            btnWsp.title = 'Reenviar WhatsApp';
+            btnWsp.classList.add('btn-admin-action', 'btn-admin-wsp');
+            btnWsp.onclick = function() { reenviarWhatsAppAdmin(data); };
+            tdActions.appendChild(btnWsp);
+            
+            tr.appendChild(tdActions);
+            tbody.appendChild(tr);
           });
       }
       
       if (actualizarDatosGlobales || forzarRecargaCompleta) {
-         await actualizarGraficosConFiltros(); // Llama a cargarEstadisticas con los filtros actuales
+         await actualizarGraficosConFiltros();
       }
       filtrarTablaAdmin();
       if (forzarRecargaCompleta) {
@@ -404,9 +456,8 @@ const firebaseConfig = {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const nuevoTimestampMillis = change.doc.data().timestamp.toMillis();
-                        if (nuevoTimestampMillis > refTimestamp) { // Solo si es realmente más nuevo que la referencia actual del listener
+                        if (nuevoTimestampMillis > refTimestamp) {
                             hayNuevosEsteSnapshot = true;
-                            // Actualizar la referencia para la próxima notificación, NO para la consulta del listener
                             if (nuevoTimestampMillis > parseInt(localStorage.getItem('adminLastReportTimestamp') || '0') ) {
                                 localStorage.setItem('adminLastReportTimestamp', nuevoTimestampMillis);
                             }
@@ -434,9 +485,9 @@ const firebaseConfig = {
     }
 
     function filtrarTablaAdmin() {
-        const input = document.getElementById("searchInputAdmin");
-        const filtroTexto = input.value.toUpperCase().trim();
-        const filtroEstado = document.getElementById("filtroEstadoTabla").value;
+        const filtroTexto = document.getElementById("searchInputAdmin").value.toUpperCase().trim();
+        const filtroDesde = document.getElementById("filtroFechaDesde").value;
+        const filtroHasta = document.getElementById("filtroFechaHasta").value;
         const tbody = document.getElementById("reporte-rows-admin");
         const rows = tbody.getElementsByTagName("tr");
         let hayResultados = false;
@@ -444,10 +495,13 @@ const firebaseConfig = {
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
             if (!row.dataset.reporteId) { row.classList.remove('fila-oculta'); continue; }
+            
             const reporteId = row.dataset.reporteId;
             const reporteData = todosLosReportes.find(r => r.id === reporteId);
             let mostrarFila = true;
+
             if (reporteData) {
+                // Filtro por texto general
                 if (filtroTexto !== "") {
                     const cliente = (reporteData.cliente || "").toUpperCase();
                     const paciente = (reporteData.paciente || "").toUpperCase();
@@ -456,26 +510,45 @@ const firebaseConfig = {
                         mostrarFila = false;
                     }
                 }
-                if (filtroEstado !== "") {
-                    const estadoReporte = reporteData.estado || "Pendiente"; // Asumir pendiente si no tiene estado
-                    if (estadoReporte !== filtroEstado) {
+                
+                // Filtro por rango de fechas
+                const fechaCirugia = reporteData.fechaCirugia; // Formato YYYY-MM-DD
+                if (mostrarFila && fechaCirugia) {
+                    if (filtroDesde && fechaCirugia < filtroDesde) {
+                        mostrarFila = false;
+                    }
+                    if (filtroHasta && fechaCirugia > filtroHasta) {
                         mostrarFila = false;
                     }
                 }
-                if (mostrarFila) { row.classList.remove('fila-oculta'); hayResultados = true; } 
-                else { row.classList.add('fila-oculta'); }
-            } else { row.classList.add('fila-oculta'); }
+
+                if (mostrarFila) {
+                    row.classList.remove('fila-oculta');
+                    hayResultados = true;
+                } else {
+                    row.classList.add('fila-oculta');
+                }
+            } else {
+                row.classList.add('fila-oculta');
+            }
         }
+
         const noResultsRowId = 'no-results-row';
         let noResultsRow = document.getElementById(noResultsRowId);
-        if (!hayResultados && (filtroTexto !== "" || filtroEstado !== "")) {
+        if (!hayResultados && (filtroTexto !== "" || filtroDesde || filtroHasta)) {
             if (!noResultsRow) {
-                noResultsRow = tbody.insertRow(); noResultsRow.id = noResultsRowId;
-                const cell = noResultsRow.insertCell(); cell.colSpan = 8; // Ajustar colspan
+                noResultsRow = tbody.insertRow();
+                noResultsRow.id = noResultsRowId;
+                const cell = noResultsRow.insertCell();
+                cell.colSpan = 6; // Ajustar colspan al nuevo número de columnas
                 cell.textContent = "No se encontraron reportes que coincidan con los filtros.";
-                cell.style.textAlign = "center"; cell.style.padding = "20px"; cell.style.color = "#777";
+                cell.style.textAlign = "center";
+                cell.style.padding = "20px";
+                cell.style.color = "#777";
             }
-        } else if (noResultsRow) { noResultsRow.remove(); }
+        } else if (noResultsRow) {
+            noResultsRow.remove();
+        }
     }
     
     window.onload = async function () {
@@ -486,6 +559,5 @@ const firebaseConfig = {
       if (modalDetalle) modalDetalle.addEventListener('click', function(event) { if (event.target === this) cerrarModalReporteDetalle(); });
     };
 </script>
-  </script>
 </body>
 </html>

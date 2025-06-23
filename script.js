@@ -31,6 +31,7 @@ const COLECCION_MATERIALES = 'materiales';
 const LOCALSTORAGE_USER_ID = 'usuarioId';
 const LOCALSTORAGE_ULTIMO_REPORTE = 'ultimoReporteDistricorr';
 const DEBOUNCE_DELAY = 250;
+const EMAIL_DESTINO_SOLICITUD = 'comprasimplantes@districorr.com.ar';
 
 // --- Fondos y Saludos Dinámicos (Temáticos Quirófano/Medicina) ---
 const fondosPorDia = {
@@ -112,6 +113,7 @@ let listaTiposCxCargada = null;
 let listaMaterialesCargada = null;
 let reportePendiente = null;
 let guardandoReporte = false;
+let materialesSolicitados = []; // NUEVA: Para el modal de solicitud de material
 
 // --- Helper Debounce ---
 function debounce(func, wait) {
@@ -593,6 +595,171 @@ const debouncedFilterMateriales = debounce(() => { // Adaptada para materiales
     }
 }, DEBOUNCE_DELAY);
 
+
+// --- NUEVAS FUNCIONES PARA MODAL DE SOLICITUD DE MATERIAL ---
+function abrirModalSolicitudMaterial() {
+    // Primero, validar que los campos requeridos del formulario principal estén completos
+    const camposRequeridos = ['paciente', 'cliente', 'medico', 'fechaCirugia'];
+    let formularioValido = true;
+    camposRequeridos.forEach(id => {
+        const input = document.getElementById(id);
+        if (!input || input.value.trim() === '') {
+            formularioValido = false;
+            // Marcar el campo inválido para que el usuario lo vea
+            if(input) input.classList.add('campo-invalido');
+        }
+    });
+
+    if (!formularioValido) {
+        mostrarToast('Por favor, complete los campos requeridos (*) del formulario principal antes de solicitar material.', 'warning');
+        return;
+    }
+
+    const modal = document.getElementById('modalSolicitudMaterial');
+    if (modal) {
+        modal.classList.add('visible');
+        modal.style.display = 'flex';
+        document.getElementById('solicitud-material-desc').focus();
+    }
+}
+
+function cerrarModalSolicitudMaterial() {
+    const modal = document.getElementById('modalSolicitudMaterial');
+    if (modal) {
+        modal.classList.remove('visible');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+        // Limpiar el estado para la próxima vez
+        materialesSolicitados = [];
+        renderizarTablaSolicitud();
+        document.getElementById('solicitud-material-form').reset();
+        document.getElementById('solicitud-es-urgente').checked = false;
+    }
+}
+
+function agregarMaterialSolicitud(event) {
+    event.preventDefault(); // Evitar que el formulario recargue la página
+    const descInput = document.getElementById('solicitud-material-desc');
+    const cantInput = document.getElementById('solicitud-material-cant');
+    const descripcion = descInput.value.trim();
+    const cantidad = parseInt(cantInput.value, 10);
+
+    if (descripcion && cantidad > 0) {
+        materialesSolicitados.push({ descripcion, cantidad });
+        renderizarTablaSolicitud();
+        descInput.value = '';
+        cantInput.value = '1';
+        descInput.focus();
+    } else {
+        mostrarToast('Por favor, ingrese una descripción y una cantidad válida.', 'warning');
+    }
+}
+
+function eliminarMaterialSolicitud(index) {
+    materialesSolicitados.splice(index, 1);
+    renderizarTablaSolicitud();
+}
+
+function renderizarTablaSolicitud() {
+    const tbody = document.getElementById('solicitud-material-tbody');
+    tbody.innerHTML = ''; // Limpiar la tabla
+    if (materialesSolicitados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#777; padding: 15px;">No hay materiales añadidos.</td></tr>';
+    } else {
+        materialesSolicitados.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.descripcion}</td>
+                <td>${item.cantidad}</td>
+                <td><button class="btn-delete-item" onclick="eliminarMaterialSolicitud(${index})">Eliminar</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+}
+
+function enviarSolicitudMaterial() {
+    if (materialesSolicitados.length === 0) {
+        mostrarToast('Debe añadir al menos un material a la lista.', 'warning');
+        return;
+    }
+
+    // Recopilar datos del formulario principal
+    const datosCirugia = obtenerDatos();
+    const paciente = datosCirugia.paciente || 'No especificado';
+    const cliente = datosCirugia.cliente || 'No especificado';
+    const medico = datosCirugia.medico || 'No especificado';
+    const fechaCirugia = formatearFechaUsuario(datosCirugia.fechaCirugia);
+
+    // Construir el asunto del correo
+    const asunto = `Solicitud de Material para Cirugía - ${paciente} - ${cliente} - ${medico}`;
+
+    // Construir la tabla de materiales en HTML
+    let tablaMaterialesHTML = `
+        <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
+            <thead style="background-color: #f2f2f2;">
+                <tr>
+                    <th style="padding: 8px; text-align: left;">Material</th>
+                    <th style="padding: 8px; text-align: center;">Cantidad</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    materialesSolicitados.forEach(item => {
+        tablaMaterialesHTML += `
+            <tr>
+                <td style="padding: 8px;">${item.descripcion}</td>
+                <td style="padding: 8px; text-align: center;">${item.cantidad}</td>
+            </tr>
+        `;
+    });
+    tablaMaterialesHTML += '</tbody></table>';
+
+    // Construir la sección de consideraciones adicionales si es urgente
+    const esUrgente = document.getElementById('solicitud-es-urgente').checked;
+    let consideracionesHTML = '';
+    if (esUrgente) {
+        consideracionesHTML = `
+            <h3 style="color: #dc3545; font-family: Arial, sans-serif;">Consideraciones Adicionales:</h3>
+            <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
+                <tbody>
+                    <tr>
+                        <td style="padding: 8px; background-color: #ffcdd2; color: #c62828; font-weight: bold;">URGENTE - La cirugía ha sido adelantada o requiere atención inmediata.</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+    }
+
+    // Construir el cuerpo completo del correo en HTML
+    const cuerpoHTML = `
+<p style="font-family: Arial, sans-serif; font-size: 14px;">Estimada,</p>
+<p style="font-family: Arial, sans-serif; font-size: 14px;">Buenos días,</p>
+<p style="font-family: Arial, sans-serif; font-size: 14px;">Por medio de este correo, solicito formalmente el siguiente material para la cirugía del paciente <strong>${paciente}</strong>.</p>
+<h3 style="font-family: Arial, sans-serif;">Detalles de la Cirugía:</h3>
+<ul style="font-family: Arial, sans-serif; font-size: 14px;">
+    <li><strong>Médico Tratante:</strong> ${medico}</li>
+    <li><strong>Cliente:</strong> ${cliente}</li>
+    <li><strong>Fecha de Cirugía:</strong> ${fechaCirugia}</li>
+</ul>
+<h3 style="font-family: Arial, sans-serif;">Material a solicitar:</h3>
+${tablaMaterialesHTML}
+<br>
+${consideracionesHTML}
+<p style="font-family: Arial, sans-serif; font-size: 14px;">Agradezco de antemano su gestión.</p>
+<p style="font-family: Arial, sans-serif; font-size: 14px;">Saludos cordiales,</p>
+    `.trim().replace(/>\s+</g, '><'); // AJUSTE: .trim() para quitar espacios al inicio/final y regex para quitar espacios entre etiquetas
+
+    // Crear y abrir el link mailto
+    const mailtoLink = `mailto:${EMAIL_DESTINO_SOLICITUD}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpoHTML)}`;
+    window.location.href = mailtoLink;
+
+    mostrarToast('Redirigiendo a su cliente de correo...', 'success');
+    cerrarModalSolicitudMaterial();
+}
+
+
 // --- Inicialización ---
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('reporteForm')) { // Solo en index.html
@@ -622,8 +789,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if(fechaInput) { fechaInput.value = fechaISO; validarCampo(fechaInput); }
     } catch (e) { console.error("Error estableciendo fecha:", e); }
     if (retrySaveBtn) retrySaveBtn.addEventListener('click', reintentarGuardado);
-    const modalsToSetup = [ { id: 'modalClientes', closeFn: cerrarModalClientes }, { id: 'modalMateriales', closeFn: cerrarModalMateriales }, { id: 'modalTipoCx', closeFn: cerrarModalTipoCx } ];
-    modalsToSetup.forEach(m => { const el = document.getElementById(m.id); if (el) el.addEventListener('click', function(e) { if (e.target === this) m.closeFn(); }); });
+    
+    // Configuración de listeners para todos los modales
+    const modalsToSetup = [ 
+        { id: 'modalClientes', closeFn: cerrarModalClientes }, 
+        { id: 'modalMateriales', closeFn: cerrarModalMateriales }, 
+        { id: 'modalTipoCx', closeFn: cerrarModalTipoCx },
+        { id: 'modalSolicitudMaterial', closeFn: cerrarModalSolicitudMaterial } // NUEVO
+    ];
+    modalsToSetup.forEach(m => { 
+        const el = document.getElementById(m.id); 
+        if (el) el.addEventListener('click', function(e) { if (e.target === this) m.closeFn(); }); 
+    });
+
+    // Listener para el formulario de añadir material en el nuevo modal
+    const solicitudMaterialForm = document.getElementById('solicitud-material-form');
+    if (solicitudMaterialForm) {
+        solicitudMaterialForm.addEventListener('submit', agregarMaterialSolicitud);
+    }
+    // Renderizar la tabla de solicitud vacía al inicio
+    renderizarTablaSolicitud();
+
     console.log("App Districorr inicializada.");
 });
 // --- END OF FILE script.js ---

@@ -126,6 +126,8 @@ button:disabled, .btn-admin-action:disabled {
 .btn-admin-ver:hover { background-color: #138496; }
 .btn-admin-wsp { background-color: #25D366; } /* Verde WhatsApp */
 .btn-admin-wsp:hover { background-color: #1DAE50; }
+.btn-admin-copiar { background-color: #007bff; } /* NUEVO: Azul para copiar */
+.btn-admin-copiar:hover { background-color: #0056b3; }
 
 
 /* --- Estilos para el Botón de Selección (Material y Tipo Cx) --- */
@@ -529,31 +531,30 @@ textarea.form-control {
 }
 
 /* --- Estilos para admin.html --- */
-.admin-controls { /* Contenedor para el buscador y filtros de tabla */
+.admin-filters-container { /* Contenedor para el buscador y filtros de tabla */
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
     margin-bottom: 20px;
-    padding: 10px;
-    background-color: #f0f2f5; /* Fondo ligeramente diferente para destacar */
-    border-radius: 6px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
 }
-.admin-controls .form-group { /* Hereda de .form-group general */
+.admin-filters-container .form-group { /* Hereda de .form-group general */
     margin-bottom: 0;
-    flex-grow: 1; /* Para que se distribuyan */
+    flex: 1 1 200px; /* Flex-grow, flex-shrink, flex-basis */
 }
-.admin-controls input.form-control,
-.admin-controls select.form-control { /* Estilos para inputs y selects en los controles */
-    max-width: 100%; /* Permitir que se ajusten al flex-grow */
-    min-width: 200px; /* Ancho mínimo para que no se achiquen demasiado */
+.admin-filters-container input.form-control,
+.admin-filters-container select.form-control {
     padding: 8px 12px;
     font-size: 14px;
 }
-.admin-controls label {
-    font-size: 0.9em;
-    margin-bottom: 4px;
+.admin-filters-container label {
+    font-size: 13px;
+    margin-bottom: 5px;
     color: #495057;
-    display: block; /* Asegurar que esté arriba del input/select */
+    display: block;
 }
 
 
@@ -572,7 +573,7 @@ body.admin-page table {
 
 body.admin-page th,
 body.admin-page td {
-    padding: 10px 12px; /* Aumentamos un poco el padding horizontal */
+    padding: 10px 12px;
     text-align: left;
     border-bottom: 1px solid #dee2e6;
     vertical-align: middle;
@@ -582,41 +583,28 @@ body.admin-page td {
 /* Definiendo anchos mínimos para columnas específicas */
 body.admin-page th:nth-child(1), /* Fecha Cir. */
 body.admin-page td:nth-child(1) {
-    min-width: 90px; /* Ancho para DD/MM/AA */
+    min-width: 90px;
     white-space: nowrap;
 }
 body.admin-page th:nth-child(2), /* Cliente */
 body.admin-page td.col-cliente {
     min-width: 130px;
-    white-space: normal;
 }
 body.admin-page th:nth-child(3), /* Paciente */
 body.admin-page td.col-paciente {
     min-width: 130px;
-    white-space: normal;
 }
 body.admin-page th:nth-child(4), /* Médico */
 body.admin-page td.col-medico {
     min-width: 130px;
-    white-space: normal;
 }
 body.admin-page th:nth-child(5), /* Tipo Cirugía */
 body.admin-page td.col-tipocx {
-    min-width: 150px; /* Un poco más para tipos de cirugía largos */
-    white-space: normal;
-}
-body.admin-page th:nth-child(6), /* Estado */
-body.admin-page td:nth-child(6) { /* Contenedor del select de estado */
-    min-width: 130px; 
-}
-body.admin-page th:nth-child(7), /* Guardado En */
-body.admin-page td:nth-child(7) {
-    min-width: 120px; /* Para fecha y hora DD/MM/AA HH:MM */
-    white-space: nowrap;
+    min-width: 150px;
 }
 body.admin-page th.col-acciones-header, /* Acciones */
 body.admin-page td.col-acciones {
-    min-width: 110px; /* Ajustar según los botones que tengas */
+    min-width: 140px; /* Aumentado para 3 botones */
     text-align: center;
     white-space: nowrap;
 }
@@ -641,31 +629,6 @@ body.admin-page tbody tr.fila-oculta {
     display: none;
 }
 
-/* Estilos para el select de estado en la tabla */
-.estado-select { 
-    padding: 5px 8px; 
-    font-size: 13px; /* Un poco más grande */
-    border-radius: 4px; 
-    border: 1px solid #ced4da; /* Borde sutil */
-    background-color: #fff; 
-    min-width: 110px; /* Asegurar que el texto del estado quepa */
-    box-sizing: border-box;
-}
-.estado-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle;}
-.estado-dot.pendiente { background-color: #ffc107; }
-.estado-dot.revisado { background-color: #28a745; }
-.estado-dot.facturado { background-color: #17a2b8; }
-.estado-dot.completado { background-color: #6c757d; }
-
-.fila-estado-completado td { 
-    color: #6c757d; /* Texto más apagado */
-    /* text-decoration: line-through; /* Opcional: tachar */
-}
-.fila-estado-completado .estado-select {
-    opacity: 0.7;
-}
-
-
 /* --- Responsividad --- */
 @media (max-width: 768px) {
   .container { padding: 20px; }
@@ -675,7 +638,7 @@ body.admin-page tbody tr.fila-oculta {
   body.admin-page th, body.admin-page td { font-size: 14px; white-space: normal; padding: 10px 8px;}
   body.admin-page td.col-acciones { text-align: left; } /* En móvil, botones a la izquierda */
   .modal-content { width: 95%; padding: 20px; }
-  .admin-controls input.form-control { max-width: 100%; }
+  .admin-filters-container { flex-direction: column; }
 }
 
 @media (max-width: 480px) {
@@ -694,4 +657,68 @@ body.admin-page tbody tr.fila-oculta {
    body.admin-page td.col-acciones .btn-admin-action { width: auto; display: inline-block; margin-right: 5px; }
 }
 
-/* --- END OF FILE style.css --- */
+/* --- ESTILOS PARA MODAL DE SOLICITUD DE MATERIAL (de index.html, por si se reutiliza) --- */
+.add-form-solicitud {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.add-form-solicitud #solicitud-material-desc {
+  flex-grow: 1;
+}
+.add-form-solicitud #solicitud-material-cant {
+  flex-basis: 80px;
+  flex-grow: 0;
+}
+.add-form-solicitud button {
+  flex-shrink: 0;
+}
+
+#solicitud-material-table th, #solicitud-material-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+#solicitud-material-table thead th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  font-size: 14px;
+  color: #495057;
+}
+#solicitud-material-table tbody tr:last-child td {
+  border-bottom: none;
+}
+#solicitud-material-table td:nth-child(2),
+#solicitud-material-table td:nth-child(3) {
+  text-align: center;
+}
+
+.btn-delete-item {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1;
+}
+.btn-delete-item:hover {
+  background-color: #c82333;
+}
+
+.form-group-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.form-group-checkbox input[type="checkbox"] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+.form-group-checkbox label {
+  margin: 0;
+  cursor: pointer;
+  font-weight: 600;
+  color: #333;
+}
