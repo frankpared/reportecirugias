@@ -131,7 +131,7 @@
       <a href="admin.html" class="btn-link" title="Ver la lista de reportes guardados">📁 Ver Reportes</a>
     </div>
 
-    <!-- Nueva Sección para Solicitud de Material -->
+    <!-- Sección para Solicitud de Material -->
     <div class="text-center" style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #dee2e6;">
         <button type="button" onclick="abrirModalSolicitudMaterial()" class="btn-warning">📧 Solicitar Pedido de Material a Leticia</button>
     </div>
@@ -145,7 +145,7 @@
   <div id="modalMateriales" class="modal-overlay" style="display: none;"> <div class="modal-content"> <div class="modal-header"><h3>Seleccionar Materiales</h3><button class="modal-close-btn" onclick="cerrarModalMateriales()">×</button></div> <div class="modal-body"><input type="text" id="modalMaterialesSearchInput" class="form-control" placeholder="Buscar material..." onkeyup="debouncedFilterMateriales()"><div id="modalMaterialesLista" class="modal-lista-container">Cargando materiales...</div></div> <div class="modal-footer"><button type="button" class="btn-link" onclick="cerrarModalMateriales()">Cancelar</button><button type="button" class="btn-primario" onclick="anadirMaterialesSeleccionados()">Añadir Seleccionados</button></div> </div> </div>
   <div id="modalTipoCx" class="modal-overlay" style="display: none;"> <div class="modal-content"> <div class="modal-header"><h3>Seleccionar Tipo de Cirugía</h3><button class="modal-close-btn" onclick="cerrarModalTipoCx()">×</button></div> <div class="modal-body"><input type="text" id="modalTipoCxSearchInput" class="form-control" placeholder="Buscar tipo de cirugía..." onkeyup="debouncedFilterTipoCx()"><div id="modalTipoCxLista" class="modal-lista-container">Cargando tipos de cirugía...</div></div> <div class="modal-footer"><button type="button" class="btn-link" onclick="cerrarModalTipoCx()">Cancelar</button></div> </div> </div>
 
-  <!-- NUEVO MODAL PARA SOLICITUD DE MATERIAL -->
+  <!-- MODAL PARA SOLICITUD DE MATERIAL -->
   <div id="modalSolicitudMaterial" class="modal-overlay" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
@@ -155,14 +155,12 @@
       <div class="modal-body">
         <p class="ayuda-texto" style="font-style: normal; margin-bottom: 20px;">Añada los materiales que necesita solicitar. La información del paciente, médico y cliente se tomará del formulario principal.</p>
         
-        <!-- Formulario para añadir un nuevo material a la lista -->
         <form id="solicitud-material-form" class="add-form-solicitud">
           <input type="text" id="solicitud-material-desc" class="form-control" placeholder="Descripción del material" required>
           <input type="number" id="solicitud-material-cant" class="form-control" placeholder="Cant." required min="1" value="1">
           <button type="submit" class="btn-primario">➕ Añadir</button>
         </form>
 
-        <!-- Tabla donde se mostrarán los materiales añadidos -->
         <div class="table-responsive" style="margin-top: 20px;">
           <table id="solicitud-material-table" style="width:100%;">
             <thead>
@@ -178,7 +176,6 @@
           </table>
         </div>
 
-        <!-- Checkbox para urgencia -->
         <div class="form-group-checkbox" style="margin-top: 20px;">
           <input type="checkbox" id="solicitud-es-urgente">
           <label for="solicitud-es-urgente">Marcar como solicitud URGENTE</label>
@@ -187,7 +184,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-link" onclick="cerrarModalSolicitudMaterial()">Cancelar</button>
-        <button type="button" class="btn-primario" onclick="enviarSolicitudMaterial()">Generar y Enviar Email</button>
+        <button type="button" class="btn-primario" onclick="enviarSolicitudYCrearPedido()">Enviar Email y Crear Pedido</button>
       </div>
     </div>
   </div>
