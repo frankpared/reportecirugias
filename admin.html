@@ -107,7 +107,7 @@
   </div>
   <div id="toast" class="toast-notification" style="display:none;"></div>
 
-<script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCFtuuSPCcQIkgDN_F1WRS4U-71pRNCf_E", // TU API KEY
       authDomain: "cirugia-reporte.firebaseapp.com",
@@ -374,7 +374,7 @@ Saludos, quedo al pendiente.`;
       if (actualizarDatosGlobales) {
           tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #555;">Cargando y procesando reportes...</td></tr>`;
           try {
-            const snapshot = await db.collection("reportes").orderBy("fechaCirugia", "desc").limit(500).get(); // Ordenar por fecha de cirugía y límite mayor
+            const snapshot = await db.collection("reportes").orderBy("fechaCirugia", "desc").limit(500).get();
             todosLosReportes = [];
             snapshot.forEach(doc => { const data = doc.data(); data.id = doc.id; todosLosReportes.push(data); });
             poblarFiltrosGraficos();
@@ -396,15 +396,24 @@ Saludos, quedo al pendiente.`;
             const tr = document.createElement("tr");
             tr.dataset.reporteId = data.id;
 
-            const createCellInternal = (text, className = '') => { const td = document.createElement('td'); td.textContent = text || '-'; if(className) td.classList.add(className); return td; };
-            tr.appendChild(createCellInternal(formatearFechaLocal(data.fechaCirugia)));
-            tr.appendChild(createCellInternal(data.cliente, 'col-cliente'));
-            tr.appendChild(createCellInternal(data.paciente, 'col-paciente'));
-            tr.appendChild(createCellInternal(data.medico, 'col-medico'));
-            tr.appendChild(createCellInternal(data.tipoCirugia ? (data.tipoCirugia.length > 23 ? data.tipoCirugia.substring(0,20)+'...' : data.tipoCirugia) : '-', 'col-tipocx'));
+            // MODIFICACIÓN CLAVE: Añadir data-label a cada celda
+            const createCellInternal = (text, label, className = '') => {
+                const td = document.createElement('td');
+                td.textContent = text || '-';
+                td.dataset.label = label; // <-- AÑADIDO
+                if(className) td.classList.add(className);
+                return td;
+            };
+            
+            tr.appendChild(createCellInternal(formatearFechaLocal(data.fechaCirugia), 'Fecha Cir.'));
+            tr.appendChild(createCellInternal(data.cliente, 'Cliente', 'col-cliente'));
+            tr.appendChild(createCellInternal(data.paciente, 'Paciente', 'col-paciente'));
+            tr.appendChild(createCellInternal(data.medico, 'Médico', 'col-medico'));
+            tr.appendChild(createCellInternal(data.tipoCirugia ? (data.tipoCirugia.length > 23 ? data.tipoCirugia.substring(0,20)+'...' : data.tipoCirugia) : '-', 'Tipo Cirugía', 'col-tipocx'));
             
             const tdActions = document.createElement('td');
             tdActions.classList.add('col-acciones');
+            tdActions.dataset.label = 'Acciones';
             
             const btnVer = document.createElement('button');
             btnVer.textContent = 'Ver';
