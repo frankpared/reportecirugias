@@ -32,7 +32,7 @@ const LOCALSTORAGE_USER_ID = 'usuarioId';
 const LOCALSTORAGE_ULTIMO_REPORTE = 'ultimoReporteDistricorr';
 const DEBOUNCE_DELAY = 250;
 const EMAIL_DESTINO_SOLICITUD = 'comprasimplantes@districorr.com.ar';
-const DISTRITRACK_URL = 'https://distritrack.vercel.app/dashboard/new-surgery';
+const DISTRITRACK_URL = 'https://distri-track.vercel.app/dashboard/new-surgery';
 
 // --- Fondos y Saludos Dinámicos (Temáticos Quirófano/Medicina) ---
 const fondosPorDia = {
