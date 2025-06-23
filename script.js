@@ -691,74 +691,63 @@ function enviarSolicitudMaterial() {
     const cliente = datosCirugia.cliente || 'No especificado';
     const medico = datosCirugia.medico || 'No especificado';
     const fechaCirugia = formatearFechaUsuario(datosCirugia.fechaCirugia);
+    const tipoCirugia = datosCirugia.tipoCirugia || 'No especificado'; // Campo añadido
+    const lugarCirugia = datosCirugia.lugarCirugia || 'No especificado'; // Campo añadido
 
     // Construir el asunto del correo
     const asunto = `Solicitud de Material para Cirugía - ${paciente} - ${cliente} - ${medico}`;
 
-    // Construir la tabla de materiales en HTML
-    let tablaMaterialesHTML = `
-        <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
-            <thead style="background-color: #f2f2f2;">
-                <tr>
-                    <th style="padding: 8px; text-align: left;">Material</th>
-                    <th style="padding: 8px; text-align: center;">Cantidad</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
+    // Construir la "tabla" de materiales como texto plano
+    let tablaMaterialesTexto = "Material\t\t\tCantidad\n"; // Encabezados con tabulaciones
+    tablaMaterialesTexto += "--------------------------------------------------\n";
     materialesSolicitados.forEach(item => {
-        tablaMaterialesHTML += `
-            <tr>
-                <td style="padding: 8px;">${item.descripcion}</td>
-                <td style="padding: 8px; text-align: center;">${item.cantidad}</td>
-            </tr>
-        `;
+        // Usamos padEnd para alinear la columna de cantidad, simulando una tabla
+        const descripcionRecortada = item.descripcion.length > 30 ? item.descripcion.substring(0, 27) + '...' : item.descripcion;
+        tablaMaterialesTexto += `${descripcionRecortada.padEnd(35, ' ')}\t${item.cantidad}\n`;
     });
-    tablaMaterialesHTML += '</tbody></table>';
 
     // Construir la sección de consideraciones adicionales si es urgente
     const esUrgente = document.getElementById('solicitud-es-urgente').checked;
-    let consideracionesHTML = '';
+    let consideracionesTexto = '';
     if (esUrgente) {
-        consideracionesHTML = `
-            <h3 style="color: #dc3545; font-family: Arial, sans-serif;">Consideraciones Adicionales:</h3>
-            <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
-                <tbody>
-                    <tr>
-                        <td style="padding: 8px; background-color: #ffcdd2; color: #c62828; font-weight: bold;">URGENTE - La cirugía ha sido adelantada o requiere atención inmediata.</td>
-                    </tr>
-                </tbody>
-            </table>
-        `;
+        consideracionesTexto = `
+Consideraciones Adicionales:
+**************************************************
+URGENTE - La cirugía ha sido adelantada o requiere atención inmediata.
+**************************************************
+`;
     }
 
-    // Construir el cuerpo completo del correo en HTML
-    const cuerpoHTML = `
-<p style="font-family: Arial, sans-serif; font-size: 14px;">Estimada,</p>
-<p style="font-family: Arial, sans-serif; font-size: 14px;">Buenos días,</p>
-<p style="font-family: Arial, sans-serif; font-size: 14px;">Por medio de este correo, solicito formalmente el siguiente material para la cirugía del paciente <strong>${paciente}</strong>.</p>
-<h3 style="font-family: Arial, sans-serif;">Detalles de la Cirugía:</h3>
-<ul style="font-family: Arial, sans-serif; font-size: 14px;">
-    <li><strong>Médico Tratante:</strong> ${medico}</li>
-    <li><strong>Cliente:</strong> ${cliente}</li>
-    <li><strong>Fecha de Cirugía:</strong> ${fechaCirugia}</li>
-</ul>
-<h3 style="font-family: Arial, sans-serif;">Material a solicitar:</h3>
-${tablaMaterialesHTML}
-<br>
-${consideracionesHTML}
-<p style="font-family: Arial, sans-serif; font-size: 14px;">Agradezco de antemano su gestión.</p>
-<p style="font-family: Arial, sans-serif; font-size: 14px;">Saludos cordiales,</p>
-    `.trim().replace(/>\s+</g, '><'); // AJUSTE: .trim() para quitar espacios al inicio/final y regex para quitar espacios entre etiquetas
+    // Construir el cuerpo completo del correo en TEXTO PLANO
+    const cuerpoTexto = `Estimada,
 
-    // Crear y abrir el link mailto
-    const mailtoLink = `mailto:${EMAIL_DESTINO_SOLICITUD}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpoHTML)}`;
+Buenos días,
+
+Por medio de este correo, solicito formalmente el siguiente material para la cirugía del paciente ${paciente}.
+
+Detalles de la Cirugía:
+- Paciente: ${paciente}
+- Cliente: ${cliente}
+- Médico Tratante: ${medico}
+- Fecha de Cirugía: ${fechaCirugia}
+- Tipo de Cirugía: ${tipoCirugia}
+- Lugar: ${lugarCirugia}
+
+Material a solicitar:
+${tablaMaterialesTexto}
+${consideracionesTexto}
+Agradezco de antemano su gestión.
+
+Saludos cordiales,
+`;
+
+    // Crear y abrir el link mailto con el cuerpo de texto plano
+    const mailtoLink = `mailto:${EMAIL_DESTINO_SOLICITUD}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpoTexto)}`;
     window.location.href = mailtoLink;
 
     mostrarToast('Redirigiendo a su cliente de correo...', 'success');
     cerrarModalSolicitudMaterial();
 }
-
 
 // --- Inicialización ---
 document.addEventListener('DOMContentLoaded', () => {
