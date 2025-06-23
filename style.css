@@ -126,7 +126,7 @@ button:disabled, .btn-admin-action:disabled {
 .btn-admin-ver:hover { background-color: #138496; }
 .btn-admin-wsp { background-color: #25D366; } /* Verde WhatsApp */
 .btn-admin-wsp:hover { background-color: #1DAE50; }
-.btn-admin-copiar { background-color: #007bff; } /* NUEVO: Azul para copiar */
+.btn-admin-copiar { background-color: #007bff; }
 .btn-admin-copiar:hover { background-color: #0056b3; }
 
 
@@ -580,36 +580,6 @@ body.admin-page td {
     word-break: break-word;
 }
 
-/* Definiendo anchos mínimos para columnas específicas */
-body.admin-page th:nth-child(1), /* Fecha Cir. */
-body.admin-page td:nth-child(1) {
-    min-width: 90px;
-    white-space: nowrap;
-}
-body.admin-page th:nth-child(2), /* Cliente */
-body.admin-page td.col-cliente {
-    min-width: 130px;
-}
-body.admin-page th:nth-child(3), /* Paciente */
-body.admin-page td.col-paciente {
-    min-width: 130px;
-}
-body.admin-page th:nth-child(4), /* Médico */
-body.admin-page td.col-medico {
-    min-width: 130px;
-}
-body.admin-page th:nth-child(5), /* Tipo Cirugía */
-body.admin-page td.col-tipocx {
-    min-width: 150px;
-}
-body.admin-page th.col-acciones-header, /* Acciones */
-body.admin-page td.col-acciones {
-    min-width: 140px; /* Aumentado para 3 botones */
-    text-align: center;
-    white-space: nowrap;
-}
-
-
 body.admin-page thead th {
     background-color: #007bff;
     color: #ffffff;
@@ -627,34 +597,6 @@ body.admin-page tbody tr:hover {
 }
 body.admin-page tbody tr.fila-oculta {
     display: none;
-}
-
-/* --- Responsividad --- */
-@media (max-width: 768px) {
-  .container { padding: 20px; }
-  button, .btn-volver, .btn-link, .btn-admin-action { padding: 8px 15px; font-size: 14px; }
-  .text-center { gap: 5px; }
-  h4 { font-size: 1.2em; }
-  body.admin-page th, body.admin-page td { font-size: 14px; white-space: normal; padding: 10px 8px;}
-  body.admin-page td.col-acciones { text-align: left; } /* En móvil, botones a la izquierda */
-  .modal-content { width: 95%; padding: 20px; }
-  .admin-filters-container { flex-direction: column; }
-}
-
-@media (max-width: 480px) {
-   body { padding: 10px; }
-   .container { padding: 15px; margin: 15px auto; }
-   body.admin-page th, body.admin-page td { padding: 8px 6px; font-size: 12px; } /* Aún menos padding en celu */
-   button, .btn-volver, .btn-link { width: 100%; margin: 5px 0; }
-   .btn-admin-action { width: auto; margin: 3px; padding: 5px 7px; font-size: 11px;} /* Botones de admin más chicos */
-   .form-actions-inline button { width: calc(50% - 10px); margin: 5px; } /* Limpiar y Cargar Último al 50% */
-   .text-center { flex-direction: column; }
-   .toast-notification { width: calc(100% - 40px); right: 20px; bottom: 20px; }
-   .modal-content { padding: 15px; }
-   .modal-header h3 { font-size: 1.1em; }
-   .modal-item label, #modalTipoCx .modal-item, #modalClientes .modal-item { font-size: 14px; }
-   body.admin-page td.col-acciones { min-width: auto; } /* Dejar que se ajuste en celu */
-   body.admin-page td.col-acciones .btn-admin-action { width: auto; display: inline-block; margin-right: 5px; }
 }
 
 /* --- ESTILOS PARA MODAL DE SOLICITUD DE MATERIAL (de index.html, por si se reutiliza) --- */
@@ -721,4 +663,132 @@ body.admin-page tbody tr.fila-oculta {
   cursor: pointer;
   font-weight: 600;
   color: #333;
+}
+
+/* --- INICIO DE MEJORAS DE RESPONSIVIDAD --- */
+
+/* Para el formulario de añadir material en datos_admin.html */
+.admin-data-section .add-form {
+    display: flex;
+    flex-wrap: wrap; /* Permite que los elementos se envuelvan */
+    gap: 10px;
+}
+.admin-data-section .add-form input {
+    flex-grow: 1; /* Permite que crezcan */
+    flex-basis: 180px; /* Ancho base antes de envolver */
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 15px; /* Menos padding en tablet */
+  }
+  
+  /* --- MEJORA CLAVE: Tabla de Reportes en modo "Tarjeta" --- */
+  #reportesTableAdmin {
+    border: 0;
+  }
+  #reportesTableAdmin thead {
+    border: none;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+  }
+  #reportesTableAdmin tr {
+    border-bottom: 3px solid #ddd;
+    display: block;
+    margin-bottom: .625em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    padding: .35em;
+  }
+  #reportesTableAdmin td {
+    border-bottom: 1px solid #ddd;
+    display: block;
+    font-size: .8em;
+    text-align: right;
+    padding-left: 50%; /* Espacio para la etiqueta */
+    position: relative;
+  }
+  #reportesTableAdmin td::before {
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+    text-transform: uppercase;
+    position: absolute;
+    left: 10px;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+  #reportesTableAdmin td:last-child {
+    border-bottom: 0;
+  }
+  #reportesTableAdmin td.col-acciones {
+    text-align: center; /* Centrar botones en móvil */
+    padding-left: 0;
+  }
+  #reportesTableAdmin td.col-acciones::before {
+    display: none; /* No mostrar etiqueta para acciones */
+  }
+  /* --- FIN MEJORA TABLA --- */
+
+  .admin-filters-container {
+    flex-direction: column;
+  }
+  .admin-stats-container {
+    grid-template-columns: 1fr 1fr; /* 2 columnas en tablet */
+  }
+  .modal-content {
+    width: 95%;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+   body {
+     padding: 10px 5px;
+   }
+   .container {
+     padding: 15px;
+     margin: 10px auto;
+   }
+   
+   /* Botones apilados */
+   .text-center {
+     flex-direction: column;
+     gap: 10px;
+   }
+   .text-center button, .text-center a {
+     width: 100%;
+     margin: 0;
+   }
+   .form-actions-inline {
+     flex-direction: row; /* Mantener botones de limpiar/cargar en línea */
+   }
+   .form-actions-inline button {
+     width: calc(50% - 5px); /* 50% con un pequeño gap */
+     margin: 0;
+   }
+
+   .toast-notification {
+     width: calc(100% - 40px);
+     right: 20px;
+     bottom: 20px;
+   }
+   .modal-content {
+     padding: 15px;
+     max-height: 90vh;
+   }
+   .modal-header h3 {
+     font-size: 1.1em;
+   }
+   .modal-item label, #modalTipoCx .modal-item, #modalClientes .modal-item {
+     font-size: 14px;
+   }
+   .admin-stats-container {
+    grid-template-columns: 1fr; /* 1 columna en móvil */
+   }
 }
