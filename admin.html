@@ -40,15 +40,15 @@
     <div class="admin-filters-container">
         <div class="form-group">
             <label for="searchInputAdmin">Buscar General:</label>
-            <input type="text" id="searchInputAdmin" class="form-control" placeholder="Cliente, Paciente o Médico..." onkeyup="filtrarTablaAdmin()">
+            <input type="text" id="searchInputAdmin" class="form-control" placeholder="Cliente, Paciente o Médico..." onkeyup="renderizarTabla(todosLosReportes)">
         </div>
         <div class="form-group">
             <label for="filtroFechaDesde">Fecha Cirugía Desde:</label>
-            <input type="date" id="filtroFechaDesde" class="form-control" onchange="filtrarTablaAdmin()">
+            <input type="date" id="filtroFechaDesde" class="form-control" onchange="manejarFiltroFecha()">
         </div>
         <div class="form-group">
             <label for="filtroFechaHasta">Fecha Cirugía Hasta:</label>
-            <input type="date" id="filtroFechaHasta" class="form-control" onchange="filtrarTablaAdmin()">
+            <input type="date" id="filtroFechaHasta" class="form-control" onchange="manejarFiltroFecha()">
         </div>
         <div class="form-group">
             <label for="filtroMedicoGraficos">Filtrar Gráficos por Médico:</label>
@@ -68,7 +68,7 @@
     </div>
 
     <div id="newReportNotification">
-        ¡Hay nuevos reportes! <a href="#" onclick="cargarReportesAdmin(true); this.parentNode.style.display='none'; return false;">Actualizar lista para verlos</a>
+        ¡Hay nuevos reportes! <a href="#" onclick="cargarReportesIniciales(); this.parentNode.style.display='none'; return false;">Actualizar lista para verlos</a>
     </div>
 
     <div id="exportBtnContainer">
@@ -91,6 +91,7 @@
            <tr><td colspan="6" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>
         </tbody>
       </table>
+      <p id="report-limit-message" class="ayuda-texto" style="text-align: center; margin-top: 15px; font-style: normal;"></p>
     </div>
 
     <div style="text-align: center; margin-top: 30px;">
@@ -120,7 +121,8 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    let todosLosReportes = [];
+    let todosLosReportes = []; // Almacena los reportes actualmente mostrados
+    let todosLosReportesGlobal = []; // Almacena todos los reportes para los gráficos
     let reportesFiltradosParaGraficos = [];
     let reportesSemanaChartInstance = null;
     let topTiposCxChartInstance = null;
@@ -275,13 +277,13 @@ Saludos, quedo al pendiente.`;
     function limpiarFiltrosFecha() {
         document.getElementById('filtroFechaDesde').value = '';
         document.getElementById('filtroFechaHasta').value = '';
-        filtrarTablaAdmin();
+        cargarReportesIniciales(); // Vuelve a cargar los últimos 20
     }
 
     // --- Gráficos y Estadísticas ---
-    function poblarFiltrosGraficos() {
-        const medicos = [...new Set(todosLosReportes.map(r => r.medico).filter(Boolean))].sort();
-        const clientes = [...new Set(todosLosReportes.map(r => r.cliente).filter(Boolean))].sort();
+    function poblarFiltrosGraficos(dataSource) {
+        const medicos = [...new Set(dataSource.map(r => r.medico).filter(Boolean))].sort();
+        const clientes = [...new Set(dataSource.map(r => r.cliente).filter(Boolean))].sort();
 
         const filtroMedicoSelect = document.getElementById('filtroMedicoGraficos');
         const filtroClienteSelect = document.getElementById('filtroClienteGraficos');
@@ -308,7 +310,7 @@ Saludos, quedo al pendiente.`;
         document.getElementById('labelReportesSemana').textContent = `Reportes (Últ. 7 días) ${medicoFiltro ? `- ${medicoFiltro}` : ''} ${clienteFiltro ? `- ${clienteFiltro}` : ''}`;
         document.getElementById('labelTopTiposCx').textContent = `Top Tipos Cx ${medicoFiltro ? `- ${medicoFiltro}` : ''} ${clienteFiltro ? `- ${clienteFiltro}` : ''}`;
 
-        reportesFiltradosParaGraficos = todosLosReportes.filter(r => {
+        reportesFiltradosParaGraficos = todosLosReportesGlobal.filter(r => {
             const medicoMatch = !medicoFiltro || r.medico === medicoFiltro;
             const clienteMatch = !clienteFiltro || r.cliente === clienteFiltro;
             return medicoMatch && clienteMatch;
@@ -316,10 +318,10 @@ Saludos, quedo al pendiente.`;
         cargarEstadisticasYGraficos(reportesFiltradosParaGraficos);
     }
 
-    async function cargarEstadisticasYGraficos(dataSource = todosLosReportes) {
-        if (dataSource.length === 0 && todosLosReportes.length === 0) {
-             document.getElementById('statTotalReportes').textContent = '0';
-             document.getElementById('statReportesHoy').textContent = '0';
+    async function cargarEstadisticasYGraficos(dataSource) {
+        if (dataSource.length === 0) {
+            document.getElementById('statTotalReportes').textContent = '0';
+            document.getElementById('statReportesHoy').textContent = '0';
             if (reportesSemanaChartInstance) reportesSemanaChartInstance.destroy();
             if (topTiposCxChartInstance) topTiposCxChartInstance.destroy();
             document.getElementById('reportesSemanaChart').parentNode.innerHTML = '<p style="text-align:center; color:#777; margin-top:50px;">No hay datos.</p>';
@@ -327,11 +329,11 @@ Saludos, quedo al pendiente.`;
             return;
         }
         
-        document.getElementById('statTotalReportes').textContent = todosLosReportes.length;
+        document.getElementById('statTotalReportes').textContent = todosLosReportesGlobal.length;
         const hoy = new Date();
         const inicioHoyTS = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(),0,0,0).getTime();
         const finHoyTS = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(),23,59,59).getTime();
-        const reportesHoy = todosLosReportes.filter(r => r.timestamp?.toDate()?.getTime() >= inicioHoyTS && r.timestamp?.toDate()?.getTime() <= finHoyTS);
+        const reportesHoy = todosLosReportesGlobal.filter(r => r.timestamp?.toDate()?.getTime() >= inicioHoyTS && r.timestamp?.toDate()?.getTime() <= finHoyTS);
         document.getElementById('statReportesHoy').textContent = reportesHoy.length;
 
         const reportesPorDia = {};
@@ -366,203 +368,142 @@ Saludos, quedo al pendiente.`;
         }
     }
 
-    // --- Carga Principal de Datos y Renderizado de Tabla ---
-    async function cargarReportesAdmin(forzarRecargaCompleta = false) {
-      const tbody = document.getElementById("reporte-rows-admin");
-      let actualizarDatosGlobales = forzarRecargaCompleta || todosLosReportes.length === 0;
-
-      if (actualizarDatosGlobales) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #555;">Cargando y procesando reportes...</td></tr>`;
-          try {
-            const snapshot = await db.collection("reportes").orderBy("fechaCirugia", "desc").limit(500).get();
-            todosLosReportes = [];
-            snapshot.forEach(doc => { const data = doc.data(); data.id = doc.id; todosLosReportes.push(data); });
-            poblarFiltrosGraficos();
-          } catch (error) {
-              console.error('Error cargando reportes admin:', error);
-              tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:red;">Error al cargar datos.</td></tr>`;
-              document.getElementById('statTotalReportes').textContent = 'Error'; document.getElementById('statReportesHoy').textContent = 'Error';
-              return;
-          }
-      }
-
-      tbody.innerHTML = '';
-      const reportesParaMostrar = todosLosReportes;
-
-      if (reportesParaMostrar.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #777;">No hay reportes guardados.</td></tr>`;
-      } else {
-          reportesParaMostrar.forEach(data => {
-            const tr = document.createElement("tr");
-            tr.dataset.reporteId = data.id;
-
-            // MODIFICACIÓN CLAVE: Añadir data-label a cada celda
-            const createCellInternal = (text, label, className = '') => {
-                const td = document.createElement('td');
-                td.textContent = text || '-';
-                td.dataset.label = label; // <-- AÑADIDO
-                if(className) td.classList.add(className);
-                return td;
-            };
+    // --- Carga de Datos y Renderizado ---
+    async function cargarReportesIniciales() {
+        const tbody = document.getElementById("reporte-rows-admin");
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #555;">Cargando reportes...</td></tr>`;
+        try {
+            const snapshot = await db.collection("reportes").orderBy("fechaCirugia", "desc").limit(20).get();
+            todosLosReportes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderizarTabla(todosLosReportes);
+            document.getElementById('report-limit-message').textContent = `Mostrando los últimos ${todosLosReportes.length} reportes. Use los filtros para buscar más antiguos.`;
             
-            tr.appendChild(createCellInternal(formatearFechaLocal(data.fechaCirugia), 'Fecha Cir.'));
-            tr.appendChild(createCellInternal(data.cliente, 'Cliente', 'col-cliente'));
-            tr.appendChild(createCellInternal(data.paciente, 'Paciente', 'col-paciente'));
-            tr.appendChild(createCellInternal(data.medico, 'Médico', 'col-medico'));
-            tr.appendChild(createCellInternal(data.tipoCirugia ? (data.tipoCirugia.length > 23 ? data.tipoCirugia.substring(0,20)+'...' : data.tipoCirugia) : '-', 'Tipo Cirugía', 'col-tipocx'));
-            
-            const tdActions = document.createElement('td');
-            tdActions.classList.add('col-acciones');
-            tdActions.dataset.label = 'Acciones';
-            
-            const btnVer = document.createElement('button');
-            btnVer.textContent = 'Ver';
-            btnVer.classList.add('btn-admin-action', 'btn-admin-ver');
-            btnVer.onclick = function() { abrirModalReporteDetalle(data); };
-            tdActions.appendChild(btnVer);
-            
-            const btnCopiar = document.createElement('button');
-            btnCopiar.innerHTML = '📋';
-            btnCopiar.title = 'Copiar Reporte';
-            btnCopiar.classList.add('btn-admin-action', 'btn-admin-copiar');
-            btnCopiar.onclick = function() { copiarReporteAdmin(data); };
-            tdActions.appendChild(btnCopiar);
+            // Cargar todos los datos para los gráficos en segundo plano
+            const snapshotGlobal = await db.collection("reportes").get();
+            todosLosReportesGlobal = snapshotGlobal.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            poblarFiltrosGraficos(todosLosReportesGlobal);
+            actualizarGraficosConFiltros();
 
-            const btnWsp = document.createElement('button');
-            btnWsp.innerHTML = '📲';
-            btnWsp.title = 'Reenviar WhatsApp';
-            btnWsp.classList.add('btn-admin-action', 'btn-admin-wsp');
-            btnWsp.onclick = function() { reenviarWhatsAppAdmin(data); };
-            tdActions.appendChild(btnWsp);
+        } catch (error) {
+            console.error('Error cargando reportes admin:', error);
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:red;">Error al cargar datos.</td></tr>`;
+        }
+    }
+
+    async function manejarFiltroFecha() {
+        const filtroDesde = document.getElementById("filtroFechaDesde").value;
+        const filtroHasta = document.getElementById("filtroFechaHasta").value;
+
+        if (!filtroDesde && !filtroHasta) {
+            cargarReportesIniciales();
+            return;
+        }
+        if (filtroDesde && filtroHasta && filtroDesde > filtroHasta) {
+            mostrarToastAdmin('La fecha "Desde" no puede ser posterior a la fecha "Hasta".', 'warning');
+            return;
+        }
+
+        const tbody = document.getElementById("reporte-rows-admin");
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #555;">Buscando en el rango de fechas...</td></tr>`;
+        
+        try {
+            let query = db.collection("reportes").orderBy("fechaCirugia", "desc");
+            if (filtroDesde) {
+                query = query.where("fechaCirugia", ">=", filtroDesde);
+            }
+            if (filtroHasta) {
+                query = query.where("fechaCirugia", "<=", filtroHasta);
+            }
             
-            tr.appendChild(tdActions);
-            tbody.appendChild(tr);
-          });
-      }
-      
-      if (actualizarDatosGlobales || forzarRecargaCompleta) {
-         await actualizarGraficosConFiltros();
-      }
-      filtrarTablaAdmin();
-      if (forzarRecargaCompleta) {
-         document.getElementById('newReportNotification').style.display = 'none';
-         if (todosLosReportes.length > 0 && todosLosReportes[0].timestamp) {
-             localStorage.setItem('adminLastReportTimestamp', todosLosReportes[0].timestamp.toMillis());
-         }
-      }
+            const snapshot = await query.get();
+            todosLosReportes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderizarTabla(todosLosReportes);
+            document.getElementById('report-limit-message').textContent = `Se encontraron ${todosLosReportes.length} reportes para el rango de fechas seleccionado.`;
+
+        } catch (error) {
+            console.error("Error buscando por fecha:", error);
+            mostrarToastAdmin("Error al buscar por fecha.", "error");
+        }
+    }
+
+    function renderizarTabla(reportes) {
+        const tbody = document.getElementById("reporte-rows-admin");
+        tbody.innerHTML = '';
+        
+        const filtroTexto = document.getElementById("searchInputAdmin").value.toUpperCase().trim();
+        const reportesFiltrados = reportes.filter(reporte => {
+            if (filtroTexto === "") return true;
+            const cliente = (reporte.cliente || "").toUpperCase();
+            const paciente = (reporte.paciente || "").toUpperCase();
+            const medico = (reporte.medico || "").toUpperCase();
+            return cliente.includes(filtroTexto) || paciente.includes(filtroTexto) || medico.includes(filtroTexto);
+        });
+
+        if (reportesFiltrados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #777;">No se encontraron reportes que coincidan con los filtros.</td></tr>`;
+        } else {
+            reportesFiltrados.forEach(data => {
+                const tr = document.createElement("tr");
+                tr.dataset.reporteId = data.id;
+
+                const createCellInternal = (text, label, className = '') => {
+                    const td = document.createElement('td');
+                    td.textContent = text || '-';
+                    td.dataset.label = label;
+                    if(className) td.classList.add(className);
+                    return td;
+                };
+                
+                tr.appendChild(createCellInternal(formatearFechaLocal(data.fechaCirugia), 'Fecha Cir.'));
+                tr.appendChild(createCellInternal(data.cliente, 'Cliente', 'col-cliente'));
+                tr.appendChild(createCellInternal(data.paciente, 'Paciente', 'col-paciente'));
+                tr.appendChild(createCellInternal(data.medico, 'Médico', 'col-medico'));
+                tr.appendChild(createCellInternal(data.tipoCirugia ? (data.tipoCirugia.length > 23 ? data.tipoCirugia.substring(0,20)+'...' : data.tipoCirugia) : '-', 'Tipo Cirugía', 'col-tipocx'));
+                
+                const tdActions = document.createElement('td');
+                tdActions.classList.add('col-acciones');
+                tdActions.dataset.label = 'Acciones';
+                
+                const btnVer = document.createElement('button');
+                btnVer.textContent = 'Ver';
+                btnVer.classList.add('btn-admin-action', 'btn-admin-ver');
+                btnVer.onclick = function() { abrirModalReporteDetalle(data); };
+                tdActions.appendChild(btnVer);
+                
+                const btnCopiar = document.createElement('button');
+                btnCopiar.innerHTML = '📋';
+                btnCopiar.title = 'Copiar Reporte';
+                btnCopiar.classList.add('btn-admin-action', 'btn-admin-copiar');
+                btnCopiar.onclick = function() { copiarReporteAdmin(data); };
+                tdActions.appendChild(btnCopiar);
+
+                const btnWsp = document.createElement('button');
+                btnWsp.innerHTML = '📲';
+                btnWsp.title = 'Reenviar WhatsApp';
+                btnWsp.classList.add('btn-admin-action', 'btn-admin-wsp');
+                btnWsp.onclick = function() { reenviarWhatsAppAdmin(data); };
+                tdActions.appendChild(btnWsp);
+                
+                tr.appendChild(tdActions);
+                tbody.appendChild(tr);
+            });
+        }
     }
 
     function escucharNuevosReportes() {
+        // Esta función puede simplificarse o eliminarse si la carga es siempre manual
+        // Por ahora, la mantenemos por la notificación.
         if (listenerNuevosReportesUnsubscribe) listenerNuevosReportesUnsubscribe();
-        let adminLastKnownTimestamp = localStorage.getItem('adminLastReportTimestamp') ? parseInt(localStorage.getItem('adminLastReportTimestamp')) : 0;
-        
-        const setupListener = (refTimestamp) => {
-            let query = db.collection("reportes").orderBy("timestamp", "desc");
-            if (refTimestamp > 0) query = query.where("timestamp", ">", firebase.firestore.Timestamp.fromMillis(refTimestamp));
-            
-            listenerNuevosReportesUnsubscribe = query.onSnapshot((snapshot) => {
-                let hayNuevosEsteSnapshot = false;
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
-                        const nuevoTimestampMillis = change.doc.data().timestamp.toMillis();
-                        if (nuevoTimestampMillis > refTimestamp) {
-                            hayNuevosEsteSnapshot = true;
-                            if (nuevoTimestampMillis > parseInt(localStorage.getItem('adminLastReportTimestamp') || '0') ) {
-                                localStorage.setItem('adminLastReportTimestamp', nuevoTimestampMillis);
-                            }
-                        }
-                    }
-                });
-                if (hayNuevosEsteSnapshot && document.getElementById('newReportNotification').style.display === 'none') {
-                    document.getElementById('newReportNotification').style.display = 'block';
-                    mostrarToastAdmin('¡Nuevos reportes disponibles!', 'info');
-                }
-            }, (error) => console.error("Error escuchando nuevos reportes: ", error));
-        };
-
-        if (todosLosReportes.length === 0 && adminLastKnownTimestamp === 0) {
-            db.collection("reportes").orderBy("timestamp", "desc").limit(1).get().then(snapshot => {
-                if (!snapshot.empty) {
-                    adminLastKnownTimestamp = snapshot.docs[0].data().timestamp.toMillis();
-                    localStorage.setItem('adminLastReportTimestamp', adminLastKnownTimestamp);
-                }
-                setupListener(adminLastKnownTimestamp);
-            }).catch(err => { console.error("Error obteniendo TS inicial", err); setupListener(0); });
-        } else {
-            setupListener(adminLastKnownTimestamp);
-        }
-    }
-
-    function filtrarTablaAdmin() {
-        const filtroTexto = document.getElementById("searchInputAdmin").value.toUpperCase().trim();
-        const filtroDesde = document.getElementById("filtroFechaDesde").value;
-        const filtroHasta = document.getElementById("filtroFechaHasta").value;
-        const tbody = document.getElementById("reporte-rows-admin");
-        const rows = tbody.getElementsByTagName("tr");
-        let hayResultados = false;
-
-        for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
-            if (!row.dataset.reporteId) { row.classList.remove('fila-oculta'); continue; }
-            
-            const reporteId = row.dataset.reporteId;
-            const reporteData = todosLosReportes.find(r => r.id === reporteId);
-            let mostrarFila = true;
-
-            if (reporteData) {
-                // Filtro por texto general
-                if (filtroTexto !== "") {
-                    const cliente = (reporteData.cliente || "").toUpperCase();
-                    const paciente = (reporteData.paciente || "").toUpperCase();
-                    const medico = (reporteData.medico || "").toUpperCase();
-                    if (!(cliente.includes(filtroTexto) || paciente.includes(filtroTexto) || medico.includes(filtroTexto))) {
-                        mostrarFila = false;
-                    }
-                }
-                
-                // Filtro por rango de fechas
-                const fechaCirugia = reporteData.fechaCirugia; // Formato YYYY-MM-DD
-                if (mostrarFila && fechaCirugia) {
-                    if (filtroDesde && fechaCirugia < filtroDesde) {
-                        mostrarFila = false;
-                    }
-                    if (filtroHasta && fechaCirugia > filtroHasta) {
-                        mostrarFila = false;
-                    }
-                }
-
-                if (mostrarFila) {
-                    row.classList.remove('fila-oculta');
-                    hayResultados = true;
-                } else {
-                    row.classList.add('fila-oculta');
-                }
-            } else {
-                row.classList.add('fila-oculta');
-            }
-        }
-
-        const noResultsRowId = 'no-results-row';
-        let noResultsRow = document.getElementById(noResultsRowId);
-        if (!hayResultados && (filtroTexto !== "" || filtroDesde || filtroHasta)) {
-            if (!noResultsRow) {
-                noResultsRow = tbody.insertRow();
-                noResultsRow.id = noResultsRowId;
-                const cell = noResultsRow.insertCell();
-                cell.colSpan = 6; // Ajustar colspan al nuevo número de columnas
-                cell.textContent = "No se encontraron reportes que coincidan con los filtros.";
-                cell.style.textAlign = "center";
-                cell.style.padding = "20px";
-                cell.style.color = "#777";
-            }
-        } else if (noResultsRow) {
-            noResultsRow.remove();
-        }
+        let query = db.collection("reportes").where("timestamp", ">", firebase.firestore.Timestamp.now());
+        listenerNuevosReportesUnsubscribe = query.onSnapshot(() => {
+            document.getElementById('newReportNotification').style.display = 'block';
+            mostrarToastAdmin('¡Nuevos reportes disponibles!', 'info');
+        }, (error) => console.error("Error escuchando nuevos reportes: ", error));
     }
     
     window.onload = async function () {
       document.body.style.backgroundColor = "#f0f2f5";
-      await cargarReportesAdmin(true); 
+      await cargarReportesIniciales(); 
       escucharNuevosReportes(); 
       const modalDetalle = document.getElementById('modalReporteDetalle');
       if (modalDetalle) modalDetalle.addEventListener('click', function(event) { if (event.target === this) cerrarModalReporteDetalle(); });
