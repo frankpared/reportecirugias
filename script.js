@@ -32,6 +32,7 @@ const LOCALSTORAGE_USER_ID = 'usuarioId';
 const LOCALSTORAGE_ULTIMO_REPORTE = 'ultimoReporteDistricorr';
 const DEBOUNCE_DELAY = 250;
 const EMAIL_DESTINO_SOLICITUD = 'comprasimplantes@districorr.com.ar';
+const DISTRITRACK_URL = 'https://[SU_DOMINIO_DE_DISTRITRACK]/dashboard/new-surgery'; // IMPORTANTE: Reemplazar con el dominio real
 
 // --- Fondos y Saludos Dinámicos (Temáticos Quirófano/Medicina) ---
 const fondosPorDia = {
@@ -113,7 +114,7 @@ let listaTiposCxCargada = null;
 let listaMaterialesCargada = null;
 let reportePendiente = null;
 let guardandoReporte = false;
-let materialesSolicitados = []; // NUEVA: Para el modal de solicitud de material
+let materialesSolicitados = [];
 
 // --- Helper Debounce ---
 function debounce(func, wait) {
@@ -314,8 +315,7 @@ function actualizarListaDatalist(datalistEl, valores) {
 // --- Obtención y Formateo de Datos ---
 function obtenerDatos(paraReporte = false) {
     const datos = {
-        // La línea de 'formato' se elimina, ya no se usa.
-        mensajeInicio: document.getElementById('mensajeInicio')?.value || 'Estimados, Adjunto detalles de la cirugía programada:', // Un default si no hay nada
+        mensajeInicio: document.getElementById('mensajeInicio')?.value || 'Estimados, Adjunto detalles de la cirugía programada:',
         cliente: document.getElementById('cliente')?.value.trim() || '',
         paciente: document.getElementById('paciente')?.value.trim() || '',
         medico: document.getElementById('medico')?.value.trim() || '',
@@ -508,23 +508,22 @@ async function generarImagen() {
 }
 
 // --- Funciones para Modales ---
-// (Clientes, Materiales, TipoCx - Las funciones son similares, refactorizadas para ser más concisas)
 async function _abrirModalGenerico(modalId, listaContainerId, searchInputId, dataArray, itemClassName, seleccionarFn, fetchFn, placeholderTexto, tituloModal) {
     const modal = document.getElementById(modalId);
     const listaCont = document.getElementById(listaContainerId);
     const searchIn = document.getElementById(searchInputId);
     if (!modal || !listaCont || !searchIn) return;
 
-    if (dataArray === null) { mostrarToast(`Cargando ${placeholderTexto}...`, "info"); await fetchFn(); dataArray = window[`lista${placeholderTexto.replace(/\s+/g, '')}Cargada`]; } // Asume variable global
+    if (dataArray === null) { mostrarToast(`Cargando ${placeholderTexto}...`, "info"); await fetchFn(); dataArray = window[`lista${placeholderTexto.replace(/\s+/g, '')}Cargada`]; }
     if (!dataArray || (Array.isArray(dataArray) && dataArray.length === 0) || (typeof dataArray === 'object' && Object.keys(dataArray).length === 0) ) {
         mostrarToast(`No hay ${placeholderTexto} disponibles.`, "warning"); return;
     }
     
-    searchIn.value = ''; listaCont.innerHTML = ''; // Limpiar antes de llenar
+    searchIn.value = ''; listaCont.innerHTML = '';
 
-    if (modalId === 'modalMateriales') { // Lógica especial para materiales por categoría
+    if (modalId === 'modalMateriales') {
         listaCont.innerHTML = 'Cargando...';
-        setTimeout(() => { // Delay para UI
+        setTimeout(() => {
             listaCont.innerHTML = '';
             for (const categoria in dataArray) {
                 const catDiv = document.createElement('div'); catDiv.classList.add('modal-categoria');
@@ -538,7 +537,7 @@ async function _abrirModalGenerico(modalId, listaContainerId, searchInputId, dat
                 listaCont.appendChild(catDiv);
             }
         },10);
-    } else { // Lógica para listas simples (Clientes, TiposCx)
+    } else {
         dataArray.forEach(item => {
             const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-item', itemClassName);
             itemDiv.dataset.value = item; itemDiv.textContent = item;
@@ -554,7 +553,6 @@ function _filtrarModalGenerico(searchInputId, listaContainerId, itemClassName) {
     const items = document.getElementById(listaContainerId).getElementsByClassName(itemClassName);
     for (let i = 0; i < items.length; i++) { items[i].style.display = (filter === "" || (items[i].textContent||items[i].innerText).toUpperCase().indexOf(filter) > -1) ? "" : "none"; }
 }
-// Instancias para cada modal
 async function abrirModalClientes() { await _abrirModalGenerico('modalClientes', 'modalClientesLista', 'modalClientesSearchInput', listaClientesCargada, 'cliente-item', anadirClienteSeleccionado, fetchClientes, 'Clientes'); }
 function cerrarModalClientes() { _cerrarModalGenerico('modalClientes'); }
 function anadirClienteSeleccionado(sel) { const i = document.getElementById('cliente'); if (i) { i.value = sel; i.dispatchEvent(new Event('input')); i.dispatchEvent(new Event('change')); } cerrarModalClientes(); }
@@ -565,9 +563,9 @@ function cerrarModalTipoCx() { _cerrarModalGenerico('modalTipoCx'); }
 function anadirTipoCxSeleccionado(sel) { const i = document.getElementById('tipoCirugia'); if (i) { i.value = sel; i.dispatchEvent(new Event('input')); i.dispatchEvent(new Event('change')); } cerrarModalTipoCx(); }
 const debouncedFilterTipoCx = debounce(() => _filtrarModalGenerico('modalTipoCxSearchInput', 'modalTipoCxLista', 'tipo-cx-item'), DEBOUNCE_DELAY);
 
-async function abrirModalMateriales() { await _abrirModalGenerico('modalMateriales', 'modalMaterialesLista', 'modalMaterialesSearchInput', listaMaterialesCargada, 'modal-item', null, fetchMateriales, 'Materiales'); } // No tiene seleccionarFn directa
+async function abrirModalMateriales() { await _abrirModalGenerico('modalMateriales', 'modalMaterialesLista', 'modalMaterialesSearchInput', listaMaterialesCargada, 'modal-item', null, fetchMateriales, 'Materiales'); }
 function cerrarModalMateriales() { _cerrarModalGenerico('modalMateriales'); if(document.getElementById('modalMateriales')) document.getElementById('modalMateriales').querySelectorAll('.modal-item-checkbox').forEach(cb => cb.checked = false); }
-function anadirMaterialesSeleccionados() { /* Misma lógica que antes, ya está bien */
+function anadirMaterialesSeleccionados() {
     const textarea = document.getElementById('material'); if (!textarea) return;
     const checkboxes = document.getElementById('modalMateriales').querySelectorAll('.modal-item-checkbox:checked');
     let texto = '';
@@ -582,7 +580,7 @@ function anadirMaterialesSeleccionados() { /* Misma lógica que antes, ya está 
     }
     cerrarModalMateriales();
 }
-const debouncedFilterMateriales = debounce(() => { // Adaptada para materiales
+const debouncedFilterMateriales = debounce(() => {
     const input = document.getElementById('modalMaterialesSearchInput'); const filter = input.value.toUpperCase().trim();
     const categorias = document.getElementById('modalMaterialesLista').getElementsByClassName('modal-categoria');
     for (let i = 0; i < categorias.length; i++) {
@@ -596,16 +594,14 @@ const debouncedFilterMateriales = debounce(() => { // Adaptada para materiales
 }, DEBOUNCE_DELAY);
 
 
-// --- NUEVAS FUNCIONES PARA MODAL DE SOLICITUD DE MATERIAL ---
+// --- LÓGICA PARA SOLICITUD DE MATERIAL Y PEDIDO EN DISTRITRACK ---
 function abrirModalSolicitudMaterial() {
-    // Primero, validar que los campos requeridos del formulario principal estén completos
     const camposRequeridos = ['paciente', 'cliente', 'medico', 'fechaCirugia'];
     let formularioValido = true;
     camposRequeridos.forEach(id => {
         const input = document.getElementById(id);
         if (!input || input.value.trim() === '') {
             formularioValido = false;
-            // Marcar el campo inválido para que el usuario lo vea
             if(input) input.classList.add('campo-invalido');
         }
     });
@@ -630,7 +626,6 @@ function cerrarModalSolicitudMaterial() {
         setTimeout(() => {
             modal.style.display = 'none';
         }, 300);
-        // Limpiar el estado para la próxima vez
         materialesSolicitados = [];
         renderizarTablaSolicitud();
         document.getElementById('solicitud-material-form').reset();
@@ -639,7 +634,7 @@ function cerrarModalSolicitudMaterial() {
 }
 
 function agregarMaterialSolicitud(event) {
-    event.preventDefault(); // Evitar que el formulario recargue la página
+    event.preventDefault();
     const descInput = document.getElementById('solicitud-material-desc');
     const cantInput = document.getElementById('solicitud-material-cant');
     const descripcion = descInput.value.trim();
@@ -663,7 +658,7 @@ function eliminarMaterialSolicitud(index) {
 
 function renderizarTablaSolicitud() {
     const tbody = document.getElementById('solicitud-material-tbody');
-    tbody.innerHTML = ''; // Limpiar la tabla
+    tbody.innerHTML = '';
     if (materialesSolicitados.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#777; padding: 15px;">No hay materiales añadidos.</td></tr>';
     } else {
@@ -679,79 +674,71 @@ function renderizarTablaSolicitud() {
     }
 }
 
-function enviarSolicitudMaterial() {
+function enviarSolicitudYCrearPedido() {
     if (materialesSolicitados.length === 0) {
         mostrarToast('Debe añadir al menos un material a la lista.', 'warning');
         return;
     }
 
-    // Recopilar datos del formulario principal
+    // --- PASO 1: Generar y lanzar el Mailto para Leticia ---
     const datosCirugia = obtenerDatos();
     const paciente = datosCirugia.paciente || 'No especificado';
     const cliente = datosCirugia.cliente || 'No especificado';
     const medico = datosCirugia.medico || 'No especificado';
     const fechaCirugia = formatearFechaUsuario(datosCirugia.fechaCirugia);
-    const tipoCirugia = datosCirugia.tipoCirugia || 'No especificado'; // Campo añadido
-    const lugarCirugia = datosCirugia.lugarCirugia || 'No especificado'; // Campo añadido
+    const tipoCirugia = datosCirugia.tipoCirugia || 'No especificado';
+    const lugarCirugia = datosCirugia.lugarCirugia || 'No especificado';
 
-    // Construir el asunto del correo
     const asunto = `Solicitud de Material para Cirugía - ${paciente} - ${cliente} - ${medico}`;
-
-    // Construir la "tabla" de materiales como texto plano
-    let tablaMaterialesTexto = "Material\t\t\tCantidad\n"; // Encabezados con tabulaciones
+    
+    let tablaMaterialesTexto = "Material\t\t\tCantidad\n";
     tablaMaterialesTexto += "--------------------------------------------------\n";
     materialesSolicitados.forEach(item => {
-        // Usamos padEnd para alinear la columna de cantidad, simulando una tabla
         const descripcionRecortada = item.descripcion.length > 30 ? item.descripcion.substring(0, 27) + '...' : item.descripcion;
         tablaMaterialesTexto += `${descripcionRecortada.padEnd(35, ' ')}\t${item.cantidad}\n`;
     });
 
-    // Construir la sección de consideraciones adicionales si es urgente
     const esUrgente = document.getElementById('solicitud-es-urgente').checked;
     let consideracionesTexto = '';
     if (esUrgente) {
-        consideracionesTexto = `
-Consideraciones Adicionales:
-**************************************************
-URGENTE - La cirugía ha sido adelantada o requiere atención inmediata.
-**************************************************
-`;
+        consideracionesTexto = `\nConsideraciones Adicionales:\n**************************************************\nURGENTE - La cirugía ha sido adelantada o requiere atención inmediata.\n**************************************************\n`;
     }
 
-    // Construir el cuerpo completo del correo en TEXTO PLANO
-    const cuerpoTexto = `Estimada,
-
-Buenos días,
-
-Por medio de este correo, solicito formalmente el siguiente material para la cirugía del paciente ${paciente}.
-
-Detalles de la Cirugía:
-- Paciente: ${paciente}
-- Cliente: ${cliente}
-- Médico Tratante: ${medico}
-- Fecha de Cirugía: ${fechaCirugia}
-- Tipo de Cirugía: ${tipoCirugia}
-- Lugar: ${lugarCirugia}
-
-Material a solicitar:
-${tablaMaterialesTexto}
-${consideracionesTexto}
-Agradezco de antemano su gestión.
-
-Saludos cordiales,
-`;
-
-    // Crear y abrir el link mailto con el cuerpo de texto plano
+    const cuerpoTexto = `Estimada,\n\nBuenos días,\n\nPor medio de este correo, solicito formalmente el siguiente material para la cirugía del paciente ${paciente}.\n\nDetalles de la Cirugía:\n- Paciente: ${paciente}\n- Cliente: ${cliente}\n- Médico Tratante: ${medico}\n- Fecha de Cirugía: ${fechaCirugia}\n- Tipo de Cirugía: ${tipoCirugia}\n- Lugar: ${lugarCirugia}\n\nMaterial a solicitar:\n${tablaMaterialesTexto}\n${consideracionesTexto}\nAgradezco de antemano su gestión.\n\nSaludos cordiales,\n`;
+    
     const mailtoLink = `mailto:${EMAIL_DESTINO_SOLICITUD}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpoTexto)}`;
     window.location.href = mailtoLink;
 
-    mostrarToast('Redirigiendo a su cliente de correo...', 'success');
+    // --- PASO 2: Construir y abrir la URL para DistriTrack ---
+    const parametros = new URLSearchParams();
+    parametros.append('patient_name', paciente);
+    parametros.append('doctor_name', medico);
+    parametros.append('institution', lugarCirugia);
+    parametros.append('client', cliente);
+    parametros.append('surgery_date', datosCirugia.fechaCirugia); // Formato YYYY-MM-DD
+
+    const materialesParaAPI = materialesSolicitados.map(item => ({
+        type: "note",
+        description: item.descripcion,
+        quantity: item.cantidad,
+        observations: ""
+    }));
+    parametros.append('materiales', JSON.stringify(materialesParaAPI));
+
+    const urlFinalDistriTrack = `${DISTRITRACK_URL}?${parametros.toString()}`;
+    
+    setTimeout(() => {
+        window.open(urlFinalDistriTrack, '_blank');
+    }, 500);
+
+    mostrarToast('Email generado. Redirigiendo a DistriTrack...', 'success');
     cerrarModalSolicitudMaterial();
 }
 
+
 // --- Inicialización ---
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('reporteForm')) { // Solo en index.html
+    if (document.getElementById('reporteForm')) {
         aplicarFondoYSaludoDinamico();
     }
     Promise.all([fetchClientes(), fetchTiposCirugia(), fetchMateriales()])
@@ -759,9 +746,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Datos maestros iniciales cargados o en proceso.");
             if (localStorage.getItem(LOCALSTORAGE_ULTIMO_REPORTE) && btnCargarUltimo) btnCargarUltimo.disabled = false;
             else if (btnCargarUltimo) btnCargarUltimo.disabled = true;
-            // Actualizar las variables globales explicitamente después del fetch para la función genérica
             window.listaClientesCargada = listaClientesCargada;
-            window.listaTiposCirugíaCargada = listaTiposCxCargada; // Ojo con el nombre aquí, debe coincidir
+            window.listaTiposCirugíaCargada = listaTiposCxCargada;
             window.listaMaterialesCargada = listaMaterialesCargada;
         });
     cargarSugerenciasIniciales('cliente', 'clientesList');
@@ -779,24 +765,21 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { console.error("Error estableciendo fecha:", e); }
     if (retrySaveBtn) retrySaveBtn.addEventListener('click', reintentarGuardado);
     
-    // Configuración de listeners para todos los modales
     const modalsToSetup = [ 
         { id: 'modalClientes', closeFn: cerrarModalClientes }, 
         { id: 'modalMateriales', closeFn: cerrarModalMateriales }, 
         { id: 'modalTipoCx', closeFn: cerrarModalTipoCx },
-        { id: 'modalSolicitudMaterial', closeFn: cerrarModalSolicitudMaterial } // NUEVO
+        { id: 'modalSolicitudMaterial', closeFn: cerrarModalSolicitudMaterial }
     ];
     modalsToSetup.forEach(m => { 
         const el = document.getElementById(m.id); 
         if (el) el.addEventListener('click', function(e) { if (e.target === this) m.closeFn(); }); 
     });
 
-    // Listener para el formulario de añadir material en el nuevo modal
     const solicitudMaterialForm = document.getElementById('solicitud-material-form');
     if (solicitudMaterialForm) {
         solicitudMaterialForm.addEventListener('submit', agregarMaterialSolicitud);
     }
-    // Renderizar la tabla de solicitud vacía al inicio
     renderizarTablaSolicitud();
 
     console.log("App Districorr inicializada.");
