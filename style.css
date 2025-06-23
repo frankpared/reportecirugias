@@ -791,4 +791,69 @@ body.admin-page tbody tr.fila-oculta {
    .admin-stats-container {
     grid-template-columns: 1fr; /* 1 columna en móvil */
    }
+/* --- ESTILOS PARA MODAL DE SOLICITUD DE MATERIAL (de index.html, por si se reutiliza) --- */
+.add-form-solicitud {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.add-form-solicitud #solicitud-material-desc {
+  flex-grow: 1;
+}
+.add-form-solicitud #solicitud-material-cant {
+  flex-basis: 80px;
+  flex-grow: 0;
+}
+.add-form-solicitud button {
+  flex-shrink: 0;
+}
+
+#solicitud-material-table th, #solicitud-material-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+#solicitud-material-table thead th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  font-size: 14px;
+  color: #495057;
+}
+#solicitud-material-table tbody tr:last-child td {
+  border-bottom: none;
+}
+#solicitud-material-table td:nth-child(2),
+#solicitud-material-table td:nth-child(3) {
+  text-align: center;
+}
+
+.btn-delete-item {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1;
+}
+.btn-delete-item:hover {
+  background-color: #c82333;
+}
+
+.form-group-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.form-group-checkbox input[type="checkbox"] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+.form-group-checkbox label {
+  margin: 0;
+  cursor: pointer;
+  font-weight: 600;
+  color: #333;
+}
 }
